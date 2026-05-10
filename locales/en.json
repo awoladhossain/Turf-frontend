@@ -1,0 +1,11 @@
+{
+  "navbar": {
+    "find_turf": "Find Turfs",
+    "offers": "Offers",
+    "about": "About Us",
+    "login": "Login"
+  },
+  "hero": {
+    "title": "Book Your Favorite Turf"
+  }
+}

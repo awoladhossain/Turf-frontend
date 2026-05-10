@@ -1,10 +1,20 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Menu, Trophy, UserCircle } from 'lucide-react'; // এই আইকনগুলো ১০০% কাজ করবে
+import '@/lib/i18n'; // i18n কনফিগারেশন ইমপোর্ট
+import { Languages, Menu, Trophy, UserCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation();
+
+  // ভাষা পরিবর্তন করার ফাংশন
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'bn' : 'en';
+    i18n.changeLanguage(newLang);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 mx-auto">
@@ -24,31 +34,42 @@ export default function Navbar() {
             href="/turfs"
             className="text-sm font-medium text-muted-foreground hover:text-green-600 transition-colors"
           >
-            সব টার্ফ
+            {t('navbar.find_turf')}
           </Link>
           <Link
             href="/offers"
             className="text-sm font-medium text-muted-foreground hover:text-green-600 transition-colors"
           >
-            অফারসমূহ
+            {t('navbar.offers')}
           </Link>
           <Link
             href="/about"
             className="text-sm font-medium text-muted-foreground hover:text-green-600 transition-colors"
           >
-            আমাদের সম্পর্কে
+            {t('navbar.about')}
           </Link>
         </nav>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
+          {/* Language Switcher Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 text-xs font-semibold hover:bg-green-50 hover:text-green-600"
+          >
+            <Languages className="h-4 w-4" />
+            {i18n.language === 'en' ? 'বাংলা' : 'EN'}
+          </Button>
+          <div className="h-6 w-[1px] bg-border hidden sm:block" /> {/* Divider */}
           <Link href="/login" className="hidden sm:block">
             <Button
               variant="ghost"
               className="text-sm font-medium flex items-center gap-2 cursor-pointer"
             >
               <UserCircle className="h-4 w-4" />
-              Login
+              {t('navbar.login')}
             </Button>
           </Link>
           <Link href="/register">
@@ -56,7 +77,6 @@ export default function Navbar() {
               Sign Up
             </Button>
           </Link>
-
           {/* Mobile Menu Icon */}
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-6 w-6" />
