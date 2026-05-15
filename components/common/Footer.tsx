@@ -2,9 +2,14 @@
 
 import { Mail, Phone, ScanFace, Spotlight, Trophy, X } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState(0);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <footer className="w-full border-t bg-slate-50 dark:bg-slate-950">
@@ -133,7 +138,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>© {currentYear} TurfBook. সর্বস্বত্ব সংরক্ষিত।</p>
+          <p>© {currentYear || new Date().getFullYear()} TurfBook. সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
     </footer>
