@@ -18,7 +18,7 @@ if (!i18n.isInitialized) {
         bn: { translation: bn },
       },
       fallbackLng: 'en', // স্পোর্টস অ্যাপের জন্য ডিফল্ট ইংলিশ রাখা সেফ
-      lng: 'en', 
+      lng: 'en',
       interpolation: {
         escapeValue: false,
       },
