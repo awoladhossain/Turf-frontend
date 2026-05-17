@@ -23,7 +23,7 @@ export default function Navbar() {
   if (!mounted) return null; // সার্ভার ও ক্লায়েন্ট রেন্ডার সেম রাখতে
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md transition-all">
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md transition-all">
       <div className="container flex h-18 items-center justify-between px-6 mx-auto">
         {/* Logo Section */}
         <Link href="/" className="flex items-center gap-2 group">
