@@ -1,144 +1,149 @@
 'use client';
 
-import { Mail, Phone, ScanFace, Spotlight, Trophy, X } from 'lucide-react';
+import {   Mail, MapPin, Phone, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
+import InstagramIcon from '@iconify-react/line-md/instagram';
+import TwitterFilledIcon from '@iconify-react/line-md/twitter-filled';
+import FacebookIcon from '@iconify-react/line-md/facebook';
 export default function Footer() {
-  const [currentYear, setCurrentYear] = useState(0);
+  const [currentYear, setCurrentYear] = useState(2026);
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
   }, []);
 
   return (
-    <footer className="w-full border-t bg-slate-50 dark:bg-slate-950">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Section */}
-          <div className="space-y-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="bg-green-600 p-1.5 rounded-lg">
-                <Trophy className="h-5 w-5 text-white" />
+    <footer className="w-full border-t border-slate-900 bg-[#05070f] text-slate-400 font-jakarta relative overflow-hidden">
+      {/* ফুটারেও হালকা ব্যাকগ্রাউন্ড গ্লো এর ছোঁয়া */}
+      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          {/* --- ব্র্যান্ড সেকশন --- */}
+          <div className="space-y-5">
+            <Link href="/" className="flex items-center gap-3 group cursor-pointer">
+              <div className="bg-gradient-to-br from-emerald-500 to-[#1e6b3e] p-2 rounded-xl border border-emerald-400/20 shadow-md shadow-emerald-950/50">
+                <Trophy className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold tracking-tight">
-                Turf<span className="text-green-600">Book</span>
+              <span className="text-xl font-black tracking-tight text-white">
+                Turf
+                <span className="text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+                  Book
+                </span>
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              আপনার পছন্দের টার্ফ খুঁজে বের করুন এবং বুক করুন খুব সহজে। আমরা দিচ্ছি সেরা খেলার
-              অভিজ্ঞতার নিশ্চয়তা।
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              আপনার পছন্দের টার্ফ খুঁজে বের করুন এবং বুক করুন খুব সহজে। আমরা দিচ্ছি ঢাকা শহরের সেরা
+              খেলার মাঠ ও প্রফেশনাল এক্সপেরিয়েন্সের নিশ্চয়তা।
             </p>
-            <div className="flex space-x-4">
-              <Link href="#" className="text-muted-foreground hover:text-green-600">
-                <ScanFace className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-green-600">
-                <Spotlight className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-muted-foreground hover:text-green-600">
-                <X className="h-5 w-5" />
-              </Link>
+
+            {/* মডার্ন সোশ্যাল লিংকস */}
+            <div className="flex items-center gap-3 pt-2">
+              {[
+                { icon: <FacebookIcon className="h-4 w-4" />, href: '#' },
+                { icon: <InstagramIcon className="h-4 w-4" />, href: '#' },
+                { icon: <TwitterFilledIcon className="h-4 w-4" />, href: '#' },
+              ].map((social, index) => (
+                <Link
+                  key={index}
+                  href={social.href}
+                  className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(52,211,153,0.1)] transition-all duration-300"
+                >
+                  {social.icon}
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* --- দ্রুত লিঙ্কসমূহ --- */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">দ্রুত লিঙ্ক</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/turfs"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  সব টার্ফ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/offers"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  অফারসমূহ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  আমাদের সম্পর্কে
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  যোগাযোগ
-                </Link>
-              </li>
+            <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-5 border-l-2 border-emerald-500 pl-3">
+              দ্রুত লিঙ্ক
+            </h3>
+            <ul className="space-y-3 text-xs font-semibold">
+              {[
+                { label: 'সব টার্ফ খুঁজুন', path: '/turfs' },
+                { label: 'এক্সক্লুসিভ অফার', path: '/offers' },
+                { label: 'আমাদের সম্পর্কে', path: '/about' },
+                { label: 'যোগাযোগ করুন', path: '/contact' },
+              ].map((link, index) => (
+                <li key={index}>
+                  <Link
+                    href={link.path}
+                    className="hover:text-emerald-400 transition-colors duration-200 block w-fit"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Support */}
+          {/* --- কাস্টমার সাপোর্ট --- */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">সাপোর্ট</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href="/faq"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  সাধারণ জিজ্ঞাসা (FAQ)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  প্রাইভেসি পলিসি
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  শর্তাবলী
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/refund"
-                  className="text-muted-foreground hover:text-green-600 transition-colors"
-                >
-                  রিফান্ড পলিসি
-                </Link>
-              </li>
+            <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-5 border-l-2 border-emerald-500 pl-3">
+              সাপোর্ট
+            </h3>
+            <ul className="space-y-3 text-xs font-semibold">
+              {[
+                { label: 'সাধারণ জিজ্ঞাসা (FAQ)', path: '/faq' },
+                { label: 'প্রাইভেসি পলিসি', path: '/privacy' },
+                { label: 'শর্তাবলী ও নিয়ম', path: '/terms' },
+                { label: 'রিফান্ড পলিসি', path: '/refund' },
+              ].map((link, index) => (
+                <li key={index}>
+                  <Link
+                    href={link.path}
+                    className="hover:text-emerald-400 transition-colors duration-200 block w-fit"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* --- অফিসিয়াল ইনফো --- */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">যোগাযোগ করুন</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center space-x-3 text-muted-foreground">
-                <Mail className="h-4 w-4 text-green-600" />
-                <span>support@turfbook.com</span>
+            <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-5 border-l-2 border-emerald-500 pl-3">
+              যোগাযোগ
+            </h3>
+            <ul className="space-y-4 text-xs font-semibold">
+              <li className="flex items-center gap-3 group">
+                <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-emerald-400">
+                  <Mail className="h-3.5 w-3.5" />
+                </div>
+                <span className="group-hover:text-slate-200 transition-colors">
+                  support@turfbook.com
+                </span>
               </li>
-              <li className="flex items-center space-x-3 text-muted-foreground">
-                <Phone className="h-4 w-4 text-green-600" />
-                <span>+880 1234 567890</span>
+              <li className="flex items-center gap-3 group">
+                <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-emerald-400">
+                  <Phone className="h-3.5 w-3.5" />
+                </div>
+                <span className="group-hover:text-slate-200 transition-colors">
+                  +880 1612 011970
+                </span>
               </li>
-              <li className="text-muted-foreground mt-2">বনানী, ঢাকা, বাংলাদেশ</li>
+              <li className="flex items-center gap-3 group">
+                <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-emerald-400">
+                  <MapPin className="h-3.5 w-3.5" />
+                </div>
+                <span className="group-hover:text-slate-200 transition-colors">
+                  বনানী, ঢাকা, বাংলাদেশ
+                </span>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>© {currentYear || new Date().getFullYear()} TurfBook. সর্বস্বত্ব সংরক্ষিত।</p>
+        {/* --- নিচের কপিরাইট লাইন --- */}
+        <div className="mt-16 pt-8 border-t border-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
+          <p>© {currentYear} TurfBook. সর্বস্বত্ব সংরক্ষিত।</p>
+          <div className="flex gap-4 text-[10px] uppercase tracking-wider font-bold">
+            <span className="text-slate-600">Built for Next-Gen Players</span>
+          </div>
         </div>
       </div>
     </footer>

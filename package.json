@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@iconify-react/line-md": "^1.0.2",
+    "@iconify-react/lucide": "^1.0.14",
     "@reduxjs/toolkit": "^2.11.2",
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.4.0",
