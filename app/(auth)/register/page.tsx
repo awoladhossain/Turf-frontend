@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { useAppDispatch } from '@/store/hooks';
 import { setCredentials } from '@/store/slices/authSlice';
+import { motion } from 'framer-motion';
 import { Lock, Mail, Trophy, User } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // ডামি সাকসেস লজিক
+      // রিয়ালিস্টিক রেজিস্ট্রেশন সাকসেস ইমিটেশন
       const dummyUser = {
         user: { id: '2', name: name, email: email, role: 'user' },
         accessToken: 'dummy-token-reg',
@@ -47,38 +48,51 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-64px)] w-full flex items-center justify-center p-4 bg-[#f8fafc] overflow-hidden font-jakarta">
-      {/* --- Premium Pitch Geometric Background Line Art --- */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-slate-200/60 rounded-full" />
-        <div className="absolute top-1/4 -left-12 w-[300px] h-[400px] border border-slate-200/50 rounded-r-3xl" />
-        <div className="absolute top-1/4 -right-12 w-[300px] h-[400px] border border-slate-200/50 rounded-l-3xl" />
-        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-slate-200/40 to-transparent" />
-        <div className="absolute top-0 left-3/4 w-px h-full bg-gradient-to-b from-transparent via-slate-200/40 to-transparent" />
-      </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-[#090d16] overflow-hidden font-jakarta text-white">
+      {/* 🌌 মডার্ন ট্যাকটিক্যাল ব্যাকগ্রাউন্ড গ্রিড */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.15] pointer-events-none" />
 
-      {/* --- Main Registration Card --- */}
-      <div className="relative w-full max-w-[460px] bg-white p-8 sm:p-10 rounded-[28px] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all">
-        {/* Brand & Header */}
+      {/* গ্লোয়িং সাইবার অরবিট */}
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#1e6b3e]/20 blur-[130px] rounded-full pointer-events-none"
+      />
+
+      {/* --- মডার্ন প্রিমিয়াম গ্লাস-মরফিজম কার্ড --- */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="relative w-full max-w-[460px] bg-slate-900/40 backdrop-blur-xl p-8 sm:p-10 rounded-[28px] border border-slate-800/80 shadow-[0_25px_60px_rgba(0,0,0,0.5)] overflow-hidden z-10"
+      >
+        {/* ব্র্যান্ড হেডার সেকশন */}
         <div className="flex flex-col items-center text-center mb-7">
           <div className="flex items-center gap-2 mb-3">
-            <div className="bg-[#1e6b3e] p-2 rounded-xl shadow-md shadow-emerald-900/10">
+            <div className="bg-gradient-to-br from-emerald-500 to-[#1e6b3e] p-2 rounded-xl border border-emerald-400/20 shadow-md">
               <Trophy className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">
-              Turf<span className="text-[#1e6b3e]">Book</span>
+            <span className="text-xl font-black tracking-tight text-white">
+              Turf
+              <span className="text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+                Book
+              </span>
             </span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Create Account</h1>
-          <p className="text-slate-500 text-sm mt-1">Join our community to book your next match.</p>
+          <h1 className="text-2xl font-black text-white tracking-tight sm:text-3xl">
+            Create Account
+          </h1>
+          <p className="text-slate-400 text-xs font-medium mt-1.5">
+            Dhaka-র সেরা স্পোর্টস কমিউনিটিতে যোগ দিন।
+          </p>
         </div>
 
-        {/* Google Sign-up Button */}
+        {/* গুগল ওয়ান-ক্লিক সাইন-আপ বাটন */}
         <div className="mb-6">
           <Button
             type="button"
             variant="outline"
-            className="w-full h-11 bg-white hover:bg-slate-50 active:bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-800 font-semibold rounded-xl transition-all flex items-center justify-center gap-2.5 shadow-sm cursor-pointer"
+            className="w-full h-12 bg-slate-950/40 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800/50 hover:border-slate-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2.5 cursor-pointer text-xs uppercase tracking-wider"
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -102,133 +116,130 @@ export default function RegisterPage() {
           </Button>
         </div>
 
-        {/* Divider */}
+        {/* মডার্ন ডিভাইডার */}
         <div className="relative flex items-center justify-center my-6">
-          <div className="absolute w-full h-px bg-slate-200/70" />
-          <span className="relative bg-white px-3 text-xs text-slate-400 font-medium uppercase tracking-widest">
+          <div className="absolute w-full h-px bg-slate-800/80" />
+          <span className="relative bg-[#0d1322] px-4 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
             or
           </span>
         </div>
 
-        {/* Registration Form */}
+        {/* রেজিস্ট্রেশন ফর্ম */}
         <form onSubmit={handleRegister} className="space-y-4">
-          {/* Full Name */}
+          {/* নাম ইনপুট */}
           <div className="relative group">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1e6b3e] transition-colors" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white focus:border-[#1e6b3e] focus:ring-2 focus:ring-emerald-600/10 outline-none transition-all text-sm font-medium text-slate-800"
+              className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-800 bg-slate-950/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500"
               required
             />
           </div>
 
-          {/* Email */}
+          {/* ইমেইল ইনপুট */}
           <div className="relative group">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1e6b3e] transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white focus:border-[#1e6b3e] focus:ring-2 focus:ring-emerald-600/10 outline-none transition-all text-sm font-medium text-slate-800"
+              className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-800 bg-slate-950/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500"
               required
             />
           </div>
 
-          {/* Password */}
+          {/* পাসওয়ার্ড ইনপুট */}
           <div className="relative group">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1e6b3e] transition-colors" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create password"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white focus:border-[#1e6b3e] focus:ring-2 focus:ring-emerald-600/10 outline-none transition-all text-sm font-medium text-slate-800"
+              className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-800 bg-slate-950/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500"
               required
             />
           </div>
 
-          {/* Confirm Password */}
+          {/* পাসওয়ার্ড কনফার্মেশন */}
           <div className="relative group">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1e6b3e] transition-colors" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm password"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white focus:border-[#1e6b3e] focus:ring-2 focus:ring-emerald-600/10 outline-none transition-all text-sm font-medium text-slate-800"
+              className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-800 bg-slate-950/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500"
               required
             />
           </div>
 
-          {/* Terms */}
+          {/* শর্তাবলী সম্মতি (Terms Checklist) */}
           <div className="flex items-start gap-2.5 px-0.5 pt-1">
             <input
               type="checkbox"
               id="terms"
-              className="mt-1 rounded border-slate-300 text-[#1e6b3e] focus:ring-[#1e6b3e] h-3.5 w-3.5 transition-all cursor-pointer"
+              className="mt-1 accent-[#1e6b3e] h-3.5 w-3.5 transition-all cursor-pointer rounded border-slate-800 bg-slate-950"
               required
             />
             <label
               htmlFor="terms"
-              className="text-xs text-slate-500 font-medium leading-relaxed cursor-pointer select-none"
+              className="text-xs text-slate-400 font-medium leading-relaxed cursor-pointer select-none hover:text-slate-300 transition-colors"
             >
               I agree to the{' '}
-              <Link href="#" className="text-[#1e6b3e] font-bold hover:underline">
+              <Link href="#" className="text-emerald-400 font-bold hover:underline">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="#" className="text-[#1e6b3e] font-bold hover:underline">
+              <Link href="#" className="text-emerald-400 font-bold hover:underline">
                 Privacy Policy
               </Link>
               .
             </label>
           </div>
 
-          {/* Submit Button */}
+          {/* গ্লোয়িং সাবমিট বোতাম */}
           <Button
             disabled={loading}
-            className="w-full h-11 bg-[#1e6b3e] hover:bg-[#16522f] text-white hover:text-white rounded-xl font-semibold text-sm transition-all shadow-md shadow-emerald-900/10 mt-3 active:scale-[0.99] cursor-pointer"
+            className="w-full h-12 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-950/50 mt-3 border border-emerald-500/20 active:scale-95 cursor-pointer"
           >
             {loading ? 'Creating Account...' : 'Get Started'}
           </Button>
         </form>
 
-        {/* Bottom Login Link */}
-        <p className="text-center text-xs text-slate-500 font-medium mt-6">
+        {/* বটম লগইন লিঙ্ক */}
+        <p className="text-center text-xs text-slate-400 font-semibold mt-6">
           Already have an account?{' '}
           <Link
             href="/login"
-            className="text-[#1e6b3e] font-bold hover:text-[#16522f] hover:underline ml-0.5 transition-colors"
+            className="text-emerald-400 font-black hover:text-emerald-300 ml-1 transition-colors"
           >
             Sign in
           </Link>
         </p>
 
-        {/* Bottom Corner Decorative Football Graphics */}
-        <div className="absolute bottom-[-15px] left-[-15px] opacity-[0.07] pointer-events-none">
+        {/* ট্যাকটিক্যাল ডেকোরেটিভ পিচ ব্যাকগ্রাউন্ড গ্রাফিক্স */}
+        <div className="absolute -bottom-4 -left-4 opacity-5 pointer-events-none text-white">
           <svg
-            width="70"
-            height="70"
+            width="75"
+            height="75"
             viewBox="0 0 100 100"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
-            className="text-slate-900"
           >
             <circle cx="50" cy="50" r="45" />
             <polygon points="50,30 65,42 59,60 41,60 35,42" />
             <line x1="50" y1="30" x2="50" y2="5" />
             <line x1="65" y1="42" x2="90" y2="35" />
             <line x1="59" y1="60" x2="75" y2="85" />
-            <line x1="41" y1="60" x2="25" y2="85" />
-            <line x1="35" y1="42" x2="10" y2="35" />
           </svg>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

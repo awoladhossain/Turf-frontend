@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { AnimatePresence, motion } from 'framer-motion'; // motion/react থেকে framer-motion এ শিফট করা হয়েছে বেটার স্ট্যাবিলিটির জন্য
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpDown, Calendar, Filter, MapPin, Search, Star, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -52,9 +52,9 @@ export default function TurfsPage() {
   const [selectedSport, setSelectedSport] = useState('All');
   const [priceRange, setPriceRange] = useState(5000);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('popular'); // 🛠️ সর্টিং স্টেট: popular, price-asc, price-desc
+  const [sortBy, setSortBy] = useState('popular');
 
-  // 🛠️ কম্বাইন্ড রিয়াল-টাইম ফিল্টারিং এবং সর্টিং লজিক
+  // 🛠️ কম্বাইন্ড ফিল্টারিং এবং সর্টিং লজিক
   const processedTurfs = useMemo(() => {
     let result = DUMMY_TURFS.filter((turf) => {
       const matchesSport =
@@ -66,7 +66,6 @@ export default function TurfsPage() {
       return matchesSport && matchesPrice && matchesSearch;
     });
 
-    // সর্টিং এক্সিকিউশন
     if (sortBy === 'price-asc') {
       result.sort((a, b) => a.pricePerHour - b.pricePerHour);
     } else if (sortBy === 'price-desc') {
@@ -79,43 +78,47 @@ export default function TurfsPage() {
   }, [selectedSport, priceRange, searchQuery, sortBy]);
 
   return (
-    <div className="min-h-screen w-full bg-[#f6f8fa] font-jakarta py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* মডার্ন ব্যাকগ্রাউন্ড গ্রিড ইফেক্ট */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+    <div className="min-h-screen w-full bg-[#090d16] font-jakarta py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-white">
+      {/* 🌌 মডার্ন ব্যাকগ্রাউন্ড গ্রিড ও অরবিট গ্লো ইফেক্ট */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.15] pointer-events-none" />
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#1e6b3e]/10 blur-[130px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto space-y-10 relative z-10">
         {/* --- Header সেকশন --- */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[#1e6b3e] bg-emerald-50 px-3 py-1 rounded-full w-fit mb-3 border border-emerald-100">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Slot Booking
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full w-fit mb-3 border border-emerald-500/20">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live Slot Hub
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight sm:text-5xl">
-              Premium <span className="text-[#1e6b3e] relative inline-block">Arenas</span>
+            <h1 className="text-4xl font-black tracking-tight sm:text-5xl text-white">
+              Explore{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+                Arenas
+              </span>
             </h1>
-            <p className="text-slate-500 text-sm mt-2 font-medium">
+            <p className="text-slate-400 text-sm mt-2 font-medium">
               ঢাকা শহরের বেস্ট কন্ডিশন পিচগুলো ভেরিফাইড রিভিউ দেখে বুক করুন।
             </p>
           </div>
 
           {/* সার্চ ইনপুট */}
           <div className="relative w-full md:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#1e6b3e] transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="মাঠ বা লোকেশনের নাম লিখুন..."
-              className="w-full h-12 pl-11 pr-4 rounded-2xl border border-slate-200 bg-white focus:border-[#1e6b3e] focus:ring-4 focus:ring-emerald-600/5 outline-none transition-all text-sm font-medium text-slate-800 placeholder-slate-400 shadow-sm"
+              className="w-full h-12 pl-11 pr-4 rounded-2xl border border-slate-800 bg-slate-950/40 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500 shadow-sm"
             />
           </div>
         </div>
 
         {/* --- মডার্ন সর্টিং সেকশন (চিপস ডিজাইন) --- */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-            <ArrowUpDown className="h-3.5 w-3.5 text-slate-400" />
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/40 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-lg">
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+            <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" />
             Sort By
           </div>
           <div className="flex flex-wrap gap-2">
@@ -127,10 +130,10 @@ export default function TurfsPage() {
               <button
                 key={option.id}
                 onClick={() => setSortBy(option.id)}
-                className={`px-4 h-9 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                className={`px-4 h-9 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
                   sortBy === option.id
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    ? 'bg-gradient-to-r from-emerald-600 to-[#1e6b3e] border-emerald-500/20 text-white shadow-md shadow-emerald-950/50'
+                    : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white'
                 }`}
               >
                 {option.label}
@@ -142,15 +145,15 @@ export default function TurfsPage() {
         {/* --- মেইন কন্টেন্ট লেআউট --- */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
           {/* --- বাম পাশের অ্যাডভান্সড ফিল্টার সাইডবার --- */}
-          <div className="lg:col-span-1 bg-white p-6 rounded-[24px] border border-slate-200/80 shadow-sm space-y-6 lg:sticky lg:top-6">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-              <Filter className="h-4 w-4 text-[#1e6b3e]" />
-              <h2 className="font-bold text-slate-800 text-sm tracking-tight">Filter Settings</h2>
+          <div className="lg:col-span-1 bg-slate-900/40 backdrop-blur-md p-6 rounded-[24px] border border-slate-800/80 shadow-xl space-y-6 lg:sticky lg:top-6">
+            <div className="flex items-center gap-2 border-b border-slate-800/60 pb-4">
+              <Filter className="h-4 w-4 text-emerald-400" />
+              <h2 className="font-bold text-white text-sm tracking-tight">Filter Settings</h2>
             </div>
 
             {/* স্পোর্টস ডিসিপ্লিন */}
             <div className="space-y-3">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">
                 Discipline
               </label>
               <div className="grid grid-cols-1 gap-2">
@@ -162,12 +165,14 @@ export default function TurfsPage() {
                       onClick={() => setSelectedSport(sport)}
                       className={`h-11 px-4 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer border ${
                         isSelected
-                          ? 'bg-[#1e6b3e]/5 border-[#1e6b3e] text-[#1e6b3e]'
-                          : 'text-slate-600 bg-white hover:bg-slate-50 border-slate-200'
+                          ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                          : 'text-slate-400 bg-slate-950/20 border-slate-800 hover:bg-slate-900 hover:text-white'
                       }`}
                     >
                       <span>{sport} Arenas</span>
-                      {isSelected && <span className="h-2 w-2 rounded-full bg-[#1e6b3e]" />}
+                      {isSelected && (
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 drop-shadow-[0_0_8px_#34d399]" />
+                      )}
                     </button>
                   );
                 })}
@@ -177,10 +182,10 @@ export default function TurfsPage() {
             {/* প্রাইস স্লাইডার */}
             <div className="space-y-4 pt-2">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                   Max Budget / Hr
                 </label>
-                <span className="text-xs font-black text-[#1e6b3e] bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-100/30">
+                <span className="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">
                   ৳{priceRange}
                 </span>
               </div>
@@ -191,9 +196,9 @@ export default function TurfsPage() {
                 step="100"
                 value={priceRange}
                 onChange={(e) => setPriceRange(Number(e.target.value))}
-                className="w-full accent-[#1e6b3e] h-1.5 bg-slate-100 rounded-lg cursor-pointer"
+                className="w-full accent-emerald-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
               />
-              <div className="flex justify-between text-[10px] text-slate-400 font-bold">
+              <div className="flex justify-between text-[10px] text-slate-500 font-bold">
                 <span>৳1,500</span>
                 <span>৳5,000</span>
               </div>
@@ -213,80 +218,80 @@ export default function TurfsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.35, ease: 'easeOut' }}
-                      className="group bg-white rounded-[24px] border border-slate-200/80 overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-[0_20px_50px_rgba(30,107,62,0.06)] transition-all duration-300"
+                      className="group bg-slate-900/40 backdrop-blur-md rounded-[24px] border border-slate-800/80 overflow-hidden flex flex-col justify-between shadow-lg hover:shadow-[0_20px_50px_rgba(30,107,62,0.08)] hover:border-slate-700 transition-all duration-300"
                     >
                       {/* ইমেজ এবং টপ ফ্ল্যাশের কন্টেইনার */}
-                      <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+                      <div className="relative h-56 w-full overflow-hidden bg-slate-950">
                         <img
                           src={turf.image}
                           alt={turf.name}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100 transition-opacity"
                         />
                         {/* গ্লসি শ্যাডো ওভারলে */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
 
                         {/* লাইভ এভেইলেবিলিটি পালস ব্যাজ */}
-                        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/50 shadow-sm text-[10px] font-black uppercase tracking-wider">
+                        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/60 shadow-sm text-[10px] font-black uppercase tracking-wider">
                           <span
-                            className={`h-2 w-2 rounded-full ${turf.availableToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}
+                            className={`h-2 w-2 rounded-full ${turf.availableToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}
                           />
                           <span
-                            className={turf.availableToday ? 'text-emerald-700' : 'text-slate-600'}
+                            className={turf.availableToday ? 'text-emerald-400' : 'text-slate-400'}
                           >
                             {turf.availableToday ? 'Available Today' : 'Full'}
                           </span>
                         </div>
 
                         {/* প্রিমিয়াম রেটিং ট্যাগ */}
-                        <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-xs font-bold text-white shadow-sm">
+                        <div className="absolute top-4 right-4 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-xs font-bold text-white shadow-sm border border-slate-800">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                           <span>{turf.rating}</span>
                         </div>
                       </div>
 
-                      {/* ইনপুট/ডিটেইলস কার্ড বডি */}
+                      {/* কার্ড বডি কন্টেন্ট */}
                       <div className="p-6 flex-grow flex flex-col justify-between space-y-6">
                         <div className="space-y-3">
                           {/* ক্যাটাগরি ও সাইজ চিপস */}
                           <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1e6b3e] uppercase tracking-wider bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100/60">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
                               <Trophy className="h-3 w-3" />
                               {turf.sport}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/50">
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800/80">
                               {turf.size}
                             </span>
                           </div>
 
                           {/* মাঠের নাম */}
-                          <h3 className="text-xl font-bold text-slate-800 group-hover:text-[#1e6b3e] transition-colors tracking-tight line-clamp-1">
+                          <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors tracking-tight line-clamp-1">
                             {turf.name}
                           </h3>
 
                           {/* লোকেশন পিন */}
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                            <MapPin className="h-4 w-4 shrink-0 text-slate-300" />
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                            <MapPin className="h-4 w-4 shrink-0 text-slate-600" />
                             <span className="line-clamp-1">{turf.location}</span>
                           </div>
                         </div>
 
                         {/* ডিভাইডার লাইন */}
-                        <div className="h-px bg-slate-100 w-full" />
+                        <div className="h-px bg-slate-800/60 w-full" />
 
                         {/* প্রাইস ও বুকিং অ্যাকশন রো */}
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                               Hourly Rate
                             </p>
-                            <p className="text-2xl font-black text-slate-900 tracking-tight">
+                            <p className="text-2xl font-black text-white tracking-tight">
                               ৳{turf.pricePerHour}
-                              <span className="text-xs text-slate-400 font-normal"> /hr</span>
+                              <span className="text-xs text-slate-500 font-normal"> /hr</span>
                             </p>
                           </div>
 
                           <Link href={`/turfs/${turf.id}`}>
-                            <Button className="h-11 bg-[#1e6b3e] hover:bg-[#14492a] text-white font-bold text-xs px-5 rounded-xl shadow-lg shadow-emerald-900/10 active:scale-95 transition-all cursor-pointer flex items-center gap-2">
+                            <Button className="h-11 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs px-5 rounded-xl shadow-md shadow-emerald-950/50 active:scale-95 border border-emerald-500/20 transition-all cursor-pointer flex items-center gap-2">
                               <Calendar className="h-4 w-4" />
                               Book Slot
                             </Button>
@@ -300,15 +305,16 @@ export default function TurfsPage() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="col-span-full bg-white border border-dashed border-slate-200 rounded-[24px] p-16 text-center flex flex-col items-center justify-center space-y-4 shadow-sm"
+                    className="col-span-full bg-slate-900/20 border border-dashed border-slate-800 rounded-[24px] p-16 text-center flex flex-col items-center justify-center space-y-4 shadow-sm"
                   >
-                    <div className="p-4 bg-slate-50 text-slate-400 rounded-2xl border border-slate-100">
+                    <div className="p-4 bg-slate-900/60 text-slate-500 rounded-2xl border border-slate-800">
                       <Search className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className="text-base font-bold text-slate-800">No arenas found</h3>
-                      <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                        আপনার ফিল্টার বা বাজেট কিছুটা বাড়িয়ে অন্য কোনো ক্যাটাগরিতে সার্চ করে দেখুন।
+                      <h3 className="text-base font-bold text-white">No arenas found</h3>
+                      <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                        আপনার ফিল্টার বা বাজেট কিছুটা বাড়িয়ে অন্য কোনো ক্যাটাগরিতে সার্চ করে
+                        দেখুন।
                       </p>
                     </div>
                   </motion.div>
