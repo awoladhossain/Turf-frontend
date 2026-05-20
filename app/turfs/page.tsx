@@ -48,13 +48,20 @@ const DUMMY_TURFS = [
   },
 ];
 
+// কিলার ফ্লুইডিটির জন্য কাস্টম ট্রানজিশন কার্ভ
+const cardTransition = {
+  type: 'spring',
+  stiffness: 260,
+  damping: 26,
+  mass: 0.8,
+} as const;
+
 export default function TurfsPage() {
   const [selectedSport, setSelectedSport] = useState('All');
   const [priceRange, setPriceRange] = useState(5000);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
 
-  // 🛠️ কম্বাইন্ড ফিল্টারিং এবং সর্টিং লজিক
   const processedTurfs = useMemo(() => {
     let result = DUMMY_TURFS.filter((turf) => {
       const matchesSport =
@@ -79,7 +86,7 @@ export default function TurfsPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#090d16] font-jakarta py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-white">
-      {/* 🌌 মডার্ন ব্যাকগ্রাউন্ড গ্রিড ও অরবিট গ্লো ইফেক্ট */}
+      {/* 🌌 ব্যাকগ্রাউন্ড গ্রিড */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.15] pointer-events-none" />
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#1e6b3e]/10 blur-[130px] rounded-full pointer-events-none" />
 
@@ -115,7 +122,7 @@ export default function TurfsPage() {
           </div>
         </div>
 
-        {/* --- মডার্ন সর্টিং সেকশন (চিপস ডিজাইন) --- */}
+        {/* --- মডার্ন সর্টিং সেকশন --- */}
         <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/40 backdrop-blur-md p-4 rounded-2xl border border-slate-800/80 shadow-lg">
           <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
             <ArrowUpDown className="h-3.5 w-3.5 text-slate-500" />
@@ -132,7 +139,7 @@ export default function TurfsPage() {
                 onClick={() => setSortBy(option.id)}
                 className={`px-4 h-9 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
                   sortBy === option.id
-                    ? 'bg-gradient-to-r from-emerald-600 to-[#1e6b3e] border-emerald-500/20 text-white shadow-md shadow-emerald-950/50'
+                    ? 'bg-gradient-to-r from-emerald-600 to-[#1e6b3e] border-emerald-500/20 text-white shadow-md'
                     : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white'
                 }`}
               >
@@ -144,8 +151,8 @@ export default function TurfsPage() {
 
         {/* --- মেইন কন্টেন্ট লেআউট --- */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          {/* --- বাম পাশের অ্যাডভান্সড ফিল্টার সাইডবার --- */}
-          <div className="lg:col-span-1 bg-slate-900/40 backdrop-blur-md p-6 rounded-[24px] border border-slate-800/80 shadow-xl space-y-6 lg:sticky lg:top-6">
+          {/* --- বাম পাশের ফিল্টার সাইডবার --- */}
+          <div className="lg:col-span-1 bg-slate-900/40 backdrop-blur-md p-6 rounded-[24px] border border-slate-800/80 shadow-xl space-y-6 lg:sticky lg:top-24">
             <div className="flex items-center gap-2 border-b border-slate-800/60 pb-4">
               <Filter className="h-4 w-4 text-emerald-400" />
               <h2 className="font-bold text-white text-sm tracking-tight">Filter Settings</h2>
@@ -163,7 +170,7 @@ export default function TurfsPage() {
                     <button
                       key={sport}
                       onClick={() => setSelectedSport(sport)}
-                      className={`h-11 px-4 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer border ${
+                      className={`h-11 px-4 rounded-xl text-left text-xs font-bold transition-all duration-200 flex items-center justify-between cursor-pointer border ${
                         isSelected
                           ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
                           : 'text-slate-400 bg-slate-950/20 border-slate-800 hover:bg-slate-900 hover:text-white'
@@ -179,7 +186,7 @@ export default function TurfsPage() {
               </div>
             </div>
 
-            {/* প্রাইস স্লাইডার */}
+            {/* প্রাইজ স্লাইডার */}
             <div className="space-y-4 pt-2">
               <div className="flex justify-between items-center">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
@@ -205,32 +212,32 @@ export default function TurfsPage() {
             </div>
           </div>
 
-          {/* --- ডান পাশের রি-ডিজাইন করা লাক্সারি টার্ফ কার্ড গ্রিড --- */}
+          {/* --- ডান পাশের কিলার স্মুথ গ্রিড --- */}
           <div className="lg:col-span-3">
-            <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatePresence mode="popLayout">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <AnimatePresence>
                 {processedTurfs.length > 0 ? (
                   processedTurfs.map((turf) => (
                     <motion.div
                       key={turf.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
+                      layout={true} // ডাইনামিক বাবলিং ছাড়াই পজিশন শিফটিং গ্যারান্টি
+                      initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.35, ease: 'easeOut' }}
-                      className="group bg-slate-900/40 backdrop-blur-md rounded-[24px] border border-slate-800/80 overflow-hidden flex flex-col justify-between shadow-lg hover:shadow-[0_20px_50px_rgba(30,107,62,0.08)] hover:border-slate-700 transition-all duration-300"
+                      transition={cardTransition}
+                      whileHover={{ y: -6 }}
+                      className="group bg-slate-900/40 backdrop-blur-md rounded-[24px] border border-slate-800/80 overflow-hidden flex flex-col justify-between shadow-lg hover:border-emerald-500/20 transition-all duration-300"
                     >
-                      {/* ইমেজ এবং টপ ফ্ল্যাশের কন্টেইনার */}
+                      {/* ইমেজ স্লট */}
                       <div className="relative h-56 w-full overflow-hidden bg-slate-950">
                         <img
                           src={turf.image}
                           alt={turf.name}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100 transition-opacity"
+                          className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500 ease-out opacity-80"
                         />
-                        {/* গ্লসি শ্যাডো ওভারলে */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
 
-                        {/* লাইভ এভেইলেবিলিটি পালস ব্যাজ */}
+                        {/* লাইভ ব্যাজ */}
                         <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/60 shadow-sm text-[10px] font-black uppercase tracking-wider">
                           <span
                             className={`h-2 w-2 rounded-full ${turf.availableToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}
@@ -242,17 +249,16 @@ export default function TurfsPage() {
                           </span>
                         </div>
 
-                        {/* প্রিমিয়াম রেটিং ট্যাগ */}
+                        {/* রেটিং */}
                         <div className="absolute top-4 right-4 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-xs font-bold text-white shadow-sm border border-slate-800">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                           <span>{turf.rating}</span>
                         </div>
                       </div>
 
-                      {/* কার্ড বডি কন্টেন্ট */}
+                      {/* বডি ইনফো */}
                       <div className="p-6 flex-grow flex flex-col justify-between space-y-6">
                         <div className="space-y-3">
-                          {/* ক্যাটাগরি ও সাইজ চিপস */}
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
                               <Trophy className="h-3 w-3" />
@@ -263,22 +269,19 @@ export default function TurfsPage() {
                             </span>
                           </div>
 
-                          {/* মাঠের নাম */}
                           <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors tracking-tight line-clamp-1">
                             {turf.name}
                           </h3>
 
-                          {/* লোকেশন পিন */}
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                             <MapPin className="h-4 w-4 shrink-0 text-slate-600" />
                             <span className="line-clamp-1">{turf.location}</span>
                           </div>
                         </div>
 
-                        {/* ডিভাইডার লাইন */}
                         <div className="h-px bg-slate-800/60 w-full" />
 
-                        {/* প্রাইস ও বুকিং অ্যাকশন রো */}
+                        {/* রেট ও বোতাম */}
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
@@ -301,7 +304,6 @@ export default function TurfsPage() {
                     </motion.div>
                   ))
                 ) : (
-                  /* মডার্ন এম্পটি স্টেট */
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -320,7 +322,7 @@ export default function TurfsPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
