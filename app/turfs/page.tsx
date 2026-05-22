@@ -48,7 +48,7 @@ const DUMMY_TURFS = [
   },
 ];
 
-// কিলার ফ্লুইডিটির জন্য কাস্টম ট্রানজিশন কার্ভ
+// 🛠️ FIX: 'as const' ব্যবহার করে টাইপস্ক্রিপ্টের জেন can বি স্ট্রিং এরর লক করা হয়েছে
 const cardTransition = {
   type: 'spring',
   stiffness: 260,
@@ -86,7 +86,7 @@ export default function TurfsPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#090d16] font-jakarta py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-white">
-      {/* 🌌 ব্যাকগ্রাউন্ড গ্রিড */}
+      {/* 🌌 ব্যাকগ্রাউন্ড সাইরেন গ্রিড */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.15] pointer-events-none" />
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-[#1e6b3e]/10 blur-[130px] rounded-full pointer-events-none" />
 
@@ -212,7 +212,7 @@ export default function TurfsPage() {
             </div>
           </div>
 
-          {/* --- ডান পাশের কিলার স্মুথ গ্রিড --- */}
+          {/* --- ডান পাশের সুপার-ফ্লুইড কার্ড গ্রিড --- */}
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <AnimatePresence>
@@ -220,7 +220,7 @@ export default function TurfsPage() {
                   processedTurfs.map((turf) => (
                     <motion.div
                       key={turf.id}
-                      layout={true} // ডাইনামিক বাবলিং ছাড়াই পজিশন শিফটিং গ্যারান্টি
+                      layout={true}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -228,17 +228,17 @@ export default function TurfsPage() {
                       whileHover={{ y: -6 }}
                       className="group bg-slate-900/40 backdrop-blur-md rounded-[24px] border border-slate-800/80 overflow-hidden flex flex-col justify-between shadow-lg hover:border-emerald-500/20 transition-all duration-300"
                     >
-                      {/* ইমেজ স্লট */}
-                      <div className="relative h-56 w-full overflow-hidden bg-slate-950">
+                      {/* --- ইমেজ স্লট (🛠️ Overflow ও ফ্লিকারিং বাগ ফিক্সড) --- */}
+                      <div className="relative h-56 w-full overflow-hidden rounded-t-[24px] bg-slate-950 isolation-isolate">
                         <img
                           src={turf.image}
                           alt={turf.name}
-                          className="h-full w-full object-cover group-hover:scale-102 transition-transform duration-500 ease-out opacity-80"
+                          className="h-full w-full object-cover will-change-transform transform-gpu group-hover:scale-105 transition-transform duration-700 ease-out opacity-80 group-hover:opacity-100"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
 
                         {/* লাইভ ব্যাজ */}
-                        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/60 shadow-sm text-[10px] font-black uppercase tracking-wider">
+                        <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/60 shadow-sm text-[10px] font-black uppercase tracking-wider select-none">
                           <span
                             className={`h-2 w-2 rounded-full ${turf.availableToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}
                           />
@@ -250,13 +250,13 @@ export default function TurfsPage() {
                         </div>
 
                         {/* রেটিং */}
-                        <div className="absolute top-4 right-4 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-xs font-bold text-white shadow-sm border border-slate-800">
+                        <div className="absolute top-4 right-4 bg-slate-950/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-xs font-bold text-white shadow-sm border border-slate-800 select-none">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                           <span>{turf.rating}</span>
                         </div>
                       </div>
 
-                      {/* বডি ইনফো */}
+                      {/* কার্ড বডি কন্টেন্ট */}
                       <div className="p-6 flex-grow flex flex-col justify-between space-y-6">
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
@@ -294,7 +294,7 @@ export default function TurfsPage() {
                           </div>
 
                           <Link href={`/turfs/${turf.id}`}>
-                            <Button className="h-11 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs px-5 rounded-xl shadow-md shadow-emerald-950/50 active:scale-95 border border-emerald-500/20 transition-all cursor-pointer flex items-center gap-2">
+                            <Button className="h-11 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs px-5 rounded-xl shadow-md shadow-emerald-950/50 active:scale-95 border border-emerald-500/20 transition-all duration-300 cursor-pointer flex items-center gap-2">
                               <Calendar className="h-4 w-4" />
                               Book Slot
                             </Button>
