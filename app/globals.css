@@ -126,6 +126,37 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
+  }
+  
+  /* Selection styling */
+  ::selection {
+    @apply bg-emerald-500/30 text-emerald-300;
+  }
+
+  /* Sleek custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #090d16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #111b2d;
+    border: 2px solid #090d16;
+    border-radius: 9999px;
+    transition: background 0.3s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1e6b3e;
+  }
+
+  /* Global desktop cursor hide override */
+  @media (pointer: fine) {
+    .custom-cursor-active,
+    .custom-cursor-active * {
+      cursor: none !important;
+    }
   }
 }

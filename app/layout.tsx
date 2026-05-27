@@ -3,6 +3,7 @@ import Navbar from '@/components/common/Navbar';
 import { Providers } from '@/providers';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import CustomCursor from '@/components/ui/CustomCursor';
 import './globals.css';
 
 // ফন্ট কনফিগারেশন
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${jakartaSans.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body 
@@ -42,6 +44,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <CustomCursor />
         </Providers>
       </body>
     </html>
