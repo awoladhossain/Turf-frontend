@@ -1,27 +1,41 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { Languages, Menu, Trophy, UserCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Languages, Menu, Trophy, UserCircle, LogOut, ChevronDown, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
       setScrolled(window.scrollY > 15);
     };
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const toggleLanguage = () => {
@@ -109,25 +123,86 @@ export default function Navbar() {
 
           {/* User Auth Actions */}
           <div className="flex items-center gap-2">
-            <Magnetic range={20} actionStrength={0.2}>
-              <Link href="/login" className="hidden sm:block" data-cursor-text="LOGIN">
-                <Button
-                  variant="ghost"
-                  className="h-9 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white flex items-center gap-1.5 px-3.5 hover:bg-slate-900/40 rounded-lg transition-all cursor-pointer"
-                >
-                  <UserCircle className="h-3.5 w-3.5 text-slate-550" />
-                  <span>{t('navbar.login')}</span>
-                </Button>
-              </Link>
-            </Magnetic>
+            {isAuthenticated && user ? (
+              <div ref={dropdownRef} className="relative">
+                <Magnetic range={15} actionStrength={0.25}>
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800 bg-[#0d1425]/40 hover:bg-slate-900/60 transition-all duration-300 text-xs font-bold text-slate-350 hover:text-white cursor-pointer select-none"
+                    data-cursor-text="USER"
+                  >
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-emerald-600 to-[#1e6b3e] flex items-center justify-center text-[10px] font-black text-white uppercase shadow-sm">
+                      {user.name ? user.name.charAt(0) : 'U'}
+                    </div>
+                    <span className="hidden md:inline max-w-[100px] truncate">{user.name}</span>
+                    <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </Magnetic>
 
-            <Magnetic range={25} actionStrength={0.25}>
-              <Link href="/register" data-cursor-text="JOIN">
-                <Button className="h-9 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white rounded-lg px-4.5 font-black text-[10px] uppercase tracking-wider shadow-sm border border-emerald-500/10 active:scale-95 transition-all cursor-pointer">
-                  Sign Up
-                </Button>
-              </Link>
-            </Magnetic>
+                {/* Dropdown Card */}
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="absolute right-0 mt-2 w-52 bg-[#0c1324]/90 backdrop-blur-2xl border border-slate-800 rounded-2xl p-2.5 shadow-[0_15px_40px_rgba(0,0,0,0.6)] z-50 overflow-hidden font-jakarta"
+                    >
+                      {/* User Info Header */}
+                      <div className="px-3 py-2 border-b border-slate-900/80 mb-1.5">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Logged in as</p>
+                        <p className="text-xs font-black text-white truncate mt-0.5">{user.name}</p>
+                        <p className="text-[10px] font-semibold text-slate-400 truncate mt-0.5">{user.email}</p>
+                      </div>
+
+                      {/* Dropdown Options */}
+                      <div className="space-y-1">
+                        <Link href="/dashboard" onClick={() => setDropdownOpen(false)}>
+                          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors duration-300 font-bold">
+                            <LayoutDashboard className="h-4 w-4 text-emerald-400" />
+                            <span>{user.role === 'ADMIN' ? 'Admin Panel' : 'My Bookings'}</span>
+                          </div>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            setDropdownOpen(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors duration-300 font-bold cursor-pointer"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <>
+                <Magnetic range={20} actionStrength={0.2}>
+                  <Link href="/login" className="hidden sm:block" data-cursor-text="LOGIN">
+                    <Button
+                      variant="ghost"
+                      className="h-9 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-white flex items-center gap-1.5 px-3.5 hover:bg-slate-900/40 rounded-lg transition-all cursor-pointer"
+                    >
+                      <UserCircle className="h-3.5 w-3.5 text-slate-550" />
+                      <span>{t('navbar.login')}</span>
+                    </Button>
+                  </Link>
+                </Magnetic>
+
+                <Magnetic range={25} actionStrength={0.25}>
+                  <Link href="/register" data-cursor-text="JOIN">
+                    <Button className="h-9 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white rounded-lg px-4.5 font-black text-[10px] uppercase tracking-wider shadow-sm border border-emerald-500/10 active:scale-95 transition-all cursor-pointer">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </Magnetic>
+              </>
+            )}
           </div>
 
           {/* Mobile Hamburg Menu */}

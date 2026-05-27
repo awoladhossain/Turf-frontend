@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useAppDispatch } from '@/store/hooks';
-import { setCredentials } from '@/store/slices/authSlice';
-import { Lock, Mail, Trophy, User, Sparkles } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Lock, Mail, Trophy, User, Sparkles, Phone } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +12,11 @@ import Magnetic from '@/components/ui/Magnetic';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
+  const { register, isRegistering } = useAuth();
 
   // Form States
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -112,38 +111,14 @@ export default function RegisterPage() {
     });
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
       return toast.error('Passwords do not match!');
     }
 
-    setLoading(true);
-
-    try {
-      // 🛠️ Fixed TS Typing by providing phone, isVerified, and createdAt
-      const dummyUser = {
-        user: { 
-          id: '2', 
-          name: name, 
-          email: email, 
-          role: 'USER' as const,
-          phone: '01712345678',
-          isVerified: true,
-          createdAt: new Date().toISOString()
-        },
-        accessToken: 'dummy-token-reg',
-        refreshToken: 'dummy-refresh-reg',
-      };
-
-      dispatch(setCredentials(dummyUser));
-      toast.success('Account created successfully!');
-    } catch (err) {
-      toast.error('Registration failed. Try again.');
-    } finally {
-      setLoading(false);
-    }
+    register({ name, email, phone, password });
   };
 
   return (
@@ -275,6 +250,19 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Phone input field */}
+          <div className="relative group will-change-transform">
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors duration-300" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone number"
+              className="w-full h-12 pl-11 pr-4 rounded-xl border border-slate-800/80 bg-slate-950/40 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all text-sm font-semibold text-white placeholder-slate-500"
+              required
+            />
+          </div>
+
           {/* Create Password input field */}
           <div className="relative group will-change-transform">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors duration-300" />
@@ -329,11 +317,11 @@ export default function RegisterPage() {
           <div className="pt-2 will-change-transform">
             <Magnetic range={25} actionStrength={0.25}>
               <Button
-                disabled={loading}
+                disabled={isRegistering}
                 className="w-full h-12 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-950/40 border border-emerald-500/20 active:scale-95 cursor-pointer"
                 data-cursor-text="JOIN"
               >
-                {loading ? 'Creating Account...' : 'Get Started'}
+                {isRegistering ? 'Creating Account...' : 'Get Started'}
               </Button>
             </Magnetic>
           </div>

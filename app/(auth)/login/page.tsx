@@ -2,19 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useAppDispatch } from '@/store/hooks';
-import { setCredentials } from '@/store/slices/authSlice';
+import { useAuth } from '@/hooks/useAuth';
 import { HelpCircle, Lock, Mail, Trophy, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
+  const { login, isLoggingIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -107,33 +104,9 @@ export default function LoginPage() {
     });
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      // 🛠️ Fixed TS Typing by providing phone, isVerified, and createdAt
-      const dummyUser = {
-        user: { 
-          id: '1', 
-          name: 'Awolad Hossain', 
-          email: email, 
-          role: 'USER' as const,
-          phone: '01712345678',
-          isVerified: true,
-          createdAt: new Date().toISOString()
-        },
-        accessToken: 'dummy-token',
-        refreshToken: 'dummy-refresh',
-      };
-
-      dispatch(setCredentials(dummyUser));
-      toast.success('Sign in successful!');
-    } catch (err) {
-      toast.error('Invalid credentials!');
-    } finally {
-      setLoading(false);
-    }
+    login({ email, password });
   };
 
   return (
@@ -288,11 +261,11 @@ export default function LoginPage() {
           <div className="pt-2 will-change-transform">
             <Magnetic range={25} actionStrength={0.25}>
               <Button
-                disabled={loading}
+                disabled={isLoggingIn}
                 className="w-full h-12 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-950/40 border border-emerald-500/20 active:scale-95 cursor-pointer"
                 data-cursor-text="SIGNIN"
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {isLoggingIn ? 'Signing In...' : 'Sign In'}
               </Button>
             </Magnetic>
           </div>
