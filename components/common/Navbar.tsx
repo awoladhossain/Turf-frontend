@@ -17,7 +17,12 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
@@ -165,6 +170,13 @@ export default function Navbar() {
                           </div>
                         </Link>
 
+                        <Link href="/profile" onClick={() => setDropdownOpen(false)}>
+                          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors duration-300 font-bold">
+                            <UserCircle className="h-4 w-4 text-emerald-400" />
+                            <span>My Profile</span>
+                          </div>
+                        </Link>
+
                         <button
                           onClick={() => {
                             setDropdownOpen(false);
@@ -210,6 +222,7 @@ export default function Navbar() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden h-9 w-9 rounded-lg border border-slate-900 bg-[#0d1425]/20 text-slate-400 hover:text-white hover:bg-slate-900/40 cursor-pointer flex items-center justify-center"
             >
               <Menu className="h-4.5 w-4.5" />
@@ -218,6 +231,109 @@ export default function Navbar() {
         </div>
 
       </div>
+
+      {/* Mobile Menu Sliding Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden w-full bg-[#050811]/95 backdrop-blur-2xl border-t border-slate-900 px-6 py-6 space-y-6 overflow-hidden z-40 relative"
+          >
+            {/* Navigation Links */}
+            <div className="flex flex-col gap-2.5">
+              {[
+                { id: 'find_turf', path: '/turfs', label: 'Explore Arenas' },
+                { id: 'offers', path: '/offers', label: 'Offers & Discounts' },
+                { id: 'about', path: '/about', label: 'About Us' },
+              ].map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.path}
+                    className={`h-11 w-full px-4 rounded-xl border flex items-center transition-all text-xs font-black uppercase tracking-wider ${
+                      isActive
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                        : 'bg-slate-950/20 border-slate-900 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="h-[1px] bg-slate-900 w-full" />
+
+            {/* Action Buttons for Mobile */}
+            <div className="flex flex-col gap-3">
+              {/* Language switcher */}
+              <button
+                onClick={toggleLanguage}
+                className="h-11 w-full flex items-center justify-center gap-2 rounded-xl border border-slate-900 bg-[#0d1425]/20 hover:bg-slate-900/60 font-black text-xs uppercase tracking-wider text-slate-400 hover:text-white transition-all cursor-pointer"
+              >
+                <Languages className="h-4 w-4 text-emerald-450" />
+                <span>{i18n.language === 'en' ? 'বাংলা' : 'English'}</span>
+              </button>
+
+              {/* Login/Signup or User Menu */}
+              {isAuthenticated && user ? (
+                <div className="space-y-3">
+                  <div className="px-2 py-1">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">Logged in as</p>
+                    <p className="text-xs font-black text-white truncate mt-0.5">{user.name}</p>
+                    <p className="text-[10px] font-semibold text-slate-400 truncate">{user.email}</p>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <Link href="/dashboard">
+                      <div className="h-11 w-full px-4 rounded-xl border border-slate-900 bg-[#0d1425]/20 flex items-center gap-2.5 text-xs text-slate-400 hover:text-white font-bold">
+                        <LayoutDashboard className="h-4 w-4 text-emerald-450" />
+                        <span>{user.role === 'ADMIN' ? 'Admin Panel' : 'My Bookings'}</span>
+                      </div>
+                    </Link>
+
+                    <Link href="/profile">
+                      <div className="h-11 w-full px-4 rounded-xl border border-slate-900 bg-[#0d1425]/20 flex items-center gap-2.5 text-xs text-slate-400 hover:text-white font-bold">
+                        <UserCircle className="h-4 w-4 text-emerald-450" />
+                        <span>My Profile</span>
+                      </div>
+                    </Link>
+
+                    <button
+                      onClick={() => {
+                        logout();
+                      }}
+                      className="h-11 w-full px-4 rounded-xl border border-rose-950/20 bg-rose-500/5 flex items-center gap-2.5 text-xs text-rose-400 hover:text-rose-300 font-bold cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <Link href="/login" className="w-full">
+                    <button className="h-11 w-full text-xs font-black uppercase tracking-wider text-slate-400 hover:text-white flex items-center justify-center gap-2 hover:bg-slate-900/40 rounded-xl transition-all cursor-pointer border border-slate-900">
+                      <UserCircle className="h-4 w-4 text-slate-550" />
+                      <span>Login</span>
+                    </button>
+                  </Link>
+
+                  <Link href="/register" className="w-full">
+                    <button className="h-11 w-full bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-sm border border-emerald-500/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+                      Sign Up
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
