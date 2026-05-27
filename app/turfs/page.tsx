@@ -9,6 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Magnetic from '@/components/ui/Magnetic';
 import { useQuery } from '@tanstack/react-query';
 import turfService from '@/services/turf.service';
+import { useAuth } from '@/hooks/useAuth';
 
 // Register ScrollTrigger safely
 if (typeof window !== 'undefined') {
@@ -16,6 +17,7 @@ if (typeof window !== 'undefined') {
 }
 
 export default function TurfsPage() {
+  const { user } = useAuth();
   const [selectedSport, setSelectedSport] = useState('All');
   const [priceRange, setPriceRange] = useState(5000);
   const [searchQuery, setSearchQuery] = useState('');
@@ -270,19 +272,33 @@ export default function TurfsPage() {
             </p>
           </div>
 
-          {/* Search box input */}
-          <div 
-            ref={searchInputRef}
-            className="relative w-full md:w-72 group will-change-transform"
-          >
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors duration-300" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="মাঠ বা লোকেশনের নাম লিখুন..."
-              className="w-full h-11 pl-9 pr-4 rounded-xl border border-slate-900 bg-[#0d1425]/20 backdrop-blur-md focus:border-emerald-500/25 outline-none transition-all text-xs font-semibold text-white placeholder-slate-550 shadow-inner"
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            {/* Admin Action Control */}
+            {user?.role === 'ADMIN' && (
+              <Magnetic range={15} actionStrength={0.25}>
+                <Link href="/admin/turfs/create" className="shrink-0">
+                  <Button className="h-11 bg-gradient-to-r from-amber-600 to-[#b57a07] hover:from-amber-400 hover:to-[#996403] text-white font-bold text-[10px] uppercase tracking-wider px-4 rounded-xl border border-amber-500/10 transition-all duration-300 cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-950/20 active:scale-95">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
+                    <span>Create Arena</span>
+                  </Button>
+                </Link>
+              </Magnetic>
+            )}
+
+            {/* Search box input */}
+            <div 
+              ref={searchInputRef}
+              className="relative w-full md:w-72 group will-change-transform"
+            >
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors duration-300" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="মাঠ বা লোকেশনের নাম লিখুন..."
+                className="w-full h-11 pl-9 pr-4 rounded-xl border border-slate-900 bg-[#0d1425]/20 backdrop-blur-md focus:border-emerald-500/25 outline-none transition-all text-xs font-semibold text-white placeholder-slate-550 shadow-inner"
+              />
+            </div>
           </div>
         </div>
 

@@ -39,6 +39,21 @@ class TurfService {
     });
     return response.data;
   }
+
+  async createTurf(dto: {
+    name: string;
+    description?: string;
+    address: string;
+    city: string;
+    sportType: 'FOOTBALL' | 'CRICKET' | 'BOTH';
+    pricePerHour: number;
+    openTime: string;
+    closeTime: string;
+    images?: string[];
+  }): Promise<Turf> {
+    const response = await api.post<Turf>('/turfs', dto);
+    return response.data;
+  }
 }
 
 const turfService = new TurfService();
