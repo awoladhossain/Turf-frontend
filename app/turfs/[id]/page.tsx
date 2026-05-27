@@ -350,6 +350,15 @@ export default function TurfDetailPage() {
                     <span className="text-[8px] font-black text-slate-400 bg-slate-950/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-slate-800">
                       Active Arena
                     </span>
+                    {user?.role === 'ADMIN' && (
+                      <Link 
+                        href={`/admin/turfs/edit/${id}`}
+                        className="text-[8px] font-black text-amber-450 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1 rounded-md border border-amber-500/30 backdrop-blur-md flex items-center gap-1 transition-all select-none cursor-pointer"
+                      >
+                        <PenSquare className="h-3 w-3 text-amber-350" />
+                        Edit Settings (Admin)
+                      </Link>
+                    )}
                   </div>
                   
                   <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">

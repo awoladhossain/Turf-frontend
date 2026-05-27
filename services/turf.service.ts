@@ -54,6 +54,26 @@ class TurfService {
     const response = await api.post<Turf>('/turfs', dto);
     return response.data;
   }
+
+  async updateTurf(id: string, dto: Partial<{
+    name: string;
+    description: string;
+    address: string;
+    city: string;
+    sportType: 'FOOTBALL' | 'CRICKET' | 'BOTH';
+    pricePerHour: number;
+    openTime: string;
+    closeTime: string;
+    images?: string[];
+  }>): Promise<Turf> {
+    const response = await api.patch<Turf>(`/turfs/${id}`, dto);
+    return response.data;
+  }
+
+  async deleteTurf(id: string): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`/turfs/${id}`);
+    return response.data;
+  }
 }
 
 const turfService = new TurfService();
