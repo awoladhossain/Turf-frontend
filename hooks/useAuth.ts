@@ -37,7 +37,10 @@ export function useAuth() {
     onSuccess: (data) => {
       dispatch(setCredentials(data));
       toast.success('Successfully logged in! ⚽');
-      router.push('/'); // Redirect to homepage or dashboard
+      const redirectPath = typeof window !== 'undefined'
+        ? (new URLSearchParams(window.location.search).get('redirect') || '/')
+        : '/';
+      router.push(redirectPath);
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Invalid email or password!';
