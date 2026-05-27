@@ -17,7 +17,7 @@ export function useAuth() {
   const { user, isAuthenticated, accessToken } = useAppSelector((state) => state.auth);
 
   // 2. TanStack Query: GET ME (Auto-sync fresh profile details on mount/refresh)
-  const { data: freshUser, isLoading: isFetchingMe, refetch: refetchMe } = useQuery({
+  const { data: freshUser, isLoading: isFetchingMe, refetch: refetchMe, error: meError } = useQuery({
     queryKey: ['auth-me'],
     queryFn: () => authService.getMe(),
     enabled: !!accessToken && isAuthenticated,
@@ -30,6 +30,16 @@ export function useAuth() {
       dispatch(updateUser(freshUser));
     }
   }, [freshUser, dispatch]);
+
+  // Handle unauthorized getMe error (Expired token)
+  useEffect(() => {
+    if (meError) {
+      const status = (meError as any)?.response?.status;
+      if (status === 401) {
+        dispatch(logoutAction());
+      }
+    }
+  }, [meError, dispatch]);
 
   // 3. TanStack Query Mutation: LOGIN
   const loginMutation = useMutation({

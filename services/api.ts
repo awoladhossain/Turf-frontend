@@ -1,5 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { store } from '../store';
+import { logout } from '../store/slices/authSlice';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BASE_URL,
@@ -19,6 +20,17 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error),
+);
+
+// response interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      store.dispatch(logout());
+    }
+    return Promise.reject(error);
+  },
 );
 
 export default api;
