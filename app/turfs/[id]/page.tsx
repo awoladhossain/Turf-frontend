@@ -32,13 +32,16 @@ export default function TurfDetailPage() {
   const loginAlertRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
 
-  // 1. Fetch live turf details (only if authenticated to comply with backend route restriction)
-  const { data: turf, isLoading, error } = useQuery({
-    queryKey: ['turf', id],
-    queryFn: () => turfService.getTurfById(id),
-    enabled: !!id && isAuthenticated,
+  // 1. Fetch live turf details & available slots for the selected date
+  const { data: slotsData, isLoading, error } = useQuery({
+    queryKey: ['turf-slots', id, selectedDate],
+    queryFn: () => turfService.getTurfSlots(id, selectedDate),
+    enabled: !!id && !!selectedDate && isAuthenticated,
     retry: 1,
   });
+
+  const turf = slotsData?.turf;
+  const slots = slotsData?.slots || [];
 
   // Generate date options for the next 7 days
   const dateOptions = useMemo(() => {
@@ -70,33 +73,6 @@ export default function TurfDetailPage() {
       setSelectedDate(dateOptions[0].iso);
     }
   }, [dateOptions]);
-
-  // Mock slot data based on turf operating hours
-  const slots = useMemo(() => {
-    if (!turf) return [];
-    
-    // Parse times (e.g. "06:00" and "23:30")
-    const openHour = parseInt(turf.openTime.split(':')[0]) || 6;
-    const closeHour = parseInt(turf.closeTime.split(':')[0]) || 23;
-    
-    const generatedSlots = [];
-    let slotHour = openHour;
-    
-    while (slotHour < closeHour) {
-      const startStr = `${String(slotHour).padStart(2, '0')}:00`;
-      const endStr = `${String(slotHour + 1).padStart(2, '0')}:30`;
-      const isBookedMock = (slotHour * 7) % 5 === 0; // Deterministic booked status for testing
-      
-      generatedSlots.push({
-        id: `slot-${slotHour}`,
-        startTime: startStr,
-        endTime: endStr,
-        isBooked: isBookedMock,
-      });
-      slotHour += 2; // 2 hour intervals
-    }
-    return generatedSlots;
-  }, [turf]);
 
   // Setup GSAP entrance animations for details page
   useEffect(() => {

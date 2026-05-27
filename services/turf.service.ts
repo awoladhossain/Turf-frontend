@@ -1,5 +1,5 @@
 import api from './api';
-import { Turf, TurfQueryParams } from '@/types/turf.types';
+import { Turf, TurfQueryParams, Slot } from '@/types/turf.types';
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -30,6 +30,13 @@ class TurfService {
 
   async getTurfById(id: string): Promise<Turf> {
     const response = await api.get<Turf>(`/turfs/${id}`);
+    return response.data;
+  }
+
+  async getTurfSlots(id: string, date: string): Promise<{ turf: Turf; slots: Slot[]; date: string }> {
+    const response = await api.get<{ turf: Turf; slots: Slot[]; date: string }>(`/turfs/${id}/slots`, {
+      params: { date },
+    });
     return response.data;
   }
 }
