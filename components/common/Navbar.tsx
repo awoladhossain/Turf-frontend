@@ -165,6 +165,13 @@ export default function Navbar() {
                           </div>
                         </Link>
 
+                        <Link href="/profile" onClick={() => setDropdownOpen(false)}>
+                          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors duration-300 font-bold">
+                            <UserCircle className="h-4 w-4 text-emerald-400" />
+                            <span>My Profile</span>
+                          </div>
+                        </Link>
+
                         <button
                           onClick={() => {
                             setDropdownOpen(false);

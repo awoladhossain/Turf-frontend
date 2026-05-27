@@ -1,8 +1,9 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setCredentials, logout as logoutAction } from '@/store/slices/authSlice';
+import { setCredentials, logout as logoutAction, updateUser } from '@/store/slices/authSlice';
 import authService from '@/services/auth.service';
 import { LoginDto, RegisterDto } from '@/types/auth.types';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,22 @@ export function useAuth() {
   // 1. Redux from Auth State
   const { user, isAuthenticated, accessToken } = useAppSelector((state) => state.auth);
 
-  // 2. TanStack Query Mutation: LOGIN
+  // 2. TanStack Query: GET ME (Auto-sync fresh profile details on mount/refresh)
+  const { data: freshUser, isLoading: isFetchingMe, refetch: refetchMe } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => authService.getMe(),
+    enabled: !!accessToken && isAuthenticated,
+    retry: false,
+  });
+
+  // Auto-sync fresh data to Redux when query succeeds
+  useEffect(() => {
+    if (freshUser) {
+      dispatch(updateUser(freshUser));
+    }
+  }, [freshUser, dispatch]);
+
+  // 3. TanStack Query Mutation: LOGIN
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginDto) => authService.login(credentials),
     onSuccess: (data) => {
@@ -29,7 +45,7 @@ export function useAuth() {
     },
   });
 
-  // 3. TanStack Query Mutation: REGISTER
+  // 4. TanStack Query Mutation: REGISTER
   const registerMutation = useMutation({
     mutationFn: (userData: RegisterDto) => authService.register(userData),
     onSuccess: (data) => {
@@ -43,7 +59,21 @@ export function useAuth() {
     },
   });
 
-  // 4. LOGOUT Action
+  // 5. TanStack Query Mutation: UPDATE PROFILE
+  const updateProfileMutation = useMutation({
+    mutationFn: (profileData: { name: string; phone: string }) => authService.updateProfile(profileData),
+    onSuccess: (data) => {
+      dispatch(updateUser(data));
+      toast.success('Profile updated successfully! 👤');
+      refetchMe(); // Refresh the getMe query
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to update profile. Try again!';
+      toast.error(message);
+    },
+  });
+
+  // 6. LOGOUT Action
   const logout = () => {
     dispatch(logoutAction());
     toast.success('Logged out successfully.');
@@ -55,6 +85,8 @@ export function useAuth() {
     user,
     isAuthenticated,
     accessToken,
+    isFetchingMe,
+    refetchMe,
     
     // Login Action & State
     login: loginMutation.mutate,
@@ -65,6 +97,11 @@ export function useAuth() {
     register: registerMutation.mutate,
     isRegistering: registerMutation.isPending,
     registerError: registerMutation.error,
+
+    // Update Profile Action & State
+    updateProfile: updateProfileMutation.mutate,
+    isUpdatingProfile: updateProfileMutation.isPending,
+    updateProfileError: updateProfileMutation.error,
 
     // Logout Action
     logout,
