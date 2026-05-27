@@ -80,6 +80,8 @@ export default function Navbar() {
           {[
             { id: 'find_turf', path: '/turfs' },
             { id: 'offers', path: '/offers' },
+            { id: 'gallery', path: '/gallery' },
+            { id: 'live', path: '/live' },
             { id: 'about', path: '/about' },
           ].map((item) => {
             const isActive = pathname === item.path;
@@ -247,6 +249,8 @@ export default function Navbar() {
               {[
                 { id: 'find_turf', path: '/turfs', label: 'Explore Arenas' },
                 { id: 'offers', path: '/offers', label: 'Offers & Discounts' },
+                { id: 'gallery', path: '/gallery', label: 'Gallery & Events' },
+                { id: 'live', path: '/live', label: 'Live Stream' },
                 { id: 'about', path: '/about', label: 'About Us' },
               ].map((item) => {
                 const isActive = pathname === item.path;
