@@ -46,79 +46,83 @@ export default function Home() {
     };
     document.addEventListener('mousedown', handleClickOutside);
 
-    // --- 1. Reset initial opacity before timeline triggers ---
-    gsap.set([badgeRef.current, subtitleRef.current, searchBarRef.current, trustBadgeContainerRef.current, locationChipsRef.current], { 
-      opacity: 0, 
-      y: 20 
-    });
-    gsap.set([orbit1Ref.current, orbit2Ref.current], { opacity: 0, scale: 0.95 });
-    
-    // Hide letters initially for 3D stagger
-    gsap.set(".char-anim", { opacity: 0, y: 30, rotateX: -30, transformOrigin: "top center" });
+    // Create GSAP context for proper cleanup during fast-refresh and back-navigation
+    const ctx = gsap.context(() => {
+      // --- 1. Reset initial opacity before timeline triggers ---
+      gsap.set([badgeRef.current, subtitleRef.current, searchBarRef.current, trustBadgeContainerRef.current, locationChipsRef.current], { 
+        opacity: 0, 
+        y: 20 
+      });
+      gsap.set([orbit1Ref.current, orbit2Ref.current], { opacity: 0, scale: 0.95 });
+      
+      // Hide letters initially for 3D stagger
+      gsap.set(".char-anim", { opacity: 0, y: 30, rotateX: -30, transformOrigin: "top center" });
 
-    // --- 2. Create high-end entrance timeline ---
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
+      // --- 2. Create high-end entrance timeline ---
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
 
-    // Background glows scale in
-    tl.to([orbit1Ref.current, orbit2Ref.current], {
-      opacity: (index) => (index === 0 ? 0.25 : 0.15),
-      scale: 1,
-      duration: 1.4,
-      stagger: 0.2
-    });
+      // Background glows scale in
+      tl.to([orbit1Ref.current, orbit2Ref.current], {
+        opacity: (index) => (index === 0 ? 0.25 : 0.15),
+        scale: 1,
+        duration: 1.4,
+        stagger: 0.2
+      });
 
-    // Staggered upward slide and fade-in reveals
-    tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=1.0');
-    
-    // 3D Letter-by-Letter stagger cascade
-    tl.to(".char-anim", {
-      opacity: 1,
-      y: 0,
-      rotateX: 0,
-      stagger: 0.012,
-      duration: 0.8,
-      ease: 'power4.out'
-    }, '-=0.8');
-    
-    // Subtitle reveal
-    tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.5');
-    
-    // Search bar elastic pop-up
-    tl.to(searchBarRef.current, { 
-      opacity: 1, 
-      y: 0, 
-      duration: 0.8,
-      ease: 'back.out(1.15)'
-    }, '-=0.4');
+      // Staggered upward slide and fade-in reveals
+      tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=1.0');
+      
+      // 3D Letter-by-Letter stagger cascade
+      tl.to(".char-anim", {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        stagger: 0.012,
+        duration: 0.8,
+        ease: 'power4.out'
+      }, '-=0.8');
+      
+      // Subtitle reveal
+      tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.5');
+      
+      // Search bar elastic pop-up
+      tl.to(searchBarRef.current, { 
+        opacity: 1, 
+        y: 0, 
+        duration: 0.8,
+        ease: 'back.out(1.15)'
+      }, '-=0.4');
 
-    // Location chips fade in
-    tl.to(locationChipsRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=0.6');
-    
-    // Trust badges reveal
-    tl.to(trustBadgeContainerRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
+      // Location chips fade in
+      tl.to(locationChipsRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=0.6');
+      
+      // Trust badges reveal
+      tl.to(trustBadgeContainerRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
 
-    // --- 3. Subtle floating animations for the orbits ---
-    gsap.to(orbit1Ref.current, {
-      y: '+=20',
-      x: '-=15',
-      duration: 12,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    });
+      // --- 3. Subtle floating animations for the orbits ---
+      gsap.to(orbit1Ref.current, {
+        y: '+=20',
+        x: '-=15',
+        duration: 12,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
 
-    gsap.to(orbit2Ref.current, {
-      y: '-=20',
-      x: '+=15',
-      duration: 14,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: 1.5
-    });
+      gsap.to(orbit2Ref.current, {
+        y: '-=20',
+        x: '+=15',
+        duration: 14,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        delay: 1.5
+      });
+    }, mainContainerRef);
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      ctx.revert(); // Reverts all GSAP modifications and kills timelines to avoid memory leaks/black screens
     };
   }, []);
 

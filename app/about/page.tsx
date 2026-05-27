@@ -56,72 +56,78 @@ export default function AboutPage() {
   const orbitRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // --- 1. Set initial clean states for elements ---
-    gsap.set([badgeRef.current, subtitleRef.current, statsRef.current, oathRef.current], { opacity: 0, y: 20 });
-    gsap.set(".char-anim", { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
-    gsap.set(".timeline-node", { opacity: 0, y: 30 });
+    // Create GSAP context for proper cleanup of ScrollTriggers and timelines during route navigation
+    const ctx = gsap.context(() => {
+      // --- 1. Set initial clean states for elements ---
+      gsap.set([badgeRef.current, subtitleRef.current, statsRef.current, oathRef.current], { opacity: 0, y: 20 });
+      gsap.set(".char-anim", { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
+      gsap.set(".timeline-node", { opacity: 0, y: 30 });
 
-    // --- 2. Build elegant entrance timelines ---
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
+      // --- 2. Build elegant entrance timelines ---
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
 
-    // Staggered upward slide and fade-in reveals
-    tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
-    
-    // Character cascade (Fast, fluid, premium stagger)
-    tl.to(".char-anim", {
-      opacity: 1,
-      y: 0,
-      rotateX: 0,
-      stagger: 0.012,
-      duration: 0.8,
-      ease: 'power4.out'
-    }, '-=0.4');
-
-    tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
-    tl.to(statsRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
-
-    // Stagger timeline card reveals as scroll approaches
-    gsap.fromTo(".timeline-node", 
-      { opacity: 0, y: 30 },
-      {
+      // Staggered upward slide and fade-in reveals
+      tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
+      
+      // Character cascade (Fast, fluid, premium stagger)
+      tl.to(".char-anim", {
         opacity: 1,
         y: 0,
-        stagger: 0.12,
-        duration: 0.7,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: ".timeline-container",
-          start: "top 80%",
-        }
-      }
-    );
-
-    // Founders oath reveal on scroll
-    gsap.fromTo(oathRef.current,
-      { opacity: 0, scale: 0.98, y: 30 },
-      {
-        opacity: 1,
-        scale: 1,
-        y: 0,
+        rotateX: 0,
+        stagger: 0.012,
         duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: ".oath-section",
-          start: "top 85%",
+        ease: 'power4.out'
+      }, '-=0.4');
+
+      tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
+      tl.to(statsRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
+
+      // Stagger timeline card reveals as scroll approaches
+      gsap.fromTo(".timeline-node", 
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.12,
+          duration: 0.7,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: ".timeline-container",
+            start: "top 80%",
+          }
         }
-      }
-    );
+      );
 
-    // Subtle background glowing float
-    gsap.to(orbitRef.current, {
-      y: '+=15',
-      x: '-=10',
-      duration: 10,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    });
+      // Founders oath reveal on scroll
+      gsap.fromTo(oathRef.current,
+        { opacity: 0, scale: 0.98, y: 30 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: ".oath-section",
+            start: "top 85%",
+          }
+        }
+      );
 
+      // Subtle background glowing float
+      gsap.to(orbitRef.current, {
+        y: '+=15',
+        x: '-=10',
+        duration: 10,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
+    }, pageContainerRef);
+
+    return () => {
+      ctx.revert(); // Cleanly kills all ScrollTriggers and reverts animations to prevent black screen bugs
+    };
   }, []);
 
   // --- 3. Spotlight coordinates tracking ---

@@ -52,55 +52,61 @@ export default function OffersPage() {
   const orbitRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // --- 1. Set initial states ---
-    gsap.set([badgeRef.current, subtitleRef.current, footerNoticeRef.current], { opacity: 0, y: 20 });
-    gsap.set(".char-anim", { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
-    
-    const offerCards = offersGridRef.current?.children;
-    if (offerCards) {
-      gsap.set(Array.from(offerCards), { opacity: 0, y: 30 });
-    }
+    // Create GSAP context for proper cleanup of ScrollTriggers and timelines during route navigation
+    const ctx = gsap.context(() => {
+      // --- 1. Set initial states ---
+      gsap.set([badgeRef.current, subtitleRef.current, footerNoticeRef.current], { opacity: 0, y: 20 });
+      gsap.set(".char-anim", { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
+      
+      const offerCards = offersGridRef.current?.children;
+      if (offerCards) {
+        gsap.set(Array.from(offerCards), { opacity: 0, y: 30 });
+      }
 
-    // --- 2. Build entrance timeline ---
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
+      // --- 2. Build entrance timeline ---
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
 
-    tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
-    
-    // Character split titles
-    tl.to(".char-anim", {
-      opacity: 1,
-      y: 0,
-      rotateX: 0,
-      stagger: 0.012,
-      duration: 0.8,
-      ease: 'power4.out'
-    }, '-=0.4');
-
-    tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
-
-    // Stagger voucher cards
-    if (offerCards) {
-      tl.to(Array.from(offerCards), {
+      tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
+      
+      // Character split titles
+      tl.to(".char-anim", {
         opacity: 1,
         y: 0,
-        stagger: 0.1,
-        duration: 0.7,
-        ease: 'power3.out'
-      }, '-=0.3');
-    }
+        rotateX: 0,
+        stagger: 0.012,
+        duration: 0.8,
+        ease: 'power4.out'
+      }, '-=0.4');
 
-    tl.to(footerNoticeRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2');
+      tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
 
-    // Float background glows
-    gsap.to(orbitRef.current, {
-      y: '+=15',
-      x: '-=15',
-      duration: 9,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    });
+      // Stagger voucher cards
+      if (offerCards) {
+        tl.to(Array.from(offerCards), {
+          opacity: 1,
+          y: 0,
+          stagger: 0.1,
+          duration: 0.7,
+          ease: 'power3.out'
+        }, '-=0.3');
+      }
 
+      tl.to(footerNoticeRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=0.2');
+
+      // Float background glows
+      gsap.to(orbitRef.current, {
+        y: '+=15',
+        x: '-=15',
+        duration: 9,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
+    }, pageContainerRef);
+
+    return () => {
+      ctx.revert(); // Revert all timelines and prevent memory leak / black screen bugs
+    };
   }, []);
 
   // --- 3. Spotlight coordinates tracking ---
