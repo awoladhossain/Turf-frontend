@@ -1,18 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import turfService from '@/services/turf.service';
-import { 
-  MapPin, Clock, Trophy, Sparkles, Star, Calendar, 
-  ChevronLeft, ArrowRight, ShieldAlert, BadgeInfo, DollarSign, PenSquare 
-} from 'lucide-react';
-import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
+import turfService from '@/services/turf.service';
+import { useQuery } from '@tanstack/react-query';
+import gsap from 'gsap';
+import {
+  ArrowRight,
+  BadgeInfo,
+  Calendar,
+  ChevronLeft,
+  Clock,
+  DollarSign,
+  MapPin,
+  PenSquare,
+  ShieldAlert,
+  Sparkles,
+  Star,
+  Trophy,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function TurfDetailPage() {
@@ -33,7 +43,11 @@ export default function TurfDetailPage() {
   const orbitRef = useRef<HTMLDivElement>(null);
 
   // 1. Fetch live turf details & available slots for the selected date
-  const { data: slotsData, isLoading, error } = useQuery({
+  const {
+    data: slotsData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['turf-slots', id, selectedDate],
     queryFn: () => turfService.getTurfSlots(id, selectedDate),
     enabled: !!id && !!selectedDate && isAuthenticated,
@@ -50,18 +64,18 @@ export default function TurfDetailPage() {
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       const isoDate = date.toISOString().split('T')[0];
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dayNum = date.getDate();
       const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-      
+
       dates.push({
         iso: isoDate,
         dayName,
         dayNum,
         monthName,
-        label: i === 0 ? 'Today' : `${dayName}, ${monthName} ${dayNum}`
+        label: i === 0 ? 'Today' : `${dayName}, ${monthName} ${dayNum}`,
       });
     }
     return dates;
@@ -85,7 +99,7 @@ export default function TurfDetailPage() {
           scale: 1,
           y: 0,
           duration: 0.8,
-          ease: 'power3.out'
+          ease: 'power3.out',
         });
       }, pageContainerRef);
       return;
@@ -96,14 +110,14 @@ export default function TurfDetailPage() {
     const ctx = gsap.context(() => {
       // Set initial state
       gsap.set('.animate-fade', { opacity: 0, y: 25 });
-      
+
       // Stagger entrance timeline
       gsap.to('.animate-fade', {
         opacity: 1,
         y: 0,
         stagger: 0.08,
         duration: 0.6,
-        ease: 'power2.out'
+        ease: 'power2.out',
       });
 
       // Continuous float animation for floating orb
@@ -113,7 +127,7 @@ export default function TurfDetailPage() {
         duration: 8,
         repeat: -1,
         yoyo: true,
-        ease: 'sine.inOut'
+        ease: 'sine.inOut',
       });
     }, pageContainerRef);
 
@@ -133,7 +147,7 @@ export default function TurfDetailPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
@@ -157,11 +171,12 @@ export default function TurfDetailPage() {
   // Fallback high-quality image provider
   const displayImage = useMemo(() => {
     if (!turf) return '';
-    const fallbackImage = turf.sportType === 'CRICKET'
-      ? 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=800'
-      : turf.sportType === 'BOTH'
-      ? 'https://images.unsplash.com/photo-1510563800743-aed2364902b8?auto=format&fit=crop&q=80&w=800'
-      : 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=800';
+    const fallbackImage =
+      turf.sportType === 'CRICKET'
+        ? 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=800'
+        : turf.sportType === 'BOTH'
+          ? 'https://images.unsplash.com/photo-1510563800743-aed2364902b8?auto=format&fit=crop&q=80&w=800'
+          : 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=800';
 
     return turf.images && turf.images.length > 0 && !turf.images[0].includes('example.com')
       ? turf.images[0]
@@ -169,35 +184,40 @@ export default function TurfDetailPage() {
   }, [turf]);
 
   const selectedSlotDetails = useMemo(() => {
-    return slots.find(s => s.id === selectedSlotId);
+    return slots.find((s) => s.id === selectedSlotId);
   }, [selectedSlotId, slots]);
 
   // --- protected State for Unauthenticated Guest Users ---
   if (!isAuthenticated) {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
-        <div 
+
+        <div
           ref={loginAlertRef}
           className="relative z-10 text-center space-y-6 max-w-md p-8 sm:p-10 rounded-[32px] bg-[#0d1425]/30 border border-slate-800/80 backdrop-blur-3xl shadow-2xl"
         >
           <div className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
             <ShieldAlert className="h-8 w-8 text-emerald-400" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Authentication Required</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Authentication Required
+          </h2>
           <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-            To secure game bookings, slots must be associated with a TurfBook account. Please log in to view availability, pricing, and book your slots.
+            To secure game bookings, slots must be associated with a TurfBook account. Please log in
+            to view availability, pricing, and book your slots.
           </p>
-          
+
           <div className="pt-2 flex flex-col gap-3">
             <Magnetic range={15} actionStrength={0.2}>
               <Button
@@ -207,7 +227,7 @@ export default function TurfDetailPage() {
                 Sign In to Account
               </Button>
             </Magnetic>
-            
+
             <button
               onClick={() => router.push('/turfs')}
               className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors duration-300 flex items-center justify-center gap-1 cursor-pointer mx-auto mt-2"
@@ -224,17 +244,19 @@ export default function TurfDetailPage() {
   // --- Loader State ---
   if (isLoading) {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
+
         <div className="relative flex flex-col items-center gap-4">
           <div className="h-10 w-10 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 animate-pulse">
@@ -248,24 +270,27 @@ export default function TurfDetailPage() {
   // --- Error State ---
   if (error || !turf) {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
+
         <div className="relative z-10 text-center space-y-6 max-w-md p-8 rounded-[32px] bg-[#0d1425]/30 border border-slate-900 backdrop-blur-3xl shadow-2xl">
           <div className="h-14 w-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
             <BadgeInfo className="h-7 w-7 text-rose-400" />
           </div>
           <h2 className="text-xl font-black text-white">Arena Not Found</h2>
           <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-            The requested arena profile could not be retrieved. It may have been unlisted or is currently undergoing maintenance.
+            The requested arena profile could not be retrieved. It may have been unlisted or is
+            currently undergoing maintenance.
           </p>
           <Magnetic range={15} actionStrength={0.2}>
             <Button
@@ -285,23 +310,26 @@ export default function TurfDetailPage() {
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 High-Performance Grid & Spotlight (Matches page.tsx theme) */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)'
+          background:
+            'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)',
         }}
       />
 
@@ -312,7 +340,6 @@ export default function TurfDetailPage() {
       />
 
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
-        
         {/* Back Link */}
         <div className="animate-fade">
           <Link
@@ -326,10 +353,8 @@ export default function TurfDetailPage() {
 
         {/* Layout Grid */}
         <div ref={contentGridRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
           {/* Left Column (2 Cols): Details, Specs, Images */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* Banner Section */}
             <div className="animate-fade relative h-72 sm:h-96 w-full rounded-3xl overflow-hidden border border-slate-900 bg-slate-950 shadow-2xl">
               <img
@@ -338,7 +363,7 @@ export default function TurfDetailPage() {
                 className="h-full w-full object-cover opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-              
+
               {/* Rating & Sport Badges on Banner */}
               <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-end justify-between gap-4">
                 <div className="space-y-2">
@@ -351,7 +376,7 @@ export default function TurfDetailPage() {
                       Active Arena
                     </span>
                     {user?.role === 'ADMIN' && (
-                      <Link 
+                      <Link
                         href={`/admin/turfs/edit/${id}`}
                         className="text-[8px] font-black text-amber-450 bg-amber-500/15 hover:bg-amber-500/25 px-2.5 py-1 rounded-md border border-amber-500/30 backdrop-blur-md flex items-center gap-1 transition-all select-none cursor-pointer"
                       >
@@ -360,7 +385,7 @@ export default function TurfDetailPage() {
                       </Link>
                     )}
                   </div>
-                  
+
                   <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md">
                     {turf.name}
                   </h1>
@@ -370,7 +395,9 @@ export default function TurfDetailPage() {
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                   <div className="text-right">
                     <p className="text-xs font-black text-white leading-none">4.9</p>
-                    <p className="text-[8px] font-bold text-slate-500 leading-none mt-0.5">124 reviews</p>
+                    <p className="text-[8px] font-bold text-slate-500 leading-none mt-0.5">
+                      124 reviews
+                    </p>
                   </div>
                 </div>
               </div>
@@ -383,25 +410,34 @@ export default function TurfDetailPage() {
                 About The Arena
               </h2>
               <p className="text-xs sm:text-sm text-slate-450 leading-relaxed font-semibold">
-                {turf.description || "Experience TurfBook premium sports complex in Dhaka. Our arena features state-of-the-art facilities, high-performance artificial shock-absorbent grass turf, and professional floodlights. Excellent location, ideal for friends, match practices, and club leagues."}
+                {turf.description ||
+                  'Experience TurfBook premium sports complex in Dhaka. Our arena features state-of-the-art facilities, high-performance artificial shock-absorbent grass turf, and professional floodlights. Excellent location, ideal for friends, match practices, and club leagues.'}
               </p>
-              
+
               <div className="h-[1px] bg-slate-900/80 my-2" />
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-bold text-slate-400">
                 <div className="flex items-start gap-2.5">
                   <MapPin className="h-4.5 w-4.5 text-slate-650 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-none">Address</p>
-                    <p className="text-white font-semibold leading-relaxed mt-1">{turf.address}, {turf.city}</p>
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-none">
+                      Address
+                    </p>
+                    <p className="text-white font-semibold leading-relaxed mt-1">
+                      {turf.address}, {turf.city}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-2.5">
                   <Clock className="h-4.5 w-4.5 text-slate-650 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-none">Operational Hours</p>
-                    <p className="text-white font-semibold leading-relaxed mt-1">{turf.openTime} AM - {turf.closeTime} PM</p>
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider leading-none">
+                      Operational Hours
+                    </p>
+                    <p className="text-white font-semibold leading-relaxed mt-1">
+                      {turf.openTime} AM - {turf.closeTime} PM
+                    </p>
                   </div>
                 </div>
               </div>
@@ -431,12 +467,14 @@ export default function TurfDetailPage() {
                         setSelectedSlotId(''); // Reset slot selection when date changes
                       }}
                       className={`flex-shrink-0 w-20 py-2.5 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-300 border cursor-pointer ${
-                        isSelected 
-                          ? 'bg-gradient-to-br from-emerald-600 to-[#1e6b3e] border-emerald-500/20 text-white shadow-lg' 
+                        isSelected
+                          ? 'bg-gradient-to-br from-emerald-600 to-[#1e6b3e] border-emerald-500/20 text-white shadow-lg'
                           : 'bg-[#050811] border-slate-900 text-slate-400 hover:text-white hover:border-slate-800'
                       }`}
                     >
-                      <span className="text-[9px] font-black uppercase tracking-wider opacity-70">{opt.dayName}</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider opacity-70">
+                        {opt.dayName}
+                      </span>
                       <span className="text-base font-black leading-none">{opt.dayNum}</span>
                       <span className="text-[8px] font-bold opacity-60">{opt.monthName}</span>
                     </button>
@@ -449,7 +487,7 @@ export default function TurfDetailPage() {
                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
                   Available Slots
                 </label>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {slots.map((slot) => {
                     const isSelected = selectedSlotId === slot.id;
@@ -461,27 +499,29 @@ export default function TurfDetailPage() {
                         onClick={() => !isBooked && setSelectedSlotId(slot.id)}
                         disabled={isBooked}
                         className={`h-12 px-4 rounded-xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${
-                          isBooked 
+                          isBooked
                             ? 'bg-[#050811]/40 border-slate-950 text-slate-600 cursor-not-allowed'
                             : isSelected
-                            ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
-                            : 'bg-[#050811] border-slate-900 text-slate-350 hover:border-slate-800 hover:text-white'
+                              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                              : 'bg-[#050811] border-slate-900 text-slate-350 hover:border-slate-800 hover:text-white'
                         }`}
                       >
                         <div className="text-left leading-none">
                           <p className="text-xs font-black">{slot.startTime}</p>
-                          <p className="text-[8px] font-bold opacity-60 mt-0.5">until {slot.endTime}</p>
+                          <p className="text-[8px] font-bold opacity-60 mt-0.5">
+                            until {slot.endTime}
+                          </p>
                         </div>
-                        
-                        <span className={`h-1.5 w-1.5 rounded-full ${isBooked ? 'bg-slate-700' : isSelected ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-600'}`} />
+
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${isBooked ? 'bg-slate-700' : isSelected ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-600'}`}
+                        />
                       </button>
                     );
                   })}
                 </div>
               </div>
-
             </div>
-
           </div>
 
           {/* Right Column: Premium Booking Cart Summary */}
@@ -495,25 +535,32 @@ export default function TurfDetailPage() {
 
             {/* Cart overview details */}
             <div className="space-y-4 text-xs font-bold text-slate-400">
-              
               <div className="flex justify-between items-start py-2 border-b border-slate-900/50">
                 <span className="text-slate-500">Arena</span>
-                <span className="text-white text-right font-black max-w-[150px] truncate">{turf.name}</span>
+                <span className="text-white text-right font-black max-w-[150px] truncate">
+                  {turf.name}
+                </span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-slate-900/50">
                 <span className="text-slate-500">Selected Date</span>
                 <span className="text-slate-200 font-semibold">
-                  {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', {
-                    month: 'short', day: 'numeric', year: 'numeric'
-                  }) : 'Not Selected'}
+                  {selectedDate
+                    ? new Date(selectedDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : 'Not Selected'}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-2 border-b border-slate-900/50">
                 <span className="text-slate-500">Slot Time</span>
                 <span className="text-slate-200 font-semibold">
-                  {selectedSlotDetails ? `${selectedSlotDetails.startTime} - ${selectedSlotDetails.endTime}` : 'Select a Slot'}
+                  {selectedSlotDetails
+                    ? `${selectedSlotDetails.startTime} - ${selectedSlotDetails.endTime}`
+                    : 'Select a Slot'}
                 </span>
               </div>
 
@@ -592,13 +639,9 @@ export default function TurfDetailPage() {
                   </Button>
                 </Magnetic>
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

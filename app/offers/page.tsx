@@ -1,32 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Ticket, 
-  Calendar, 
-  Clock, 
-  Copy, 
-  Check, 
-  Sparkles,
-  Percent,
-  Calculator,
-  ShieldCheck,
-  Flame,
-  Gift,
-  RefreshCw,
-  ChevronDown,
-  CheckCircle2,
-  Info,
-  Share2,
-  Tag,
-  ArrowRight
-} from 'lucide-react';
-import Link from 'next/link';
-import toast from 'react-hot-toast';
+import Magnetic from '@/components/ui/Magnetic';
+import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Magnetic from '@/components/ui/Magnetic';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowRight,
+  Calculator,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  Copy,
+  Gift,
+  RefreshCw,
+  Sparkles,
+  Ticket,
+} from 'lucide-react';
+import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 // Register ScrollTrigger safely
 if (typeof window !== 'undefined') {
@@ -52,60 +45,65 @@ const PREMIUM_OFFERS: Offer[] = [
   {
     id: 1,
     title: 'Midnight Madness',
-    description: 'রাত ১০টার পরের যেকোনো স্লট বুকিংয়ে ফ্ল্যাট ৩০% ডিসকাউন্ট! বন্ধুদের নিয়ে চলে আসুন লেট-নাইট ম্যাচের রোমাঞ্চ নিতে।',
+    description:
+      'রাত ১০টার পরের যেকোনো স্লট বুকিংয়ে ফ্ল্যাট ৩০% ডিসকাউন্ট! বন্ধুদের নিয়ে চলে আসুন লেট-নাইট ম্যাচের রোমাঞ্চ নিতে।',
     discount: '30% OFF',
-    discountValue: 0.30,
+    discountValue: 0.3,
     discountType: 'percentage',
     code: 'MIDNIGHT30',
     validUntil: 'June 30, 2026',
     tag: '⚡ Best Value',
-    bgGradient: 'from-purple-500/10 via-slate-900/10 to-emerald-500/5'
+    bgGradient: 'from-purple-500/10 via-slate-900/10 to-emerald-500/5',
   },
   {
     id: 2,
     title: 'Weekend Kickoff',
-    description: 'শুক্রবার এবং শনিবারের যেকোনো ফুটবল বা ক্রিকেট স্লট বুকিংয়ে পেয়ে যান ৫০০ টাকা সোজা ক্যাশব্যাক।',
+    description:
+      'শুক্রবার এবং শনিবারের যেকোনো ফুটবল বা ক্রিকেট স্লট বুকিংয়ে পেয়ে যান ৫০০ টাকা সোজা ক্যাশব্যাক।',
     discount: '৳500 FLAT',
     discountValue: 500,
     discountType: 'flat',
     code: 'WEEKEND500',
     validUntil: 'July 15, 2026',
     tag: '🔥 Popular',
-    bgGradient: 'from-emerald-500/10 via-slate-900/10 to-teal-500/5'
+    bgGradient: 'from-emerald-500/10 via-slate-900/10 to-teal-500/5',
   },
   {
     id: 3,
     title: 'First Match Special',
-    description: 'টার্ফবুক অ্যাপে আপনার প্রথম বুকিং? প্রমো কোডটি ব্যবহার করুন এবং প্রথম ম্যাচের ভাড়ায় লুফে নিন ১৫% ছাড়।',
+    description:
+      'টার্ফবুক অ্যাপে আপনার প্রথম বুকিং? প্রমো কোডটি ব্যবহার করুন এবং প্রথম ম্যাচের ভাড়ায় লুফে নিন ১৫% ছাড়।',
     discount: '15% OFF',
     discountValue: 0.15,
     discountType: 'percentage',
     code: 'PLAYFREE15',
     validUntil: 'Dec 31, 2026',
     tag: '🎉 New Player',
-    bgGradient: 'from-blue-500/10 via-slate-900/10 to-emerald-500/5'
-  }
+    bgGradient: 'from-blue-500/10 via-slate-900/10 to-emerald-500/5',
+  },
 ];
 
 // Mock Real-Time Claimed Feed Ticker Data
 const MOCK_CLAIMED_DEALS = [
-  { player: "Sadman S.", location: "Dhanmondi", deal: "MIDNIGHT30", time: "Just now" },
-  { player: "Mahmudul H.", location: "Banani", deal: "WEEKEND500", time: "3 mins ago" },
-  { player: "Rafsan J.", location: "Mirpur", deal: "PLAYFREE15", time: "12 mins ago" },
-  { player: "Tahmid C.", location: "Gulshan", deal: "MIDNIGHT30", time: "25 mins ago" }
+  { player: 'Sadman S.', location: 'Dhanmondi', deal: 'MIDNIGHT30', time: 'Just now' },
+  { player: 'Mahmudul H.', location: 'Banani', deal: 'WEEKEND500', time: '3 mins ago' },
+  { player: 'Rafsan J.', location: 'Mirpur', deal: 'PLAYFREE15', time: '12 mins ago' },
+  { player: 'Tahmid C.', location: 'Gulshan', deal: 'MIDNIGHT30', time: '25 mins ago' },
 ];
 
 export default function OffersPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'ALL' | 'PERCENTAGE' | 'FLAT'>('ALL');
-  
+
   // Interactive Calculator State
   const [calcArena, setCalcArena] = useState<'gulshan' | 'dhanmondi' | 'mirpur'>('gulshan');
   const [calcHours, setCalcHours] = useState(1);
   const [calcCoupon, setCalcCoupon] = useState<string>('MIDNIGHT30');
-  
+
   // Gamified Scratch Card State
-  const [scratchState, setScratchState] = useState<'UNSCRATCHED' | 'SCRATCHING' | 'REVEALED'>('UNSCRATCHED');
+  const [scratchState, setScratchState] = useState<'UNSCRATCHED' | 'SCRATCHING' | 'REVEALED'>(
+    'UNSCRATCHED',
+  );
 
   // Animation Refs
   const pageContainerRef = useRef<HTMLDivElement>(null);
@@ -119,7 +117,7 @@ export default function OffersPage() {
   const [tickerIndex, setTickerIndex] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      setTickerIndex(prev => (prev + 1) % MOCK_CLAIMED_DEALS.length);
+      setTickerIndex((prev) => (prev + 1) % MOCK_CLAIMED_DEALS.length);
     }, 6000);
     return () => clearInterval(interval);
   }, []);
@@ -136,12 +134,12 @@ export default function OffersPage() {
       if (elementsToClean.length > 0) {
         gsap.set(elementsToClean, { opacity: 0, y: 20 });
       }
-      
-      const charAnims = pageContainerRef.current?.querySelectorAll(".char-anim");
+
+      const charAnims = pageContainerRef.current?.querySelectorAll('.char-anim');
       if (charAnims && charAnims.length > 0) {
         gsap.set(charAnims, { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
       }
-      
+
       const offerCards = offersGridRef.current?.children;
       if (offerCards) {
         gsap.set(Array.from(offerCards), { opacity: 0, y: 30 });
@@ -153,16 +151,20 @@ export default function OffersPage() {
       if (badgeRef.current) {
         tl.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
       }
-      
+
       if (charAnims && charAnims.length > 0) {
-        tl.to(charAnims, {
-          opacity: 1,
-          y: 0,
-          rotateX: 0,
-          stagger: 0.012,
-          duration: 0.8,
-          ease: 'power4.out'
-        }, '-=0.4');
+        tl.to(
+          charAnims,
+          {
+            opacity: 1,
+            y: 0,
+            rotateX: 0,
+            stagger: 0.012,
+            duration: 0.8,
+            ease: 'power4.out',
+          },
+          '-=0.4',
+        );
       }
 
       if (subtitleRef.current) {
@@ -171,13 +173,17 @@ export default function OffersPage() {
 
       // Voucher Card cascade trigger
       if (offerCards && offerCards.length > 0) {
-        tl.to(Array.from(offerCards), {
-          opacity: 1,
-          y: 0,
-          stagger: 0.1,
-          duration: 0.7,
-          ease: 'power3.out'
-        }, '-=0.3');
+        tl.to(
+          Array.from(offerCards),
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            duration: 0.7,
+            ease: 'power3.out',
+          },
+          '-=0.3',
+        );
       }
 
       if (infoNoticeRef.current) {
@@ -192,29 +198,29 @@ export default function OffersPage() {
           duration: 9,
           repeat: -1,
           yoyo: true,
-          ease: 'sine.inOut'
+          ease: 'sine.inOut',
         });
       }
 
       // Scroll triggered reveal for sandbox/calculator sections
-      const sandboxReveal = pageContainerRef.current?.querySelectorAll(".scroll-reveal");
+      const sandboxReveal = pageContainerRef.current?.querySelectorAll('.scroll-reveal');
       if (sandboxReveal && sandboxReveal.length > 0) {
-        gsap.fromTo(sandboxReveal,
+        gsap.fromTo(
+          sandboxReveal,
           { opacity: 0, y: 30 },
           {
             opacity: 1,
             y: 0,
             stagger: 0.15,
             duration: 0.8,
-            ease: "power3.out",
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: ".interactive-sandbox-section",
-              start: "top 80%",
-            }
-          }
+              trigger: '.interactive-sandbox-section',
+              start: 'top 80%',
+            },
+          },
         );
       }
-
     }, pageContainerRef);
 
     return () => ctx.revert();
@@ -233,7 +239,7 @@ export default function OffersPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
@@ -243,9 +249,10 @@ export default function OffersPage() {
     toast.success(`Promo code "${code}" copied!`);
 
     const target = e.currentTarget;
-    gsap.fromTo(target, 
-      { scale: 0.95 }, 
-      { scale: 1, duration: 0.3, ease: 'elastic.out(1.2, 0.4)' }
+    gsap.fromTo(
+      target,
+      { scale: 0.95 },
+      { scale: 1, duration: 0.3, ease: 'elastic.out(1.2, 0.4)' },
     );
 
     setTimeout(() => {
@@ -260,9 +267,9 @@ export default function OffersPage() {
     setScratchState('SCRATCHING');
     setTimeout(() => {
       setScratchState('REVEALED');
-      toast.success("💥 40% OFF Secret Voucher Revealed!", {
+      toast.success('💥 40% OFF Secret Voucher Revealed!', {
         icon: '🔥',
-        duration: 4000
+        duration: 4000,
       });
     }, 1500);
   };
@@ -283,15 +290,19 @@ export default function OffersPage() {
   // --- Pricing Calculation Values ---
   const arenaPrices = {
     gulshan: { name: "Chef's Table Courts", rate: 2500 },
-    dhanmondi: { name: "Jaff Arena", rate: 2200 },
-    mirpur: { name: "Mirpur Turf City", rate: 1800 }
+    dhanmondi: { name: 'Jaff Arena', rate: 2200 },
+    mirpur: { name: 'Mirpur Turf City', rate: 1800 },
   };
 
-  const activePromo = PREMIUM_OFFERS.find(o => o.code === calcCoupon) || (calcCoupon === 'SECRET40' ? {
-    code: 'SECRET40',
-    discountValue: 0.40,
-    discountType: 'percentage' as const
-  } : null);
+  const activePromo =
+    PREMIUM_OFFERS.find((o) => o.code === calcCoupon) ||
+    (calcCoupon === 'SECRET40'
+      ? {
+          code: 'SECRET40',
+          discountValue: 0.4,
+          discountType: 'percentage' as const,
+        }
+      : null);
 
   const originalPrice = arenaPrices[calcArena].rate * calcHours;
   let discountAmount = 0;
@@ -305,7 +316,7 @@ export default function OffersPage() {
   const finalPrice = Math.max(0, originalPrice - discountAmount);
 
   // Tab Filtering
-  const filteredOffers = PREMIUM_OFFERS.filter(offer => {
+  const filteredOffers = PREMIUM_OFFERS.filter((offer) => {
     if (activeTab === 'ALL') return true;
     if (activeTab === 'PERCENTAGE') return offer.discountType === 'percentage';
     if (activeTab === 'FLAT') return offer.discountType === 'flat';
@@ -313,28 +324,30 @@ export default function OffersPage() {
   });
 
   return (
-    <div 
+    <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
-      
       {/* 🌌 High-Performance Grid and Spotlight Mask */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(550px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)'
+          background:
+            'radial-gradient(550px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)',
         }}
       />
 
@@ -343,18 +356,14 @@ export default function OffersPage() {
         ref={orbitRef}
         className="absolute top-10 left-1/3 -translate-x-1/2 w-[450px] h-[450px] bg-emerald-500/5 blur-[125px] rounded-full pointer-events-none will-change-transform"
       />
-      <div
-        className="absolute bottom-20 right-1/4 translate-x-1/2 w-[500px] h-[500px] bg-teal-500/5 blur-[140px] rounded-full pointer-events-none"
-      />
+      <div className="absolute bottom-20 right-1/4 translate-x-1/2 w-[500px] h-[500px] bg-teal-500/5 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-24 relative z-10">
-        
         {/* ================= HEADER SECTION ================= */}
         <header className="text-center space-y-5 max-w-2xl mx-auto flex flex-col items-center">
-          
           <div ref={badgeRef} className="will-change-transform">
             <Magnetic range={20} actionStrength={0.15}>
-              <div 
+              <div
                 className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-4.5 py-2 rounded-full backdrop-blur-md shadow-sm cursor-pointer hover:bg-emerald-500/15 transition-all duration-300"
                 data-cursor-text="DEALS"
               >
@@ -365,22 +374,26 @@ export default function OffersPage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.12] text-white will-change-transform animate-none">
-            <div>{render3DLetters("Active ")}</div>
+            <div>{render3DLetters('Active ')}</div>
             <div className="mt-1">
-              <span 
+              <span
                 className="cursor-pointer drop-shadow-[0_4px_20px_rgba(52,211,153,0.25)]"
                 data-cursor-text="PROMOS"
               >
-                {render3DLetters("Promos & Offers", "text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400")}
+                {render3DLetters(
+                  'Promos & Offers',
+                  'text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400',
+                )}
               </span>
             </div>
           </h1>
 
-          <p 
+          <p
             ref={subtitleRef}
             className="text-slate-400 text-xs sm:text-sm max-w-xl leading-relaxed font-medium will-change-transform"
           >
-            আপনার পছন্দের মাঠে খেলার খরচ কমিয়ে আনুন। প্রমো কোড কপি করুন এবং স্লট বুক করার সময় কুপন হিসেবে ব্যবহার করুন! 
+            আপনার পছন্দের মাঠে খেলার খরচ কমিয়ে আনুন। প্রমো কোড কপি করুন এবং স্লট বুক করার সময় কুপন
+            হিসেবে ব্যবহার করুন!
             <span className="text-white font-bold"> নো টেনশন, জাস্ট প্লে!</span>
           </p>
 
@@ -388,7 +401,12 @@ export default function OffersPage() {
           <div className="h-9 overflow-hidden bg-[#0d1425]/30 border border-slate-900 rounded-full px-5 py-1.5 flex items-center justify-center gap-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider backdrop-blur-md">
             <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />
             <div className="transition-all duration-500 transform font-mono">
-              ⚡ <span className="text-white">{MOCK_CLAIMED_DEALS[tickerIndex].player}</span> from {MOCK_CLAIMED_DEALS[tickerIndex].location} claimed <span className="text-emerald-400 font-black">{MOCK_CLAIMED_DEALS[tickerIndex].deal}</span> ({MOCK_CLAIMED_DEALS[tickerIndex].time})
+              ⚡ <span className="text-white">{MOCK_CLAIMED_DEALS[tickerIndex].player}</span> from{' '}
+              {MOCK_CLAIMED_DEALS[tickerIndex].location} claimed{' '}
+              <span className="text-emerald-400 font-black">
+                {MOCK_CLAIMED_DEALS[tickerIndex].deal}
+              </span>{' '}
+              ({MOCK_CLAIMED_DEALS[tickerIndex].time})
             </div>
           </div>
         </header>
@@ -398,12 +416,14 @@ export default function OffersPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5 border-b border-slate-900/60 pb-5">
             <div className="space-y-1 text-center sm:text-left">
               <h3 className="text-lg font-black text-white">Voucher Feed</h3>
-              <p className="text-[10px] text-slate-550 font-bold uppercase tracking-wider">ক্লিক করে আপনার প্রয়োজনীয় প্রমো কোডটি কপি করুন</p>
+              <p className="text-[10px] text-slate-550 font-bold uppercase tracking-wider">
+                ক্লিক করে আপনার প্রয়োজনীয় প্রমো কোডটি কপি করুন
+              </p>
             </div>
 
             {/* Filter tab buttons */}
             <div className="flex gap-1.5 bg-[#0d1425]/30 border border-slate-900 p-1 rounded-xl">
-              {(['ALL', 'PERCENTAGE', 'FLAT'] as const).map(tab => (
+              {(['ALL', 'PERCENTAGE', 'FLAT'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -413,17 +433,18 @@ export default function OffersPage() {
                       : 'text-slate-500 hover:text-slate-350'
                   }`}
                 >
-                  {tab === 'PERCENTAGE' ? '% Discount' : tab === 'FLAT' ? 'Flat Cashback' : 'All Deals'}
+                  {tab === 'PERCENTAGE'
+                    ? '% Discount'
+                    : tab === 'FLAT'
+                      ? 'Flat Cashback'
+                      : 'All Deals'}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Luxury Ticket Stub Cards Grid */}
-          <div 
-            ref={offersGridRef}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
+          <div ref={offersGridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredOffers.map((offer) => (
               <div
                 key={offer.id}
@@ -439,7 +460,7 @@ export default function OffersPage() {
                     <span className="text-[9px] font-black uppercase tracking-widest bg-[#050811] px-2.5 py-1 rounded-md border border-slate-850 text-slate-500">
                       {offer.tag}
                     </span>
-                    
+
                     <div className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 drop-shadow-[0_2px_8px_rgba(52,211,153,0.15)] flex items-center gap-1">
                       <span>{offer.discount}</span>
                       <Sparkles className="h-3 w-3 text-emerald-400 fill-emerald-400 animate-pulse" />
@@ -464,7 +485,7 @@ export default function OffersPage() {
                       <Clock className="h-3 w-3 text-slate-650" />
                       LIMITED DEAL
                     </span>
-                    
+
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3 text-slate-650" />
                       EXP: {offer.validUntil}
@@ -476,7 +497,7 @@ export default function OffersPage() {
                     <div className="flex-1 font-mono text-center text-xs font-bold tracking-widest text-emerald-400 bg-emerald-500/5 py-1.5 rounded-lg border border-emerald-500/10">
                       {offer.code}
                     </div>
-                    
+
                     <Magnetic range={15} actionStrength={0.2}>
                       <button
                         onClick={(e) => handleCopyCode(offer.code, e)}
@@ -501,7 +522,7 @@ export default function OffersPage() {
             ))}
           </div>
 
-          <div 
+          <div
             ref={infoNoticeRef}
             className="bg-[#0d1425]/10 border border-dashed border-slate-850/60 rounded-xl p-4.5 text-center text-[10px] text-slate-500 font-bold uppercase tracking-wider will-change-transform"
           >
@@ -511,37 +532,38 @@ export default function OffersPage() {
 
         {/* ================= INTERACTIVE PLAYGROUND SANDBOX SECTION ================= */}
         <section className="interactive-sandbox-section grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
           {/* Left Block: Gamified Scratch Card (Highly Unique!) */}
           <div className="lg:col-span-6 p-6 rounded-3xl bg-[#0d1425]/15 border border-slate-900 hover:border-slate-800 transition-all duration-500 flex flex-col justify-between space-y-6 scroll-reveal relative overflow-hidden group">
             <div className="absolute right-0 top-0 w-48 h-48 bg-emerald-500/5 blur-[80px] rounded-full pointer-events-none" />
-            
+
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                 <Gift className="h-3 w-3 text-emerald-400" />
                 <span>Gamified Loyalty</span>
               </div>
-              <h3 className="text-base sm:text-lg font-black text-white">Daily Secret Scratch Card</h3>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                Daily Secret Scratch Card
+              </h3>
               <p className="text-[11px] sm:text-xs text-slate-400 font-semibold leading-relaxed">
-                টার্ফবুকের পক্ষ থেকে আপনার জন্য একটি সারপ্রাইজ উপহার! নিচের কার্ডটি স্ক্র্যাচ করে আজকের সিক্রেট ডিসকাউন্ট কুপনটি আনলক করুন।
+                টার্ফবুকের পক্ষ থেকে আপনার জন্য একটি সারপ্রাইজ উপহার! নিচের কার্ডটি স্ক্র্যাচ করে
+                আজকের সিক্রেট ডিসকাউন্ট কুপনটি আনলক করুন।
               </p>
             </div>
 
             {/* Interactive Scratch Canvas widget */}
-            <div 
+            <div
               onClick={handleScratchReveal}
               className={`h-[160px] rounded-2xl border relative overflow-hidden flex flex-col items-center justify-center text-center p-4 transition-all duration-500 ${
                 scratchState === 'UNSCRATCHED'
                   ? 'bg-gradient-to-br from-[#1e6b3e]/30 via-[#0f3d23]/20 to-[#050811] border-emerald-500/20 hover:border-emerald-500/40 cursor-pointer shadow-lg'
                   : scratchState === 'SCRATCHING'
-                  ? 'bg-[#050811] border-emerald-500/10 cursor-wait'
-                  : 'bg-emerald-500/5 border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
+                    ? 'bg-[#050811] border-emerald-500/10 cursor-wait'
+                    : 'bg-emerald-500/5 border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
               }`}
             >
-              
               <AnimatePresence mode="wait">
                 {scratchState === 'UNSCRATCHED' && (
-                  <motion.div 
+                  <motion.div
                     key="unscratched"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -552,14 +574,18 @@ export default function OffersPage() {
                       <Gift className="h-6 w-6 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-xs font-black text-white uppercase tracking-wider">Tap to Scratch & Reveal</p>
-                      <p className="text-[9px] text-slate-500 font-semibold mt-0.5">সিক্রেট প্রোমো কোড আনলক করতে এখানে ক্লিক করুন</p>
+                      <p className="text-xs font-black text-white uppercase tracking-wider">
+                        Tap to Scratch & Reveal
+                      </p>
+                      <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
+                        সিক্রেট প্রোমো কোড আনলক করতে এখানে ক্লিক করুন
+                      </p>
                     </div>
                   </motion.div>
                 )}
 
                 {scratchState === 'SCRATCHING' && (
-                  <motion.div 
+                  <motion.div
                     key="scratching"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -567,12 +593,14 @@ export default function OffersPage() {
                     className="space-y-3"
                   >
                     <RefreshCw className="h-7 w-7 text-emerald-400 animate-spin mx-auto" />
-                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest font-mono">Scratching digital foil...</p>
+                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest font-mono">
+                      Scratching digital foil...
+                    </p>
                   </motion.div>
                 )}
 
                 {scratchState === 'REVEALED' && (
-                  <motion.div 
+                  <motion.div
                     key="revealed"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -601,7 +629,6 @@ export default function OffersPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-
             </div>
 
             <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider text-center">
@@ -611,26 +638,29 @@ export default function OffersPage() {
 
           {/* Right Block: Interactive Pitch Pricing Calculator (Great Engineering!) */}
           <div className="lg:col-span-6 p-6 rounded-3xl bg-gradient-to-b from-[#111a2d]/20 to-[#080d1a]/20 border border-slate-900 shadow-xl flex flex-col justify-between space-y-6 scroll-reveal relative overflow-hidden">
-            
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                 <Calculator className="h-3.5 w-3.5 text-emerald-400" />
                 <span>Savings Calculator</span>
               </div>
-              <h3 className="text-base sm:text-lg font-black text-white">Dynamic Court Cost Estimator</h3>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                Dynamic Court Cost Estimator
+              </h3>
               <p className="text-[11px] sm:text-xs text-slate-400 font-semibold leading-relaxed">
-                আপনার পছন্দের এরেনা, খেলার সময় এবং একটি প্রোমো কোড সিলেক্ট করে দেখুন মোট কত টাকা সেভ করতে পারছেন।
+                আপনার পছন্দের এরেনা, খেলার সময় এবং একটি প্রোমো কোড সিলেক্ট করে দেখুন মোট কত টাকা সেভ
+                করতে পারছেন।
               </p>
             </div>
 
             {/* Calculator controls */}
             <div className="space-y-4 bg-[#050811]/60 p-4.5 rounded-2xl border border-slate-850">
-              
               {/* Select Arena */}
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Select Arena</label>
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                  Select Arena
+                </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={calcArena}
                     onChange={(e) => setCalcArena(e.target.value as any)}
                     className="w-full h-9 px-3 bg-[#050811] border border-slate-900 outline-none text-xs font-semibold text-white rounded-xl focus:border-emerald-500/25 appearance-none cursor-pointer"
@@ -647,12 +677,14 @@ export default function OffersPage() {
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-widest">
                   <span>Match Duration</span>
-                  <span className="text-white font-mono">{calcHours} Hour{calcHours > 1 ? 's' : ''}</span>
+                  <span className="text-white font-mono">
+                    {calcHours} Hour{calcHours > 1 ? 's' : ''}
+                  </span>
                 </div>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="4" 
+                <input
+                  type="range"
+                  min="1"
+                  max="4"
                   value={calcHours}
                   onChange={(e) => setCalcHours(Number(e.target.value))}
                   className="w-full accent-emerald-500 cursor-pointer bg-slate-900 h-1 rounded-full appearance-none"
@@ -661,9 +693,11 @@ export default function OffersPage() {
 
               {/* Select Active Promo Code */}
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Select Voucher Code</label>
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                  Select Voucher Code
+                </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={calcCoupon}
                     onChange={(e) => setCalcCoupon(e.target.value)}
                     className="w-full h-9 px-3 bg-[#050811] border border-slate-900 outline-none text-xs font-semibold text-white rounded-xl focus:border-emerald-500/25 appearance-none cursor-pointer"
@@ -678,7 +712,6 @@ export default function OffersPage() {
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
                 </div>
               </div>
-
             </div>
 
             {/* Bill Receipt breakdown */}
@@ -691,9 +724,9 @@ export default function OffersPage() {
                 <span>Estimated savings:</span>
                 <span>- ৳{discountAmount.toLocaleString()}</span>
               </div>
-              
+
               <div className="h-[1px] bg-slate-900 w-full" />
-              
+
               <div className="flex justify-between text-xs font-black text-white">
                 <span>Grand Total:</span>
                 <span className="text-emerald-400">৳{finalPrice.toLocaleString()}</span>
@@ -709,11 +742,8 @@ export default function OffersPage() {
                 </button>
               </Link>
             </Magnetic>
-
           </div>
-
         </section>
-
       </div>
     </div>
   );

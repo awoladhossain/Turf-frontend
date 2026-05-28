@@ -1,15 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Calendar, Filter, MapPin, Search, Star, Trophy, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
+import turfService from '@/services/turf.service';
+import { useQuery } from '@tanstack/react-query';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Magnetic from '@/components/ui/Magnetic';
-import { useQuery } from '@tanstack/react-query';
-import turfService from '@/services/turf.service';
-import { useAuth } from '@/hooks/useAuth';
+import {
+  ArrowUpDown,
+  Calendar,
+  Filter,
+  MapPin,
+  Search,
+  Sparkles,
+  Star,
+  Trophy,
+} from 'lucide-react';
+import Link from 'next/link';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 // Register ScrollTrigger safely
 if (typeof window !== 'undefined') {
@@ -31,22 +40,27 @@ export default function TurfsPage() {
   const sortingRef = useRef<HTMLDivElement>(null);
   const filterSidebarRef = useRef<HTMLDivElement>(null);
   const cardsGridRef = useRef<HTMLDivElement>(null);
-  
+
   // Background glow orbit
   const orbitRef = useRef<HTMLDivElement>(null);
 
   // 1. TanStack Query to fetch live turf data (only triggers server query when sport selection changes)
-  const { data: turfResponse, isLoading, error } = useQuery({
+  const {
+    data: turfResponse,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['turfs', selectedSport],
-    queryFn: () => turfService.getAllTurfs({
-      sportType: selectedSport === 'All' ? undefined : (selectedSport.toUpperCase() as any),
-    }),
+    queryFn: () =>
+      turfService.getAllTurfs({
+        sportType: selectedSport === 'All' ? undefined : (selectedSport.toUpperCase() as any),
+      }),
   });
 
   // 2. Map & Filter logic using memoized processedTurfs
   const processedTurfs = useMemo(() => {
     const rawTurfs = turfResponse?.data || [];
-    
+
     let result = rawTurfs.map((turf) => {
       // Map sport type to a friendly display string
       let sportDisplay = 'Football';
@@ -59,20 +73,22 @@ export default function TurfsPage() {
       if (turf.sportType === 'BOTH') sizeDisplay = 'Multi-purpose';
 
       // High-performance fallback image configuration
-      const fallbackImage = turf.sportType === 'CRICKET'
-        ? 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=600'
-        : turf.sportType === 'BOTH'
-        ? 'https://images.unsplash.com/photo-1510563800743-aed2364902b8?auto=format&fit=crop&q=80&w=600'
-        : 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=600';
+      const fallbackImage =
+        turf.sportType === 'CRICKET'
+          ? 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=600'
+          : turf.sportType === 'BOTH'
+            ? 'https://images.unsplash.com/photo-1510563800743-aed2364902b8?auto=format&fit=crop&q=80&w=600'
+            : 'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=600';
 
       // Ensure that broken or dummy example.com images fallback beautifully to curated sport imagery
-      const imageDisplay = turf.images && turf.images.length > 0 && !turf.images[0].includes('example.com')
-        ? turf.images[0]
-        : fallbackImage;
+      const imageDisplay =
+        turf.images && turf.images.length > 0 && !turf.images[0].includes('example.com')
+          ? turf.images[0]
+          : fallbackImage;
 
       // Hardcoded ratings for consistent gamification elements in UI
       const ratingDisplay = turf.name.length % 2 === 0 ? 4.9 : 4.8;
-      const reviewsDisplay = (turf.name.length * 7) % 150 + 40;
+      const reviewsDisplay = ((turf.name.length * 7) % 150) + 40;
 
       return {
         ...turf,
@@ -121,9 +137,18 @@ export default function TurfsPage() {
 
     const ctx = gsap.context(() => {
       // --- Reset initial opacity states ---
-      gsap.set([headerBadgeRef.current, subtitleRef.current, searchInputRef.current, sortingRef.current, filterSidebarRef.current], { opacity: 0, y: 20 });
-      gsap.set(".char-anim", { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
-      
+      gsap.set(
+        [
+          headerBadgeRef.current,
+          subtitleRef.current,
+          searchInputRef.current,
+          sortingRef.current,
+          filterSidebarRef.current,
+        ],
+        { opacity: 0, y: 20 },
+      );
+      gsap.set('.char-anim', { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
+
       const cards = cardsGridRef.current?.querySelectorAll('.arena-card');
       if (cards) {
         gsap.set(Array.from(cards), { opacity: 0, y: 30 });
@@ -133,16 +158,20 @@ export default function TurfsPage() {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 1 } });
 
       tl.to(headerBadgeRef.current, { opacity: 1, y: 0, duration: 0.6 });
-      
+
       // Character cascade reveal
-      tl.to(".char-anim", {
-        opacity: 1,
-        y: 0,
-        rotateX: 0,
-        stagger: 0.012,
-        duration: 0.8,
-        ease: 'power4.out'
-      }, '-=0.4');
+      tl.to(
+        '.char-anim',
+        {
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          stagger: 0.012,
+          duration: 0.8,
+          ease: 'power4.out',
+        },
+        '-=0.4',
+      );
 
       tl.to(subtitleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
       tl.to(searchInputRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.5');
@@ -151,13 +180,17 @@ export default function TurfsPage() {
 
       // Stagger arenas cards
       if (cards && cards.length > 0) {
-        tl.to(Array.from(cards), {
-          opacity: 1,
-          y: 0,
-          stagger: 0.1,
-          duration: 0.7,
-          ease: 'power3.out'
-        }, '-=0.4');
+        tl.to(
+          Array.from(cards),
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            duration: 0.7,
+            ease: 'power3.out',
+          },
+          '-=0.4',
+        );
       }
 
       // Continuous float for background neon glow
@@ -167,7 +200,7 @@ export default function TurfsPage() {
         duration: 10,
         repeat: -1,
         yoyo: true,
-        ease: 'sine.inOut'
+        ease: 'sine.inOut',
       });
     }, pageContainerRef);
 
@@ -187,7 +220,7 @@ export default function TurfsPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
@@ -205,27 +238,30 @@ export default function TurfsPage() {
   };
 
   return (
-    <div 
+    <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden text-white select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 High-Performance Grid & Spotlight (Matches page.tsx theme) */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)'
+          background:
+            'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)',
         }}
       />
 
@@ -236,13 +272,12 @@ export default function TurfsPage() {
       />
 
       <div className="max-w-6xl mx-auto space-y-12 relative z-10">
-        
         {/* --- HEADER & SEARCH CONTROLS SECTION --- */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-5 border-b border-slate-900">
           <div className="space-y-4">
             <div ref={headerBadgeRef} className="will-change-transform w-fit">
               <Magnetic range={15} actionStrength={0.15}>
-                <div 
+                <div
                   className="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-emerald-500/15 transition-all duration-300 animate-pulse"
                   data-cursor-text="LIVE HUB"
                 >
@@ -251,24 +286,28 @@ export default function TurfsPage() {
                 </div>
               </Magnetic>
             </div>
-            
+
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.12] text-white will-change-transform">
-              <div>{render3DLetters("Explore ")}</div>
+              <div>{render3DLetters('Explore ')}</div>
               <div className="mt-1">
-                <span 
+                <span
                   className="cursor-pointer drop-shadow-[0_4px_20px_rgba(52,211,153,0.25)]"
                   data-cursor-text="ARENAS"
                 >
-                  {render3DLetters("Verified Arenas", "text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400")}
+                  {render3DLetters(
+                    'Verified Arenas',
+                    'text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400',
+                  )}
                 </span>
               </div>
             </h1>
-            
-            <p 
+
+            <p
               ref={subtitleRef}
               className="text-slate-400 text-xs sm:text-sm font-semibold max-w-xl leading-relaxed will-change-transform"
             >
-              ঢাকা শহরের বেস্ট কন্ডিশন পিচগুলো ভেরিফাইড রিভিউ দেখে বুক করুন। <span className="text-white">নো টেনশন, জাস্ট প্লে!</span>
+              ঢাকা শহরের বেস্ট কন্ডিশন পিচগুলো ভেরিফাইড রিভিউ দেখে বুক করুন।{' '}
+              <span className="text-white">নো টেনশন, জাস্ট প্লে!</span>
             </p>
           </div>
 
@@ -286,7 +325,7 @@ export default function TurfsPage() {
             )}
 
             {/* Search box input */}
-            <div 
+            <div
               ref={searchInputRef}
               className="relative w-full md:w-72 group will-change-transform"
             >
@@ -303,7 +342,7 @@ export default function TurfsPage() {
         </div>
 
         {/* --- MINIMAL SORTING CONTAINER --- */}
-        <div 
+        <div
           ref={sortingRef}
           className="flex flex-wrap items-center justify-between gap-4 bg-[#0d1425]/20 backdrop-blur-2xl p-4 rounded-2xl border border-slate-900/80 shadow-sm will-change-transform"
         >
@@ -311,7 +350,7 @@ export default function TurfsPage() {
             <ArrowUpDown className="h-3.5 w-3.5 text-slate-650" />
             <span>Sort By</span>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'popular', label: '⭐ Top Rated' },
@@ -335,15 +374,16 @@ export default function TurfsPage() {
 
         {/* --- MAIN PAGE LAYOUT GRID --- */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          
           {/* --- ULTRA-SLEEK GLASS SIDEBAR FILTERS --- */}
-          <div 
+          <div
             ref={filterSidebarRef}
             className="lg:col-span-1 bg-[#0d1425]/20 backdrop-blur-2xl p-5 rounded-2xl border border-slate-900/80 shadow-sm space-y-6 lg:sticky lg:top-24 will-change-transform"
           >
             <div className="flex items-center gap-2 border-b border-slate-900 pb-3.5">
               <Filter className="h-3.5 w-3.5 text-emerald-400" />
-              <h2 className="font-black text-white text-xs uppercase tracking-wider">Filter Settings</h2>
+              <h2 className="font-black text-white text-xs uppercase tracking-wider">
+                Filter Settings
+              </h2>
             </div>
 
             {/* Sports Selector */}
@@ -351,7 +391,7 @@ export default function TurfsPage() {
               <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">
                 Discipline
               </label>
-              
+
               <div className="grid grid-cols-1 gap-1.5">
                 {['All', 'Football', 'Cricket'].map((sport) => {
                   const isSelected = selectedSport === sport;
@@ -385,7 +425,7 @@ export default function TurfsPage() {
                   ৳{priceRange}
                 </span>
               </div>
-              
+
               <input
                 type="range"
                 min="1500"
@@ -395,7 +435,7 @@ export default function TurfsPage() {
                 onChange={(e) => setPriceRange(Number(e.target.value))}
                 className="w-full accent-emerald-500 h-1 bg-slate-850 rounded-lg cursor-pointer transition-all"
               />
-              
+
               <div className="flex justify-between text-[8px] text-slate-550 font-bold tracking-wider">
                 <span>৳1,500</span>
                 <span>৳5,000</span>
@@ -414,10 +454,7 @@ export default function TurfsPage() {
                 </p>
               </div>
             ) : (
-              <div 
-                ref={cardsGridRef}
-                className="grid grid-cols-1 md:grid-cols-2 gap-5"
-              >
+              <div ref={cardsGridRef} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {processedTurfs.length > 0 ? (
                   processedTurfs.map((turf) => (
                     <div
@@ -438,7 +475,9 @@ export default function TurfsPage() {
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${turf.availableToday ? 'bg-emerald-400 animate-pulse' : 'bg-slate-650'}`}
                           />
-                          <span className={turf.availableToday ? 'text-emerald-400' : 'text-slate-500'}>
+                          <span
+                            className={turf.availableToday ? 'text-emerald-400' : 'text-slate-500'}
+                          >
                             {turf.availableToday ? 'Available' : 'Full'}
                           </span>
                         </div>
@@ -458,7 +497,7 @@ export default function TurfsPage() {
                               <Trophy className="h-2.5 w-2.5" />
                               {turf.sport}
                             </span>
-                            
+
                             <span className="text-[8px] font-black text-slate-500 bg-[#050811] px-2 py-0.5 rounded-md border border-slate-850">
                               {turf.size}
                             </span>
@@ -505,11 +544,14 @@ export default function TurfsPage() {
                     <div className="p-3.5 bg-[#050811] text-slate-600 rounded-full border border-slate-850">
                       <Search className="h-5 w-5" />
                     </div>
-                    
+
                     <div className="space-y-1">
-                      <h3 className="text-xs font-black text-white uppercase tracking-wider">No arenas found</h3>
+                      <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                        No arenas found
+                      </h3>
                       <p className="text-[10px] text-slate-500 max-w-xs mx-auto">
-                        আপনার ফিল্টার বা বাজেট কিছুটা বাড়িয়ে অন্য কোনো ক্যাটাগরিতে সার্চ করে দেখুন।
+                        আপনার ফিল্টার বা বাজেট কিছুটা বাড়িয়ে অন্য কোনো ক্যাটাগরিতে সার্চ করে
+                        দেখুন।
                       </p>
                     </div>
                   </div>
@@ -517,9 +559,7 @@ export default function TurfsPage() {
               </div>
             )}
           </div>
-
         </div>
-
       </div>
     </div>
   );

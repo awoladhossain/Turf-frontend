@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setCredentials, logout as logoutAction, updateUser } from '@/store/slices/authSlice';
 import authService from '@/services/auth.service';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout as logoutAction, setCredentials, updateUser } from '@/store/slices/authSlice';
 import { LoginDto, RegisterDto } from '@/types/auth.types';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
@@ -17,7 +17,12 @@ export function useAuth() {
   const { user, isAuthenticated, accessToken } = useAppSelector((state) => state.auth);
 
   // 2. TanStack Query: GET ME (Auto-sync fresh profile details on mount/refresh)
-  const { data: freshUser, isLoading: isFetchingMe, refetch: refetchMe, error: meError } = useQuery({
+  const {
+    data: freshUser,
+    isLoading: isFetchingMe,
+    refetch: refetchMe,
+    error: meError,
+  } = useQuery({
     queryKey: ['auth-me'],
     queryFn: () => authService.getMe(),
     enabled: !!accessToken && isAuthenticated,
@@ -47,9 +52,10 @@ export function useAuth() {
     onSuccess: (data) => {
       dispatch(setCredentials(data));
       toast.success('Successfully logged in! ⚽');
-      const redirectPath = typeof window !== 'undefined'
-        ? (new URLSearchParams(window.location.search).get('redirect') || '/')
-        : '/';
+      const redirectPath =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('redirect') || '/'
+          : '/';
       router.push(redirectPath);
     },
     onError: (error: any) => {
@@ -74,7 +80,8 @@ export function useAuth() {
 
   // 5. TanStack Query Mutation: UPDATE PROFILE
   const updateProfileMutation = useMutation({
-    mutationFn: (profileData: { name: string; phone: string }) => authService.updateProfile(profileData),
+    mutationFn: (profileData: { name: string; phone: string }) =>
+      authService.updateProfile(profileData),
     onSuccess: (data) => {
       dispatch(updateUser(data));
       toast.success('Profile updated successfully! 👤');
@@ -100,7 +107,7 @@ export function useAuth() {
     accessToken,
     isFetchingMe,
     refetchMe,
-    
+
     // Login Action & State
     login: loginMutation.mutate,
     isLoggingIn: loginMutation.isPending,

@@ -1,27 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Image as ImageIcon,
-  Calendar, 
-  MapPin, 
-  ChevronLeft, 
-  ChevronRight, 
-  X, 
-  Award, 
-  Sparkles,
-  Trophy,
-  Users,
-  Flame,
-  Share2,
-  Clock,
-  ArrowRight
-} from 'lucide-react';
-import Link from 'next/link';
+import Magnetic from '@/components/ui/Magnetic';
+import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Magnetic from '@/components/ui/Magnetic';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowRight,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Image as ImageIcon,
+  MapPin,
+  Share2,
+  Trophy,
+  Users,
+  X,
+} from 'lucide-react';
+import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 // Register ScrollTrigger safely
@@ -46,98 +43,112 @@ interface GalleryItem {
 const GALLERY_ITEMS: GalleryItem[] = [
   {
     id: 1,
-    title: "Dhaka Corporate Futsal Cup 2026",
+    title: 'Dhaka Corporate Futsal Cup 2026',
     category: 'CORPORATE',
     categoryLabel: 'Corporate Cups',
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800",
-    date: "May 15, 2026",
+    image:
+      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800',
+    date: 'May 15, 2026',
     venue: "Chef's Table Courts",
-    playersCount: "32 Corporate Teams",
-    description: "ঢাকার শীর্ষ ১৬টি টেক ও ফাইন্যান্স কোম্পানির অংশগ্রহণে অনুষ্ঠিত হয়ে গেল রোমাঞ্চকর কর্পোরেট টুর্নামেন্ট। ফাইনালে তুমুল প্রতিদ্বন্দ্বিতার পর ট্রফি ছিনিয়ে নেয় ড্যাফোডিল সলিউশন্স।"
+    playersCount: '32 Corporate Teams',
+    description:
+      'ঢাকার শীর্ষ ১৬টি টেক ও ফাইন্যান্স কোম্পানির অংশগ্রহণে অনুষ্ঠিত হয়ে গেল রোমাঞ্চকর কর্পোরেট টুর্নামেন্ট। ফাইনালে তুমুল প্রতিদ্বন্দ্বিতার পর ট্রফি ছিনিয়ে নেয় ড্যাফোডিল সলিউশন্স।',
   },
   {
     id: 2,
-    title: "Midnight Futsal Champion Celebration",
+    title: 'Midnight Futsal Champion Celebration',
     category: 'CHAMPIONS',
     categoryLabel: 'Champions',
-    image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=800",
-    date: "May 22, 2026",
-    venue: "Jaff Arena",
-    playersCount: "Champions Moment",
-    description: "লেট-নাইট মিডনাইট লিগের ট্রফি জয়ের পর চ্যাম্পিয়ন দলের আনন্দঘন মুহূর্ত। জ্যাফ অ্যারেনার গ্যালারি কাঁপানো করতালির মাধ্যমে টুর্নামেন্ট সম্পন্ন হয়।"
+    image:
+      'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=800',
+    date: 'May 22, 2026',
+    venue: 'Jaff Arena',
+    playersCount: 'Champions Moment',
+    description:
+      'লেট-নাইট মিডনাইট লিগের ট্রফি জয়ের পর চ্যাম্পিয়ন দলের আনন্দঘন মুহূর্ত। জ্যাফ অ্যারেনার গ্যালারি কাঁপানো করতালির মাধ্যমে টুর্নামেন্ট সম্পন্ন হয়।',
   },
   {
     id: 3,
-    title: "Banani Super League Match Action",
+    title: 'Banani Super League Match Action',
     category: 'LEAGUE',
     categoryLabel: 'Leagues',
-    image: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&q=80&w=800",
-    date: "May 10, 2026",
-    venue: "Banani FC Arena",
-    playersCount: "7v7 League Match",
-    description: "উত্তেজনাপূর্ণ গ্রুপ পর্বের ম্যাচে দুর্দান্ত গোলস্কোরিং ড্রিবল অ্যাকশন। ফিফা স্ট্যান্ডার্ড কৃত্রিম ঘাসের উপর খেলোয়াড়দের গতির ঝড় তোলার চিত্র।"
+    image:
+      'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&q=80&w=800',
+    date: 'May 10, 2026',
+    venue: 'Banani FC Arena',
+    playersCount: '7v7 League Match',
+    description:
+      'উত্তেজনাপূর্ণ গ্রুপ পর্বের ম্যাচে দুর্দান্ত গোলস্কোরিং ড্রিবল অ্যাকশন। ফিফা স্ট্যান্ডার্ড কৃত্রিম ঘাসের উপর খেলোয়াড়দের গতির ঝড় তোলার চিত্র।',
   },
   {
     id: 4,
-    title: "Mirpur Youth Derby Championship",
+    title: 'Mirpur Youth Derby Championship',
     category: 'LEAGUE',
     categoryLabel: 'Leagues',
-    image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&q=80&w=800",
-    date: "April 28, 2026",
-    venue: "Mirpur Turf City",
-    playersCount: "8 Local Clubs",
-    description: "মিরপুর-১১ তে অনূর্ধ্ব-২১ ক্লাবের অংশগ্রহণে অনুষ্ঠিত ইয়ুথ ডার্বির চমৎকার ফুটবল মুহূর্ত। পুরো ঢাকা থেকে ১০০০-এর বেশি দর্শক মাঠে আসেন।"
+    image:
+      'https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&q=80&w=800',
+    date: 'April 28, 2026',
+    venue: 'Mirpur Turf City',
+    playersCount: '8 Local Clubs',
+    description:
+      'মিরপুর-১১ তে অনূর্ধ্ব-২১ ক্লাবের অংশগ্রহণে অনুষ্ঠিত ইয়ুথ ডার্বির চমৎকার ফুটবল মুহূর্ত। পুরো ঢাকা থেকে ১০০০-এর বেশি দর্শক মাঠে আসেন।',
   },
   {
     id: 5,
-    title: "Corporate Cricket Championship",
+    title: 'Corporate Cricket Championship',
     category: 'CORPORATE',
     categoryLabel: 'Corporate Cups',
-    image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=800",
-    date: "May 02, 2026",
+    image:
+      'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&q=80&w=800',
+    date: 'May 02, 2026',
     venue: "Chef's Table Courts",
-    playersCount: "24 Teams",
-    description: "টার্ফ পিচে সংক্ষিপ্ত সংস্করণের কর্পোরেট ক্রিকেট টুর্নামেন্টের ধুন্ধুমার চার-ছক্কার আসর। দর্শকদের উত্তেজনা ও টিমগুলোর ট্রফি লড়াইয়ের দারুণ মুহূর্ত।"
+    playersCount: '24 Teams',
+    description:
+      'টার্ফ পিচে সংক্ষিপ্ত সংস্করণের কর্পোরেট ক্রিকেট টুর্নামেন্টের ধুন্ধুমার চার-ছক্কার আসর। দর্শকদের উত্তেজনা ও টিমগুলোর ট্রফি লড়াইয়ের দারুণ মুহূর্ত।',
   },
   {
     id: 6,
-    title: "Behind The Scenes: Night Turf Setup",
+    title: 'Behind The Scenes: Night Turf Setup',
     category: 'SCENES',
     categoryLabel: 'Behind the Scenes',
-    image: "https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?auto=format&fit=crop&q=80&w=800",
-    date: "Ongoing Events",
-    venue: "All Arenas",
-    playersCount: "Pitch Setup",
-    description: "ম্যাচ শুরুর আগে ফ্লাডলাইটের সোনালী আলোয় ভেজা ঘাস এবং প্রস্তুত করা ফুটবল অ্যারেনা। প্লেয়ারদের সেরা অভিজ্ঞতা দিতে টার্ফবুকের অন-গ্রাউন্ড ক্রুদের আয়োজন।"
-  }
+    image:
+      'https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?auto=format&fit=crop&q=80&w=800',
+    date: 'Ongoing Events',
+    venue: 'All Arenas',
+    playersCount: 'Pitch Setup',
+    description:
+      'ম্যাচ শুরুর আগে ফ্লাডলাইটের সোনালী আলোয় ভেজা ঘাস এবং প্রস্তুত করা ফুটবল অ্যারেনা। প্লেয়ারদের সেরা অভিজ্ঞতা দিতে টার্ফবুকের অন-গ্রাউন্ড ক্রুদের আয়োজন।',
+  },
 ];
 
 // Mock Upcoming Events
 const UPCOMING_EVENTS = [
   {
     id: 1,
-    title: "Dhaka Futsal League Season 4",
-    venue: "Jaff Arena",
-    date: "June 12, 2026",
+    title: 'Dhaka Futsal League Season 4',
+    venue: 'Jaff Arena',
+    date: 'June 12, 2026',
     teamsRegistered: 8,
     teamsTotal: 12,
-    prizePool: "৳৫০,০০০ BDT",
-    entryFee: "৳৫,০০০"
+    prizePool: '৳৫০,০০০ BDT',
+    entryFee: '৳৫,০০০',
   },
   {
     id: 2,
-    title: "Corporate Cricket Cup 2026",
+    title: 'Corporate Cricket Cup 2026',
     venue: "Chef's Table Courts",
-    date: "June 25, 2026",
+    date: 'June 25, 2026',
     teamsRegistered: 14,
     teamsTotal: 24,
-    prizePool: "৳১,০০,০০০ BDT",
-    entryFee: "৳৮,০০০"
-  }
+    prizePool: '৳১,০০,০০০ BDT',
+    entryFee: '৳৮,০০০',
+  },
 ];
 
 export default function GalleryPage() {
-  const [activeCategory, setActiveCategory] = useState<'ALL' | 'CORPORATE' | 'LEAGUE' | 'CHAMPIONS' | 'SCENES'>('ALL');
+  const [activeCategory, setActiveCategory] = useState<
+    'ALL' | 'CORPORATE' | 'LEAGUE' | 'CHAMPIONS' | 'SCENES'
+  >('ALL');
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
 
   // Refs for entrance triggers
@@ -158,8 +169,8 @@ export default function GalleryPage() {
       if (elementsToClean.length > 0) {
         gsap.set(elementsToClean, { opacity: 0, y: 20 });
       }
-      
-      const charAnims = pageContainerRef.current?.querySelectorAll(".char-anim");
+
+      const charAnims = pageContainerRef.current?.querySelectorAll('.char-anim');
       if (charAnims && charAnims.length > 0) {
         gsap.set(charAnims, { opacity: 0, y: 35, rotateX: -30, transformOrigin: 'top center' });
       }
@@ -177,14 +188,18 @@ export default function GalleryPage() {
       }
 
       if (charAnims && charAnims.length > 0) {
-        tl.to(charAnims, {
-          opacity: 1,
-          y: 0,
-          rotateX: 0,
-          stagger: 0.012,
-          duration: 0.8,
-          ease: 'power4.out'
-        }, '-=0.4');
+        tl.to(
+          charAnims,
+          {
+            opacity: 1,
+            y: 0,
+            rotateX: 0,
+            stagger: 0.012,
+            duration: 0.8,
+            ease: 'power4.out',
+          },
+          '-=0.4',
+        );
       }
 
       if (subtitleRef.current) {
@@ -192,13 +207,17 @@ export default function GalleryPage() {
       }
 
       if (gridCards && gridCards.length > 0) {
-        tl.to(Array.from(gridCards), {
-          opacity: 1,
-          y: 0,
-          stagger: 0.1,
-          duration: 0.7,
-          ease: 'power3.out'
-        }, '-=0.3');
+        tl.to(
+          Array.from(gridCards),
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            duration: 0.7,
+            ease: 'power3.out',
+          },
+          '-=0.3',
+        );
       }
 
       // Neon orbit animations
@@ -209,29 +228,29 @@ export default function GalleryPage() {
           duration: 10,
           repeat: -1,
           yoyo: true,
-          ease: 'sine.inOut'
+          ease: 'sine.inOut',
         });
       }
 
       // Scroll triggers for upcoming events section
-      const eventCards = pageContainerRef.current?.querySelectorAll(".event-reveal");
+      const eventCards = pageContainerRef.current?.querySelectorAll('.event-reveal');
       if (eventCards && eventCards.length > 0) {
-        gsap.fromTo(eventCards,
+        gsap.fromTo(
+          eventCards,
           { opacity: 0, y: 30 },
           {
             opacity: 1,
             y: 0,
             stagger: 0.15,
             duration: 0.8,
-            ease: "power3.out",
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: ".upcoming-events-section",
-              start: "top 80%",
-            }
-          }
+              trigger: '.upcoming-events-section',
+              start: 'top 80%',
+            },
+          },
         );
       }
-
     }, pageContainerRef);
 
     return () => ctx.revert();
@@ -250,12 +269,12 @@ export default function GalleryPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
   // Category filter
-  const filteredItems = GALLERY_ITEMS.filter(item => {
+  const filteredItems = GALLERY_ITEMS.filter((item) => {
     if (activeCategory === 'ALL') return true;
     return item.category === activeCategory;
   });
@@ -304,28 +323,30 @@ export default function GalleryPage() {
   };
 
   return (
-    <div 
+    <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
-      
       {/* 🌌 High-Performance Grid & Spotlight */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(550px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)'
+          background:
+            'radial-gradient(550px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)',
         }}
       />
 
@@ -334,18 +355,14 @@ export default function GalleryPage() {
         ref={orbitRef}
         className="absolute top-10 left-1/3 -translate-x-1/2 w-[450px] h-[450px] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none will-change-transform"
       />
-      <div
-        className="absolute bottom-20 right-1/4 translate-x-1/2 w-[550px] h-[550px] bg-[#1e6b3e]/5 blur-[150px] rounded-full pointer-events-none"
-      />
+      <div className="absolute bottom-20 right-1/4 translate-x-1/2 w-[550px] h-[550px] bg-[#1e6b3e]/5 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-24 relative z-10">
-        
         {/* ================= HEADER SECTION ================= */}
         <header className="text-center space-y-5 max-w-2xl mx-auto flex flex-col items-center">
-          
           <div ref={badgeRef} className="will-change-transform">
             <Magnetic range={20} actionStrength={0.15}>
-              <div 
+              <div
                 className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-4.5 py-2 rounded-full backdrop-blur-md shadow-sm cursor-pointer hover:bg-emerald-500/15 transition-all duration-300"
                 data-cursor-text="EVENT MAP"
               >
@@ -356,38 +373,43 @@ export default function GalleryPage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.12] text-white will-change-transform">
-            <div>{render3DLetters("Match Gallery & ")}</div>
+            <div>{render3DLetters('Match Gallery & ')}</div>
             <div className="mt-1">
-              <span 
+              <span
                 className="cursor-pointer drop-shadow-[0_4px_20px_rgba(52,211,153,0.25)]"
                 data-cursor-text="EVENTS"
               >
-                {render3DLetters("Dhaka Sports Events", "text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400")}
+                {render3DLetters(
+                  'Dhaka Sports Events',
+                  'text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-teal-400',
+                )}
               </span>
             </div>
           </h1>
 
-          <p 
+          <p
             ref={subtitleRef}
             className="text-slate-400 text-xs sm:text-sm max-w-xl leading-relaxed font-medium will-change-transform"
           >
-            টার্ফবুকের ভেন্যুগুলোতে হওয়া জমজমাট কর্পোরেট কাপ, মিডনাইট টুর্নামেন্ট ও ফুটবল চ্যাম্পিয়নদের রোমাঞ্চকর মুহূর্তগুলো এক নজরে দেখুন। 
+            টার্ফবুকের ভেন্যুগুলোতে হওয়া জমজমাট কর্পোরেট কাপ, মিডনাইট টুর্নামেন্ট ও ফুটবল
+            চ্যাম্পিয়নদের রোমাঞ্চকর মুহূর্তগুলো এক নজরে দেখুন।
             <span className="text-white font-bold"> নো টেনশন, জাস্ট প্লে!</span>
           </p>
         </header>
 
         {/* ================= DYNAMIC CATEGORIES GRID ================= */}
         <section className="space-y-8">
-          
           <div className="flex flex-col sm:flex-row items-center justify-between gap-5 border-b border-slate-900/60 pb-5">
             <div className="space-y-1 text-center sm:text-left">
               <h3 className="text-lg font-black text-white">Event Highlights</h3>
-              <p className="text-[10px] text-slate-550 font-bold uppercase tracking-wider">ফিল্টার সিলেক্ট করে বিভিন্ন ক্যাটাগরির ছবি দেখুন</p>
+              <p className="text-[10px] text-slate-550 font-bold uppercase tracking-wider">
+                ফিল্টার সিলেক্ট করে বিভিন্ন ক্যাটাগরির ছবি দেখুন
+              </p>
             </div>
 
             {/* Filter Pills */}
             <div className="flex flex-wrap gap-1.5 justify-center bg-[#0d1425]/30 border border-slate-900 p-1 rounded-xl">
-              {(['ALL', 'CORPORATE', 'LEAGUE', 'CHAMPIONS', 'SCENES'] as const).map(cat => (
+              {(['ALL', 'CORPORATE', 'LEAGUE', 'CHAMPIONS', 'SCENES'] as const).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
@@ -397,17 +419,22 @@ export default function GalleryPage() {
                       : 'text-slate-500 hover:text-slate-350'
                   }`}
                 >
-                  {cat === 'ALL' ? 'All Moments' : cat === 'CORPORATE' ? 'Corporate' : cat === 'LEAGUE' ? 'Leagues' : cat === 'CHAMPIONS' ? 'Champions' : 'Behind Scenes'}
+                  {cat === 'ALL'
+                    ? 'All Moments'
+                    : cat === 'CORPORATE'
+                      ? 'Corporate'
+                      : cat === 'LEAGUE'
+                        ? 'Leagues'
+                        : cat === 'CHAMPIONS'
+                          ? 'Champions'
+                          : 'Behind Scenes'}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Staggered Photo Grid */}
-          <div 
-            ref={gridRef}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
+          <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredItems.map((item, index) => (
               <div
                 key={item.id}
@@ -417,18 +444,18 @@ export default function GalleryPage() {
                 {/* Visual Image container with dynamic hover spotlight */}
                 <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-900 relative group-hover:shadow-[0_8px_25px_rgba(16,185,129,0.05)] transition-shadow">
                   <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors duration-300 z-10" />
-                  
+
                   {/* Category Label badge */}
                   <span className="absolute top-3 left-3 bg-[#050811]/85 backdrop-blur-md border border-slate-800 text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded text-emerald-400 z-20">
                     {item.categoryLabel}
                   </span>
 
-                  <img 
-                    src={item.image} 
+                  <img
+                    src={item.image}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
-                  
+
                   {/* Interactive Quick View overlay */}
                   <div className="absolute inset-0 bg-[#050811]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
                     <span className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-wider rounded-xl hover:bg-emerald-500/20 transition-all active:scale-95">
@@ -453,7 +480,6 @@ export default function GalleryPage() {
               </div>
             ))}
           </div>
-
         </section>
 
         {/* ================= INTERACTIVE LIGHTBOX MODAL ================= */}
@@ -474,7 +500,6 @@ export default function GalleryPage() {
                 onClick={(e) => e.stopPropagation()}
                 className="bg-[#0c1324]/90 border border-slate-800 rounded-3xl p-5 sm:p-7 max-w-3xl w-full shadow-2xl relative flex flex-col md:flex-row gap-6 overflow-hidden max-h-[90vh] overflow-y-auto"
               >
-                
                 {/* Semicircle premium glowing background inside modal */}
                 <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
 
@@ -488,8 +513,8 @@ export default function GalleryPage() {
 
                 {/* Left Part: Premium Media View */}
                 <div className="md:flex-1 relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-950 border border-slate-850">
-                  <img 
-                    src={activeItem.image} 
+                  <img
+                    src={activeItem.image}
                     alt={activeItem.title}
                     className="w-full h-full object-cover"
                   />
@@ -526,11 +551,15 @@ export default function GalleryPage() {
                     {/* Metadata boxes */}
                     <div className="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-400">
                       <div className="p-2.5 bg-[#050811] rounded-xl border border-slate-850 space-y-1">
-                        <span className="text-[7px] text-slate-500 uppercase tracking-widest block">Venue Arena</span>
+                        <span className="text-[7px] text-slate-500 uppercase tracking-widest block">
+                          Venue Arena
+                        </span>
                         <span className="text-white truncate block">📍 {activeItem.venue}</span>
                       </div>
                       <div className="p-2.5 bg-[#050811] rounded-xl border border-slate-850 space-y-1">
-                        <span className="text-[7px] text-slate-500 uppercase tracking-widest block">Match Date</span>
+                        <span className="text-[7px] text-slate-500 uppercase tracking-widest block">
+                          Match Date
+                        </span>
                         <span className="text-white block">📅 {activeItem.date}</span>
                       </div>
                     </div>
@@ -565,7 +594,11 @@ export default function GalleryPage() {
                       </button>
 
                       <Magnetic range={10} actionStrength={0.25}>
-                        <Link href="/turfs" className="flex-1" onClick={() => setSelectedItemIndex(null)}>
+                        <Link
+                          href="/turfs"
+                          className="flex-1"
+                          onClick={() => setSelectedItemIndex(null)}
+                        >
                           <button className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all shadow-md active:scale-95 cursor-pointer border border-emerald-500/10 flex items-center justify-center gap-1.5">
                             <span>Book Venue Now</span>
                             <ArrowRight className="h-3 w-3" />
@@ -574,9 +607,7 @@ export default function GalleryPage() {
                       </Magnetic>
                     </div>
                   </div>
-
                 </div>
-
               </motion.div>
             </motion.div>
           )}
@@ -589,9 +620,12 @@ export default function GalleryPage() {
               <Flame className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400 animate-bounce" />
               <span>Dhaka Tournaments Timeline</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">Upcoming Leagues & Tournaments</h2>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+              Upcoming Leagues & Tournaments
+            </h2>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-              টার্ফবুক পার্টনার অ্যারেনাতে আয়োজিত হতে যাওয়া ঢাকা অঞ্চলের জনপ্রিয় টুর্নামেন্টগুলোতে আপনার ফুটবল ক্লাব নিয়ে এখনই অনবোর্ড হন।
+              টার্ফবুক পার্টনার অ্যারেনাতে আয়োজিত হতে যাওয়া ঢাকা অঞ্চলের জনপ্রিয় টুর্নামেন্টগুলোতে
+              আপনার ফুটবল ক্লাব নিয়ে এখনই অনবোর্ড হন।
             </p>
           </div>
 
@@ -600,7 +634,7 @@ export default function GalleryPage() {
             {UPCOMING_EVENTS.map((evt) => {
               const regPercentage = (evt.teamsRegistered / evt.teamsTotal) * 100;
               return (
-                <div 
+                <div
                   key={evt.id}
                   className="event-reveal p-6 rounded-3xl bg-[#0d1425]/15 border border-slate-900 hover:border-slate-800 transition-all duration-300 flex flex-col justify-between space-y-6"
                 >
@@ -635,11 +669,13 @@ export default function GalleryPage() {
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-widest">
                         <span>Teams Registered</span>
-                        <span className="text-white font-mono">{evt.teamsRegistered} / {evt.teamsTotal} Slots</span>
+                        <span className="text-white font-mono">
+                          {evt.teamsRegistered} / {evt.teamsTotal} Slots
+                        </span>
                       </div>
                       <div className="h-2 bg-[#050811] rounded-full overflow-hidden border border-slate-850">
-                        <div 
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" 
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
                           style={{ width: `${regPercentage}%` }}
                         />
                       </div>
@@ -650,9 +686,12 @@ export default function GalleryPage() {
                   <Magnetic range={15} actionStrength={0.2}>
                     <button
                       onClick={() => {
-                        toast.success("Registration request sent! Our tournament operations team will contact you shortly.", {
-                          duration: 4000
-                        });
+                        toast.success(
+                          'Registration request sent! Our tournament operations team will contact you shortly.',
+                          {
+                            duration: 4000,
+                          },
+                        );
                       }}
                       className="w-full py-3 bg-[#050811] border border-slate-850 hover:border-emerald-500/30 hover:bg-emerald-500/5 text-slate-350 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
                     >
@@ -660,13 +699,11 @@ export default function GalleryPage() {
                       <ArrowRight className="h-3 w-3 text-emerald-400" />
                     </button>
                   </Magnetic>
-
                 </div>
               );
             })}
           </div>
         </section>
-
       </div>
     </div>
   );

@@ -1,18 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import turfService from '@/services/turf.service';
-import { 
-  Trophy, Sparkles, Calendar, ChevronLeft, ShieldAlert, 
-  MapPin, Clock, DollarSign, PenSquare, FileText, Image as ImageIcon 
-} from 'lucide-react';
-import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
+import turfService from '@/services/turf.service';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import gsap from 'gsap';
+import {
+  ChevronLeft,
+  Clock,
+  DollarSign,
+  FileText,
+  Image as ImageIcon,
+  MapPin,
+  PenSquare,
+  ShieldAlert,
+  Sparkles,
+  Trophy,
+} from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function CreateTurfPage() {
@@ -49,7 +57,7 @@ export default function CreateTurfPage() {
     onError: (err: any) => {
       const msg = err?.response?.data?.message || 'Failed to create turf arena!';
       toast.error(msg);
-    }
+    },
   });
 
   // Entrance animations
@@ -63,7 +71,7 @@ export default function CreateTurfPage() {
           scale: 1,
           y: 0,
           duration: 0.8,
-          ease: 'power3.out'
+          ease: 'power3.out',
         });
       }, pageContainerRef);
       return;
@@ -77,13 +85,17 @@ export default function CreateTurfPage() {
 
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
       tl.to(cardRef.current, { opacity: 1, y: 0, duration: 1 });
-      
-      tl.to('.animate-item', {
-        opacity: 1,
-        y: 0,
-        stagger: 0.05,
-        duration: 0.5
-      }, '-=0.5');
+
+      tl.to(
+        '.animate-item',
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.05,
+          duration: 0.5,
+        },
+        '-=0.5',
+      );
 
       // Continuous float neon orb
       gsap.to(orbitRef.current, {
@@ -93,7 +105,7 @@ export default function CreateTurfPage() {
         duration: 9,
         repeat: -1,
         yoyo: true,
-        ease: 'sine.inOut'
+        ease: 'sine.inOut',
       });
     }, pageContainerRef);
 
@@ -113,7 +125,7 @@ export default function CreateTurfPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
@@ -139,7 +151,7 @@ export default function CreateTurfPage() {
       pricePerHour: Number(pricePerHour),
       openTime,
       closeTime,
-      images: images.length > 0 ? images : undefined
+      images: images.length > 0 ? images : undefined,
     });
   };
 
@@ -154,29 +166,34 @@ export default function CreateTurfPage() {
   // --- protection: Authenticated but NOT Admin ---
   if (!isFetchingMe && isAuthenticated && user?.role !== 'ADMIN') {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
-        <div 
+
+        <div
           ref={cardRef}
           className="relative z-10 text-center space-y-6 max-w-md p-8 sm:p-10 rounded-[32px] bg-[#0d1425]/30 border border-slate-800/80 backdrop-blur-3xl shadow-2xl"
         >
           <div className="h-16 w-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4 animate-bounce">
             <ShieldAlert className="h-8 w-8 text-amber-400" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Access Restricted</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Access Restricted
+          </h2>
           <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-            Unauthorized action. Creating sports arenas and managing platform inventory is strictly restricted to platform administrators.
+            Unauthorized action. Creating sports arenas and managing platform inventory is strictly
+            restricted to platform administrators.
           </p>
-          
+
           <div className="pt-2 flex flex-col gap-3">
             <Magnetic range={15} actionStrength={0.2}>
               <Button
@@ -206,23 +223,26 @@ export default function CreateTurfPage() {
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 Grid & Spotlight */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(245,158,11,0.03), transparent 50%)'
+          background:
+            'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(245,158,11,0.03), transparent 50%)',
         }}
       />
 
@@ -233,7 +253,6 @@ export default function CreateTurfPage() {
       />
 
       <div className="max-w-3xl mx-auto space-y-6 relative z-10">
-        
         {/* Back Link */}
         <div className="animate-item">
           <Link
@@ -246,7 +265,7 @@ export default function CreateTurfPage() {
         </div>
 
         {/* --- FORM CARD --- */}
-        <div 
+        <div
           ref={cardRef}
           className="relative bg-[#0d1425]/40 backdrop-blur-3xl rounded-[32px] border border-slate-800/80 p-8 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.65)] overflow-hidden"
         >
@@ -256,18 +275,21 @@ export default function CreateTurfPage() {
               <Sparkles className="h-3 w-3 animate-pulse" />
               <span>Admin Dashboard</span>
             </div>
-            
+
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               Create New Sport Arena
             </h1>
             <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-              Add a verified turf to the TurfBook system. Slots for the first 7 days will be automatically initialized at midnight.
+              Add a verified turf to the TurfBook system. Slots for the first 7 days will be
+              automatically initialized at midnight.
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 pt-6 font-semibold text-slate-400 text-xs">
-            
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 pt-6 font-semibold text-slate-400 text-xs"
+          >
             {/* Row 1: Name */}
             <div className="space-y-2 animate-item">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -398,7 +420,7 @@ export default function CreateTurfPage() {
                 <ImageIcon className="h-3.5 w-3.5 text-slate-550" />
                 Arena Showcase Image URLs (Optional)
               </label>
-              
+
               <div className="space-y-2">
                 <input
                   type="text"
@@ -426,15 +448,14 @@ export default function CreateTurfPage() {
                   className="w-full h-12 bg-gradient-to-r from-amber-500 to-[#b57a07] hover:from-amber-400 hover:to-[#996403] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-950/30 border border-amber-500/10 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="h-4 w-4 text-amber-200" />
-                  <span>{createMutation.isPending ? 'Deploying Arena...' : 'Create Arena Profile'}</span>
+                  <span>
+                    {createMutation.isPending ? 'Deploying Arena...' : 'Create Arena Profile'}
+                  </span>
                 </Button>
               </Magnetic>
             </div>
-
           </form>
-
         </div>
-
       </div>
     </div>
   );
