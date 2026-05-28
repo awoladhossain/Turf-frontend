@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Mail, MapPin, Phone, Trophy, Heart } from 'lucide-react';
-import Link from 'next/link';
+import Magnetic from '@/components/ui/Magnetic';
+import FacebookIcon from '@iconify-react/line-md/facebook';
 import InstagramIcon from '@iconify-react/line-md/instagram';
 import TwitterFilledIcon from '@iconify-react/line-md/twitter-filled';
-import FacebookIcon from '@iconify-react/line-md/facebook';
-import Magnetic from '@/components/ui/Magnetic';
+import { Heart, Mail, MapPin, Phone, Trophy } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function Footer() {
   const [currentYear, setCurrentYear] = useState(2026);
@@ -17,13 +17,11 @@ export default function Footer() {
 
   return (
     <footer className="w-full border-t border-slate-900 bg-[#050811] text-slate-450 font-jakarta relative overflow-hidden select-none">
-      
       {/* 🌌 Deep Space Glowing Backdrop */}
       <div className="absolute bottom-0 right-10 w-[250px] h-[250px] bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          
           {/* --- BRAND SECTION --- */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2.5 group cursor-pointer w-fit">
@@ -37,7 +35,7 @@ export default function Footer() {
                 </span>
               </span>
             </Link>
-            
+
             <p className="text-[11px] sm:text-xs text-slate-400 font-medium leading-relaxed">
               আপনার পছন্দের টার্ফ খুঁজে বের করুন এবং বুক করুন খুব সহজে। আমরা দিচ্ছি ঢাকা শহরের সেরা
               খেলার মাঠ ও প্রফেশনাল এক্সপেরিয়েন্সের নিশ্চয়তা।
@@ -67,7 +65,7 @@ export default function Footer() {
             <h3 className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-4.5">
               Quick Nav
             </h3>
-            
+
             <ul className="space-y-2.5 text-[11px] sm:text-xs font-semibold text-slate-450">
               {[
                 { label: 'সব টার্ফ খুঁজুন', path: '/turfs' },
@@ -94,7 +92,7 @@ export default function Footer() {
             <h3 className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-4.5">
               Support
             </h3>
-            
+
             <ul className="space-y-2.5 text-[11px] sm:text-xs font-semibold text-slate-450">
               {[
                 { label: 'সাধারণ জিজ্ঞাসা (FAQ)', path: '/faq' },
@@ -121,7 +119,7 @@ export default function Footer() {
             <h3 className="text-slate-500 font-black text-[9px] uppercase tracking-widest mb-4.5">
               Contact
             </h3>
-            
+
             <ul className="space-y-3.5 text-[11px] sm:text-xs font-semibold text-slate-450">
               <li className="flex items-center gap-2.5 group">
                 <div className="p-1.5 bg-[#050811] border border-slate-950 rounded-full text-emerald-400 flex items-center justify-center">
@@ -131,7 +129,7 @@ export default function Footer() {
                   support@turfbook.com
                 </span>
               </li>
-              
+
               <li className="flex items-center gap-2.5 group">
                 <div className="p-1.5 bg-[#050811] border border-slate-950 rounded-full text-emerald-400 flex items-center justify-center">
                   <Phone className="h-3 w-3" />
@@ -140,7 +138,7 @@ export default function Footer() {
                   +880 1612 011970
                 </span>
               </li>
-              
+
               <li className="flex items-center gap-2.5 group">
                 <div className="p-1.5 bg-[#050811] border border-slate-950 rounded-full text-emerald-400 flex items-center justify-center">
                   <MapPin className="h-3 w-3" />
@@ -151,19 +149,17 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
         </div>
 
         {/* --- BOTTOM RIGHTS & COPYRIGHT BLOCK --- */}
         <div className="mt-14 pt-6.5 border-t border-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
           <p>© {currentYear} TurfBook. সর্বস্বত্ব সংরক্ষিত।</p>
-          
+
           <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-550">
             <span>Built for Next-Gen Players</span>
             <Heart className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500 animate-pulse" />
           </div>
         </div>
-
       </div>
     </footer>
   );

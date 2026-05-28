@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { HelpCircle, Lock, Mail, Trophy, Sparkles, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
-import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
+import gsap from 'gsap';
+import { Eye, EyeOff, HelpCircle, Lock, Mail, Sparkles, Trophy } from 'lucide-react';
+import Link from 'next/link';
+import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -33,11 +33,14 @@ export default function LoginPage() {
     // --- 1. Set initial opacity and y-states for GSAP staggered reveals ---
     gsap.set(cardRef.current, { opacity: 0, scale: 0.95, y: 30 });
     gsap.set(brandLogoRef.current, { opacity: 0, scale: 0.8, rotate: -15 });
-    gsap.set([headingRef.current, googleBtnRef.current, dividerRef.current, bottomLinkRef.current], { 
-      opacity: 0, 
-      y: 15 
-    });
-    
+    gsap.set(
+      [headingRef.current, googleBtnRef.current, dividerRef.current, bottomLinkRef.current],
+      {
+        opacity: 0,
+        y: 15,
+      },
+    );
+
     // Select form items (inputs, remember row, login button)
     const formChildren = formItemsRef.current?.children;
     if (formChildren) {
@@ -48,28 +51,36 @@ export default function LoginPage() {
     const tl = gsap.timeline({ defaults: { ease: 'power4.out', duration: 1 } });
 
     tl.to(cardRef.current, { opacity: 1, scale: 1, y: 0, duration: 1.2, ease: 'back.out(1.1)' });
-    
+
     // Brand logo spins into view
-    tl.to(brandLogoRef.current, { opacity: 1, scale: 1, rotate: 0, duration: 0.8, ease: 'back.out(1.6)' }, '-=0.8');
-    
+    tl.to(
+      brandLogoRef.current,
+      { opacity: 1, scale: 1, rotate: 0, duration: 0.8, ease: 'back.out(1.6)' },
+      '-=0.8',
+    );
+
     // Header reveal
     tl.to(headingRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.6');
-    
+
     // Google Button reveal
     tl.to(googleBtnRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=0.5');
-    
+
     // Divider
     tl.to(dividerRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=0.4');
 
     // Inputs stagger
     if (formChildren) {
-      tl.to(Array.from(formChildren), {
-        opacity: 1,
-        y: 0,
-        stagger: 0.08,
-        duration: 0.7,
-        ease: 'power3.out'
-      }, '-=0.3');
+      tl.to(
+        Array.from(formChildren),
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.08,
+          duration: 0.7,
+          ease: 'power3.out',
+        },
+        '-=0.3',
+      );
     }
 
     // Signup footer link
@@ -83,9 +94,8 @@ export default function LoginPage() {
       duration: 8,
       repeat: -1,
       yoyo: true,
-      ease: 'sine.inOut'
+      ease: 'sine.inOut',
     });
-
   }, []);
 
   // --- 3. Spotlight coordinates tracker ---
@@ -101,7 +111,7 @@ export default function LoginPage() {
       '--spotlight-x': `${x}px`,
       '--spotlight-y': `${y}px`,
       duration: 0.5,
-      ease: 'power3.out'
+      ease: 'power3.out',
     });
   };
 
@@ -111,27 +121,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
+    <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="relative min-h-screen w-full flex items-center justify-center p-4 bg-[#050811] overflow-hidden font-jakarta text-white"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 High-Performance Grid & Spotlight (Matches page.tsx theme) */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.22] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(500px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)'
+          background:
+            'radial-gradient(500px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.06), transparent 50%)',
         }}
       />
 
@@ -153,7 +166,10 @@ export default function LoginPage() {
 
         {/* Brand Header Section */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div ref={brandLogoRef} className="flex items-center gap-2.5 mb-3.5 will-change-transform">
+          <div
+            ref={brandLogoRef}
+            className="flex items-center gap-2.5 mb-3.5 will-change-transform"
+          >
             <div className="bg-gradient-to-br from-emerald-500 to-[#1e6b3e] p-2 rounded-xl border border-emerald-400/20 shadow-lg">
               <Trophy className="h-5 w-5 text-white" />
             </div>
@@ -164,7 +180,7 @@ export default function LoginPage() {
               </span>
             </span>
           </div>
-          
+
           <div ref={headingRef} className="will-change-transform">
             <h1 className="text-2xl font-black text-white tracking-tight sm:text-3xl">
               Welcome Back
@@ -209,7 +225,10 @@ export default function LoginPage() {
         </div>
 
         {/* Divider */}
-        <div ref={dividerRef} className="relative flex items-center justify-center my-6 will-change-transform">
+        <div
+          ref={dividerRef}
+          className="relative flex items-center justify-center my-6 will-change-transform"
+        >
           <div className="absolute w-full h-px bg-slate-800/60" />
           <span className="relative bg-[#080d19] px-4 text-[10px] text-slate-500 uppercase tracking-widest font-black">
             or
@@ -247,11 +266,7 @@ export default function LoginPage() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-350 focus:outline-none transition-colors duration-200 cursor-pointer"
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
@@ -264,7 +279,10 @@ export default function LoginPage() {
               />
               Remember me
             </label>
-            <Link href="#" className="text-emerald-400 hover:text-emerald-350 transition-colors duration-300">
+            <Link
+              href="#"
+              className="text-emerald-400 hover:text-emerald-350 transition-colors duration-300"
+            >
               Forgot password?
             </Link>
           </div>
@@ -284,7 +302,10 @@ export default function LoginPage() {
         </form>
 
         {/* Footer Link */}
-        <p ref={bottomLinkRef} className="text-center text-xs text-slate-400 font-semibold mt-6 will-change-transform">
+        <p
+          ref={bottomLinkRef}
+          className="text-center text-xs text-slate-400 font-semibold mt-6 will-change-transform"
+        >
           Don&apos;t have an account?{' '}
           <Link
             href="/register"
@@ -321,7 +342,6 @@ export default function LoginPage() {
             <polygon points="50,30 65,42 59,60 41,60 35,42" />
           </svg>
         </div>
-
       </div>
     </div>
   );

@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { User, Mail, Phone, Shield, Calendar, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
+import { useAuth } from '@/hooks/useAuth';
+import gsap from 'gsap';
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle2,
+  Mail,
+  Phone,
+  Shield,
+  Sparkles,
+  User,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function ProfilePage() {
   const { user, isAuthenticated, updateProfile, isUpdatingProfile, isFetchingMe } = useAuth();
@@ -96,17 +105,19 @@ export default function ProfilePage() {
   // Sleek rotating loader during initial profile fetch
   if (isFetchingMe && !user) {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
+
         <div className="relative flex flex-col items-center gap-4">
           <div className="h-10 w-10 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 animate-pulse">
@@ -120,17 +131,19 @@ export default function ProfilePage() {
   // Redirect unauthorized users
   if (!isAuthenticated || !user) {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
+
         <div className="relative z-10 text-center space-y-6 max-w-sm p-8 rounded-3xl bg-[#0d1425]/30 border border-slate-900 backdrop-blur-3xl shadow-2xl">
           <div className="h-14 w-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="h-7 w-7 text-rose-400" />
@@ -166,23 +179,26 @@ export default function ProfilePage() {
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 High-Performance Grid & Spotlight */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)'
+          background:
+            'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(16,185,129,0.05), transparent 50%)',
         }}
       />
 
@@ -193,7 +209,6 @@ export default function ProfilePage() {
       />
 
       <div className="max-w-4xl mx-auto relative z-10 space-y-8">
-        
         {/* Header section */}
         <div className="space-y-2">
           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
@@ -208,10 +223,11 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          
           {/* Left Column: Premium User Badge Card */}
-          <div ref={cardRef} className="lg:col-span-1 bg-[#0d1425]/20 backdrop-blur-2xl rounded-3xl border border-slate-900 p-6 space-y-6 shadow-xl will-change-transform">
-            
+          <div
+            ref={cardRef}
+            className="lg:col-span-1 bg-[#0d1425]/20 backdrop-blur-2xl rounded-3xl border border-slate-900 p-6 space-y-6 shadow-xl will-change-transform"
+          >
             {/* Centered Avatar */}
             <div className="text-center space-y-4">
               <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-600 to-[#1e6b3e] flex items-center justify-center text-3xl font-black text-white uppercase shadow-lg mx-auto border border-emerald-500/20">
@@ -222,8 +238,12 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <h2 className="text-sm font-black text-white truncate max-w-[200px] mx-auto">{user.name}</h2>
-                <p className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">{user.email}</p>
+                <h2 className="text-sm font-black text-white truncate max-w-[200px] mx-auto">
+                  {user.name}
+                </h2>
+                <p className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">
+                  {user.email}
+                </p>
               </div>
             </div>
 
@@ -231,7 +251,6 @@ export default function ProfilePage() {
 
             {/* Quick Details List */}
             <div className="space-y-4 text-xs font-bold text-slate-400">
-              
               <div className="profile-field flex items-center justify-between py-1 border-b border-slate-900/50">
                 <span className="flex items-center gap-2 text-slate-500">
                   <Shield className="h-4 w-4 text-slate-650" />
@@ -257,18 +276,13 @@ export default function ProfilePage() {
                   <Calendar className="h-4 w-4 text-slate-650" />
                   Joined TurfBook
                 </span>
-                <span className="text-slate-300 font-semibold">
-                  {registrationDate}
-                </span>
+                <span className="text-slate-300 font-semibold">{registrationDate}</span>
               </div>
-
             </div>
-
           </div>
 
           {/* Right Column: Edit Profile Credentials Form */}
           <div className="lg:col-span-2 bg-[#0d1425]/20 backdrop-blur-2xl rounded-3xl border border-slate-900 p-6 sm:p-8 space-y-6 shadow-xl">
-            
             <div className="border-b border-slate-900/80 pb-3">
               <h2 className="text-sm font-black text-white tracking-wide uppercase flex items-center gap-2">
                 <Sparkles className="h-4.5 w-4.5 text-emerald-400" />
@@ -277,7 +291,6 @@ export default function ProfilePage() {
             </div>
 
             <form onSubmit={handleUpdateProfile} className="space-y-5">
-              
               {/* Full Name field */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -342,13 +355,9 @@ export default function ProfilePage() {
                   </Button>
                 </Magnetic>
               </div>
-
             </form>
-
           </div>
-
         </div>
-
       </div>
     </div>
   );

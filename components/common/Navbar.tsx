@@ -1,14 +1,22 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Languages, Menu, Trophy, UserCircle, LogOut, ChevronDown, LayoutDashboard } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
 import Magnetic from '@/components/ui/Magnetic';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  Languages,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Trophy,
+  UserCircle,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -59,10 +67,13 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-6xl mx-auto flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
-        
         {/* --- Logo Section (Perfect Circular Glowing Badge) --- */}
         <Magnetic range={25} actionStrength={0.2}>
-          <Link href="/" className="flex items-center gap-2.5 group cursor-pointer" data-cursor-text="HOME">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 group cursor-pointer"
+            data-cursor-text="HOME"
+          >
             <div className="bg-gradient-to-br from-emerald-600 to-[#1e6b3e] p-2 rounded-full group-hover:rotate-6 transition-transform duration-350 shadow-sm shadow-emerald-950/50 border border-emerald-500/10 flex items-center justify-center">
               <Trophy className="h-3.5 w-3.5 text-white" />
             </div>
@@ -80,6 +91,8 @@ export default function Navbar() {
           {[
             { id: 'find_turf', path: '/turfs' },
             { id: 'offers', path: '/offers' },
+            { id: 'gallery', path: '/gallery' },
+            { id: 'live', path: '/live' },
             { id: 'about', path: '/about' },
           ].map((item) => {
             const isActive = pathname === item.path;
@@ -140,7 +153,9 @@ export default function Navbar() {
                       {user.name ? user.name.charAt(0) : 'U'}
                     </div>
                     <span className="hidden md:inline max-w-[100px] truncate">{user.name}</span>
-                    <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`h-3 w-3 text-slate-500 transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
                 </Magnetic>
 
@@ -156,9 +171,13 @@ export default function Navbar() {
                     >
                       {/* User Info Header */}
                       <div className="px-3 py-2 border-b border-slate-900/80 mb-1.5">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Logged in as</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                          Logged in as
+                        </p>
                         <p className="text-xs font-black text-white truncate mt-0.5">{user.name}</p>
-                        <p className="text-[10px] font-semibold text-slate-400 truncate mt-0.5">{user.email}</p>
+                        <p className="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
+                          {user.email}
+                        </p>
                       </div>
 
                       {/* Dropdown Options */}
@@ -229,7 +248,6 @@ export default function Navbar() {
             </Button>
           </Magnetic>
         </div>
-
       </div>
 
       {/* Mobile Menu Sliding Drawer */}
@@ -247,6 +265,8 @@ export default function Navbar() {
               {[
                 { id: 'find_turf', path: '/turfs', label: 'Explore Arenas' },
                 { id: 'offers', path: '/offers', label: 'Offers & Discounts' },
+                { id: 'gallery', path: '/gallery', label: 'Gallery & Events' },
+                { id: 'live', path: '/live', label: 'Live Stream' },
                 { id: 'about', path: '/about', label: 'About Us' },
               ].map((item) => {
                 const isActive = pathname === item.path;
@@ -283,11 +303,15 @@ export default function Navbar() {
               {isAuthenticated && user ? (
                 <div className="space-y-3">
                   <div className="px-2 py-1">
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">Logged in as</p>
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider">
+                      Logged in as
+                    </p>
                     <p className="text-xs font-black text-white truncate mt-0.5">{user.name}</p>
-                    <p className="text-[10px] font-semibold text-slate-400 truncate">{user.email}</p>
+                    <p className="text-[10px] font-semibold text-slate-400 truncate">
+                      {user.email}
+                    </p>
                   </div>
-                  
+
                   <div className="flex flex-col gap-2">
                     <Link href="/dashboard">
                       <div className="h-11 w-full px-4 rounded-xl border border-slate-900 bg-[#0d1425]/20 flex items-center gap-2.5 text-xs text-slate-400 hover:text-white font-bold">
