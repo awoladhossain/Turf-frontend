@@ -26,16 +26,33 @@ export default function Magnetic({
     const el = containerRef.current;
     if (!el) return;
 
-    const onMouseMove = (e: MouseEvent) => {
+    // Cache the page-relative coordinates of the element's center.
+    // Document-relative coords are immune to scroll, so we don't need to listen to scroll events.
+    let cachedCenterX = 0;
+    let cachedCenterY = 0;
+    let hasMeasured = false;
+
+    const updateCachedPosition = () => {
+      if (!el) return;
+      // Temporarily clear GSAP transform to measure the original layout position
+      const transform = el.style.transform;
+      el.style.transform = 'none';
       const rect = el.getBoundingClientRect();
-      const elCenterX = rect.left + rect.width / 2;
-      const elCenterY = rect.top + rect.height / 2;
+      el.style.transform = transform;
 
-      // Distance between cursor and element center
-      const distanceX = e.clientX - elCenterX;
-      const distanceY = e.clientY - elCenterY;
+      cachedCenterX = rect.left + rect.width / 2 + window.scrollX;
+      cachedCenterY = rect.top + rect.height / 2 + window.scrollY;
+      hasMeasured = true;
+    };
 
-      // Calculate absolute distance
+    const onMouseMove = (e: MouseEvent) => {
+      if (!hasMeasured) {
+        updateCachedPosition();
+      }
+
+      // Calculate distance using page coordinates (immune to scrolling)
+      const distanceX = e.pageX - cachedCenterX;
+      const distanceY = e.pageY - cachedCenterY;
       const distance = Math.hypot(distanceX, distanceY);
 
       if (distance < range) {
@@ -67,14 +84,22 @@ export default function Magnetic({
       });
     };
 
+    const onMouseEnter = () => {
+      updateCachedPosition();
+    };
+
     window.addEventListener('mousemove', onMouseMove);
     el.addEventListener('mouseleave', onMouseLeave);
+    el.addEventListener('mouseenter', onMouseEnter);
+    window.addEventListener('resize', updateCachedPosition);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       if (el) {
         el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mouseenter', onMouseEnter);
       }
+      window.removeEventListener('resize', updateCachedPosition);
     };
   }, [range, actionStrength]);
 
@@ -85,3 +110,4 @@ export default function Magnetic({
     className: `${children.props.className || ''} will-change-transform`,
   });
 }
+

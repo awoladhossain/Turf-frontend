@@ -1,6 +1,7 @@
 'use client';
 
 import Magnetic from '@/components/ui/Magnetic';
+import { useSpotlight } from '@/hooks/useSpotlight';
 import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -106,7 +107,7 @@ export default function OffersPage() {
   );
 
   // Animation Refs
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const offersGridRef = useRef<HTMLDivElement>(null);
@@ -226,22 +227,6 @@ export default function OffersPage() {
     return () => ctx.revert();
   }, []);
 
-  // --- Mouse Spotlight Coordinate Tracker ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
 
   const handleCopyCode = (code: string, e: React.MouseEvent<HTMLButtonElement>) => {
     navigator.clipboard.writeText(code);

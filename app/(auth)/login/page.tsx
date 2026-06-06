@@ -1,4 +1,5 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import { Button } from '@/components/ui/button';
 import Magnetic from '@/components/ui/Magnetic';
@@ -17,7 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Refs for GSAP animations
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const cardRef = useRef<HTMLDivElement>(null);
   const brandLogoRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -97,23 +98,7 @@ export default function LoginPage() {
       ease: 'sine.inOut',
     });
   }, []);
-
-  // --- 3. Spotlight coordinates tracker ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
+;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

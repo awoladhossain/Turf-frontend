@@ -1,6 +1,8 @@
 'use client';
 
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
+import { useSpotlight } from '@/hooks/useSpotlight';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
@@ -276,7 +278,7 @@ const TESTIMONIALS = [
 ];
 
 export default function AboutPage() {
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
@@ -432,22 +434,6 @@ export default function AboutPage() {
     };
   }, []);
 
-  // --- 3. Spotlight coordinates tracking ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
 
   // 3D character text splitter with custom support for gradient text classes
   const render3DLetters = (line: string, customClass: string = '') => {
@@ -888,11 +874,7 @@ export default function AboutPage() {
                   {/* Profile Frame */}
                   <div className="aspect-square w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-850 group-hover:border-emerald-500/20 relative shadow-inner">
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050811] via-transparent to-transparent opacity-60 z-10" />
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out grayscale group-hover:grayscale-0"
-                    />
+                    <Image src={member.image} alt={member.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out grayscale group-hover:grayscale-0" />
                   </div>
 
                   {/* Text details */}
@@ -982,11 +964,7 @@ export default function AboutPage() {
 
                 {/* Profile row */}
                 <div className="flex items-center gap-3 pt-3 border-t border-slate-850">
-                  <img
-                    src={t.avatar}
-                    alt={t.author}
-                    className="h-10 w-10 rounded-full object-cover border border-slate-800 flex-shrink-0"
-                  />
+                  <Image src={t.avatar} alt={t.author} width={40} height={40} className="h-10 w-10 rounded-full object-cover border border-slate-800 flex-shrink-0" />
                   <div>
                     <h4 className="text-xs font-black text-white">{t.author}</h4>
                     <p className="text-[9px] text-slate-500 font-bold mt-0.5">{t.team}</p>
@@ -1064,11 +1042,7 @@ export default function AboutPage() {
             {/* Avatar image size perfectly balanced */}
             <div className="relative h-20 w-20 rounded-full overflow-hidden border border-slate-850 flex-shrink-0 group bg-slate-900 shadow-inner">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-transparent z-10" />
-              <img
-                src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=200"
-                alt="Players on turf"
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-85"
-              />
+              <Image src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=200" alt="Players on turf" fill sizes="80px" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-85" />
             </div>
 
             <div className="space-y-3.5 flex-grow">

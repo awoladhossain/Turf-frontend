@@ -1,7 +1,9 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import { Button } from '@/components/ui/button';
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import turfService from '@/services/turf.service';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +35,7 @@ export default function TurfsPage() {
   const [sortBy, setSortBy] = useState('popular');
 
   // Animation Refs
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const headerBadgeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
@@ -206,23 +208,7 @@ export default function TurfsPage() {
 
     return () => ctx.revert(); // Reverts timelines and cancels animations to prevent back-navigation bugs
   }, [isLoading]);
-
-  // Spotlight Mouse physics coordinate tracker
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
+;
 
   // 3D character text splitter
   const render3DLetters = (line: string, customClass: string = '') => {
@@ -463,11 +449,7 @@ export default function TurfsPage() {
                     >
                       {/* Arena Image Frame */}
                       <div className="relative h-48 w-full overflow-hidden bg-slate-950 isolation-isolate">
-                        <img
-                          src={turf.image}
-                          alt={turf.name}
-                          className="h-full w-full object-cover will-change-transform transform-gpu group-hover:scale-105 transition-transform duration-700 ease-out opacity-80 group-hover:opacity-100"
-                        />
+                        <Image src={turf.image} alt={turf.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="h-full w-full object-cover will-change-transform transform-gpu group-hover:scale-105 transition-transform duration-700 ease-out opacity-80 group-hover:opacity-100" />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/15 to-transparent pointer-events-none" />
 
                         {/* Live availability label */}
