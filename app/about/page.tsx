@@ -55,10 +55,17 @@ const TIMELINE_EVENTS = [
     icon: <Trophy className="h-4 w-4 text-emerald-400" />,
   },
   {
-    year: '2025+',
-    title: 'দ্য ফিউচার (The Horizon)',
-    subtitle: 'Smart Portfolios and Matchmaking Ecosystems',
-    desc: 'আমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, মেম্বারশিপ ট্যুরস এবং প্লেয়ার কোয়ালিটি ড্যাশবোর্ড নিয়ে আসছি খুব শীঘ্রই। প্রতিটি প্লেয়ার পাবে তাদের নিজস্ব ম্যাচ অ্যানালিটিক্স।',
+    year: '2025',
+    title: 'দ্য এক্সপ্যানশন (The Expansion)',
+    subtitle: 'AI Matchmaking & Regional Onboarding',
+    desc: 'ঢাকার বাইরে চট্টগ্রাম ও সিলেটে আমাদের কার্যক্রম প্রসারিত করা হয়েছে। একই সাথে প্লেয়ার ম্যাচমেকিং লবি এবং ইন-অ্যাপ স্প্লিট পেমেন্ট ফিচার যুক্ত করা হয়েছে, যা বন্ধুদের মধ্যে মাঠের ভাড়া ভাগাভাগি করার প্রক্রিয়াকে আরও সহজ করেছে।',
+    icon: <Users className="h-4 w-4 text-emerald-400" />,
+  },
+  {
+    year: '2026',
+    title: 'দ্য ফিউচার ইকোসিস্টেম (The Future Ecosystem)',
+    subtitle: 'Live Video Broadcasts & Career Analytics',
+    desc: 'আমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, লাইভ ভিডিও সম্প্রচার এবং প্লেয়ার ক্যারিয়ার স্ট্যাটস কার্ড ড্যাশবোর্ড নিয়ে এসেছি লাইভ। প্রতিটি প্লেয়ার এখন তাদের ম্যাচের ভিডিও এবং পারফরম্যান্স অ্যানালিটিক্স পাচ্ছেন সরাসরি প্রোফাইলে।',
     icon: <Flame className="h-4 w-4 text-emerald-400" />,
   },
 ];
@@ -67,21 +74,21 @@ const TIMELINE_EVENTS = [
 const CORE_PILLARS = [
   {
     icon: <Cpu className="h-6 w-6 text-emerald-400" />,
-    title: '১০০% কনকারেন্সি লক ইঞ্জিন',
-    subtitle: 'Zero Double-Booking Guarantee',
-    desc: 'আমাদের ব্যাকএন্ডে প্রতি মিলি-সেকেন্ডে স্লটের অবস্থা পর্যবেক্ষণ করে। যখন আপনি একটি টার্ফ স্লট সিলেক্ট করেন, আমাদের রিয়েল-টাইম লক ইঞ্জিন মুহূর্তেই অন্য সবার জন্য স্লটটি ব্লক করে দেয়। ডাবল বুকিং হওয়ার কোনো সুযোগই নেই।',
+    title: 'Edge-Native Concurrency Engine',
+    subtitle: 'Sub-2ms Distributed Locking',
+    desc: 'আমাদের ব্যাকএন্ডে Redis Distributed Locks এবং WebSocket গেটওয়ের মাধ্যমে স্লটের লাইভ অবস্থা পর্যবেক্ষণ করা হয়। যখনই আপনি একটি স্লট ক্লিক করেন, সেটি মুহূর্তের মধ্যে ঢাকার অন্য সমস্ত ইউজারের জন্য লক হয়ে যায়—নিশ্চিত করে শূন্য ফ্যান্টম বুকিং।',
   },
   {
     icon: <ShieldCheck className="h-6 w-6 text-emerald-400" />,
-    title: 'প্রি-ভেটেড এরেনা ইকোসিস্টেম',
-    subtitle: '100% Verified Quality Standards',
-    desc: 'টার্ফবুকে তালিকাভুক্ত প্রতিটি মাঠ আমাদের ফিজিক্যাল ইন্সপেকশন টিমের দ্বারা ম্যানুয়ালি রিভিউ করা হয়। কৃত্রিম ঘাসের কোয়ালিটি, লাইটিং সিস্টেম, ওয়াশরুম এবং চেঞ্জিং এরিয়া যাচাই করার পরই কেবল মাঠটি লাইভ করা হয়।',
+    title: 'Premium Vet-Tested Venues',
+    subtitle: 'Multi-point Inspection Protocol',
+    desc: 'টার্ফবুকে তালিকাভুক্ত প্রতিটি মাঠ আমাদের ফিজিক্যাল ইন্সপেকশন টিমের দ্বারা ম্যানুয়ালি রিভিউ করা হয়। কৃত্রিম ঘাসের কোয়ালিটি, লাইটিং সিস্টেম (লাক্স লেভেল), ওয়াশরুম এবং চেঞ্জিং এরিয়া যাচাই করার পরই কেবল মাঠটি লাইভ করা হয়।',
   },
   {
     icon: <Users className="h-6 w-6 text-emerald-400" />,
-    title: 'কমিউনিটি ও প্লেয়ার ম্যাচমেকিং',
-    subtitle: 'Connecting Solo Players & Teams',
-    desc: 'টার্ফবুক কেবল মাঠ বুকিং অ্যাপ নয়, এটি একটি স্পোর্টস সোসাইটি। মাঠ বুকিংয়ের পাশাপাশি আপনি সোলো প্লেয়ার বা বিরোধী টিম খুঁজে পেতে পারেন আমাদের ইন-বিল্ট ম্যাচমেকিং ও ফ্রেন্ডস লবি ফিচারের মাধ্যমে।',
+    title: 'AI Matchmaking & Lobbies',
+    subtitle: 'Connecting Dhaka\'s Athletes',
+    desc: 'টার্ফবুক কেবল স্লট বুকিং নয়, এটি একটি আধুনিক স্পোর্টস সোশ্যাল নেটওয়ার্ক। মাঠ বুকিংয়ের পাশাপাশি আপনি সোলো প্লেয়ার বা বিরোধী টিম খুঁজে পেতে পারেন আমাদের রিয়েল-টাইম ম্যাচমেকিং ও ফ্রেন্ডস লবি ফিচারের মাধ্যমে।',
   },
 ];
 
@@ -527,9 +534,8 @@ export default function AboutPage() {
             ref={subtitleRef}
             className="text-slate-400 text-xs sm:text-sm max-w-2xl leading-relaxed font-semibold will-change-transform"
           >
-            টার্ফবুক (TurfBook) শুধুমাত্র একটি স্লট বুকিং সিস্টেম নয়; এটি ঢাকার ক্রীড়াপ্রেমীদের একটি
-            আধুনিক ডিজিটাল ইকোসিস্টেম। মাঠ খোঁজা থেকে শুরু করে বুকিং কনফার্মেশন—সবকিছুকে আমরা নিয়ে
-            এসেছি আপনার আঙুলের ডগায়। নো টেনশন, জাস্ট প্লে!
+            টার্ফবুক (TurfBook) শুধুমাত্র একটি স্লট বুকিং অ্যাপ নয়; এটি ঢাকার ক্রীড়াপ্রেমীদের জন্য নির্মিত একটি আধুনিক এজ-নেটিভ ডিজিটাল স্পোর্টস নেটওয়ার্ক। Edge-Native locks এবং Redis ডিস্ট্রিবিউটেড লকিং টেকনোলজির মাধ্যমে আমরা ঢাকার প্রতিটি খেলোয়াড়ের স্লট বুকিং প্রসেসকে করেছি বাফার-ফ্রি ও ডাবল-বুকিং মুক্ত।
+            <span className="text-white font-bold"> নো টেনশন, জাস্ট প্লে!</span>
           </p>
         </div>
 
@@ -732,10 +738,10 @@ export default function AboutPage() {
                   <Sparkles className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
                 </div>
 
-                {/* Player Visual Placeholder */}
+                {/* Player Photo */}
                 <div className="my-5 flex items-center gap-4 relative z-10">
                   <div className="relative h-16 w-16 rounded-full border border-emerald-500/20 bg-slate-900/60 overflow-hidden flex-shrink-0 flex items-center justify-center group-hover:border-emerald-500/40 transition-all duration-300">
-                    <Users className="h-7 w-7 text-emerald-500/30" />
+                    <Image src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=150" alt="Cap. Awolad Hossain" fill sizes="64px" className="object-cover" />
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-white tracking-tight">
@@ -1042,7 +1048,7 @@ export default function AboutPage() {
             {/* Avatar image size perfectly balanced */}
             <div className="relative h-20 w-20 rounded-full overflow-hidden border border-slate-850 flex-shrink-0 group bg-slate-900 shadow-inner">
               <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-transparent z-10" />
-              <Image src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=200" alt="Players on turf" fill sizes="80px" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-85" />
+              <Image src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=200" alt="Players on turf" fill sizes="80px" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-85" />
             </div>
 
             <div className="space-y-3.5 flex-grow">

@@ -49,7 +49,7 @@ const FEATURED_ARENAS = [
     id: 'chefs-table',
     name: "Chef's Table Courts",
     location: "Gulshan, Dhaka",
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600",
+    image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=600",
     rating: 4.9,
     reviews: 142,
     price: "২,৫০০ BDT/hr",

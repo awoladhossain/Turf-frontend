@@ -50,7 +50,7 @@ const LIVE_BROADCASTS: LiveMatch[] = [
     arena: 'Jaff Arena',
     sport: 'Football',
     spectators: 1840,
-    videoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2',
+    videoUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b',
     status: 'LIVE',
     logoA: 'BF',
     logoB: 'DT',

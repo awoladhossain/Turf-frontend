@@ -49,7 +49,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'CORPORATE',
     categoryLabel: 'Corporate Cups',
     image:
-      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=800',
     date: 'May 15, 2026',
     venue: "Chef's Table Courts",
     playersCount: '32 Corporate Teams',
