@@ -433,7 +433,7 @@ export default function LiveStreamPage() {
               {/* Aspect Ratio Image Overlay placeholder (Simulated high-end stream stream) */}
               <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-[#050811]/40 group-hover:bg-[#050811]/10 transition-colors duration-300 pointer-events-none z-10" />
-                <Image src={selectedMatch.videoUrl} alt={selectedMatch.title} fill sizes="100vw" className="w-full h-full object-cover pointer-events-none" />
+                <Image src={selectedMatch.videoUrl} alt={selectedMatch.title} fill sizes="(max-width: 1024px) 100vw, 800px" className="w-full h-full object-cover pointer-events-none" />
               </div>
 
               {/* Player Top Interface: Live scoreboard overlay */}
