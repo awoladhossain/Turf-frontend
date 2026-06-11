@@ -3,8 +3,10 @@ import Navbar from '@/components/common/Navbar';
 import { Providers } from '@/providers';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-import CustomCursor from '@/components/ui/CustomCursor';
+import ClientCursor from '@/components/ui/ClientCursor';
 import './globals.css';
+
+
 
 // ফন্ট কনফিগারেশন
 const jakartaSans = Plus_Jakarta_Sans({
@@ -44,7 +46,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
-          <CustomCursor />
+          <ClientCursor />
         </Providers>
       </body>
     </html>

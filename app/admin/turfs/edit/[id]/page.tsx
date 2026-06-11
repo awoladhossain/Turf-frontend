@@ -1,4 +1,5 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -34,7 +35,7 @@ export default function EditTurfPage() {
   const [imageUrl2, setImageUrl2] = useState('');
 
   // Refs for animations
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const cardRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
 
@@ -143,23 +144,7 @@ export default function EditTurfPage() {
 
     return () => ctx.revert();
   }, [isAuthenticated, user, isFetchingTurf, turf]);
-
-  // Spotlight mouse physics tracker
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out'
-    });
-  };
+;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

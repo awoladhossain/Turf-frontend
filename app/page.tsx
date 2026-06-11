@@ -32,6 +32,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 // Register ScrollTrigger safely
 if (typeof window !== 'undefined') {
@@ -47,7 +49,7 @@ const FEATURED_ARENAS = [
     id: 'chefs-table',
     name: "Chef's Table Courts",
     location: "Gulshan, Dhaka",
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600",
+    image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=600",
     rating: 4.9,
     reviews: 142,
     price: "২,৫০০ BDT/hr",
@@ -157,7 +159,7 @@ export default function Home() {
   const [joinedLobbies, setJoinedLobbies] = useState<number[]>([]);
 
   // GSAP Refs for entrance triggers
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
@@ -402,22 +404,6 @@ export default function Home() {
     };
   }, []);
 
-  // --- Spotlight Mouse-Tracking coordinates logic ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out'
-    });
-  };
 
   // --- Trust Badge physics hover animations ---
   const playIconAnimation = (ref: React.RefObject<HTMLDivElement | null>, type: 'spin' | 'bounce' | 'pulse') => {
@@ -919,11 +905,7 @@ export default function Home() {
                       {arena.badge}
                     </div>
                     
-                    <img 
-                      src={arena.image} 
-                      alt={arena.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    />
+                    <Image src={arena.image} alt={arena.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
                   </div>
 
                   {/* Details Card info */}
@@ -997,11 +979,7 @@ export default function Home() {
                 >
                   {/* Left part: Profile and Team */}
                   <div className="flex items-center gap-4">
-                    <img 
-                      src={team.avatar} 
-                      alt={team.captain}
-                      className="h-11 w-11 rounded-full object-cover border border-slate-800 flex-shrink-0"
-                    />
+                    <Image src={team.avatar} alt={team.captain} width={44} height={44} className="h-11 w-11 rounded-full object-cover border border-slate-800 flex-shrink-0" />
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-xs font-black text-white">{team.teamName}</h4>

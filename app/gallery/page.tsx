@@ -1,6 +1,8 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -47,7 +49,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'CORPORATE',
     categoryLabel: 'Corporate Cups',
     image:
-      'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=800',
     date: 'May 15, 2026',
     venue: "Chef's Table Courts",
     playersCount: '32 Corporate Teams',
@@ -152,7 +154,7 @@ export default function GalleryPage() {
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(null);
 
   // Refs for entrance triggers
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -255,23 +257,7 @@ export default function GalleryPage() {
 
     return () => ctx.revert();
   }, []);
-
-  // --- Mouse Spotlight Coordinate Tracker ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
+;
 
   // Category filter
   const filteredItems = GALLERY_ITEMS.filter((item) => {
@@ -450,11 +436,7 @@ export default function GalleryPage() {
                     {item.categoryLabel}
                   </span>
 
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  />
+                  <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
 
                   {/* Interactive Quick View overlay */}
                   <div className="absolute inset-0 bg-[#050811]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
@@ -513,11 +495,7 @@ export default function GalleryPage() {
 
                 {/* Left Part: Premium Media View */}
                 <div className="md:flex-1 relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-950 border border-slate-850">
-                  <img
-                    src={activeItem.image}
-                    alt={activeItem.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <Image src={activeItem.image} alt={activeItem.title} fill sizes="(max-width: 768px) 100vw, 80vw" className="w-full h-full object-cover" />
 
                   {/* Symmetrical Left/Right Slider Controls */}
                   <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none z-20">

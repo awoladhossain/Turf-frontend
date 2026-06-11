@@ -1,7 +1,9 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import { Button } from '@/components/ui/button';
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import turfService from '@/services/turf.service';
 import { useQuery } from '@tanstack/react-query';
@@ -37,7 +39,7 @@ export default function TurfDetailPage() {
   const [couponCode, setCouponCode] = useState<string>('');
 
   // Refs for animations
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const contentGridRef = useRef<HTMLDivElement>(null);
   const loginAlertRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
@@ -133,23 +135,7 @@ export default function TurfDetailPage() {
 
     return () => ctx.revert();
   }, [isAuthenticated, isLoading, turf]);
-
-  // Spotlight mouse tracker
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
+;
 
   // Handle mock booking process
   const handleBooking = () => {
@@ -357,11 +343,7 @@ export default function TurfDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Banner Section */}
             <div className="animate-fade relative h-72 sm:h-96 w-full rounded-3xl overflow-hidden border border-slate-900 bg-slate-950 shadow-2xl">
-              <img
-                src={displayImage}
-                alt={turf.name}
-                className="h-full w-full object-cover opacity-80"
-              />
+              <Image src={displayImage} alt={turf.name} fill sizes="100vw" className="h-full w-full object-cover opacity-80" priority />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
               {/* Rating & Sport Badges on Banner */}

@@ -1,6 +1,7 @@
 'use client';
 
 import Magnetic from '@/components/ui/Magnetic';
+import { useSpotlight } from '@/hooks/useSpotlight';
 import { AnimatePresence, motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -101,17 +102,22 @@ export default function OffersPage() {
   const [calcCoupon, setCalcCoupon] = useState<string>('MIDNIGHT30');
 
   // Gamified Scratch Card State
-  const [scratchState, setScratchState] = useState<'UNSCRATCHED' | 'SCRATCHING' | 'REVEALED'>(
+  const [scratchState, setScratchState] = useState<'UNSCRATCHED' | 'REVEALED'>(
     'UNSCRATCHED',
   );
 
   // Animation Refs
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const offersGridRef = useRef<HTMLDivElement>(null);
   const infoNoticeRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
+
+  // Scratch Canvas Refs & States
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawingRef = useRef(false);
+  const [scratchedArea, setScratchedArea] = useState(0);
 
   // --- Real-time Claim Ticker Cycle ---
   const [tickerIndex, setTickerIndex] = useState(0);
@@ -226,22 +232,6 @@ export default function OffersPage() {
     return () => ctx.revert();
   }, []);
 
-  // --- Mouse Spotlight Coordinate Tracker ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
 
   const handleCopyCode = (code: string, e: React.MouseEvent<HTMLButtonElement>) => {
     navigator.clipboard.writeText(code);
@@ -260,18 +250,112 @@ export default function OffersPage() {
     }, 2000);
   };
 
-  // Gamified Scratch Interaction
-  const handleScratchReveal = () => {
-    if (scratchState !== 'UNSCRATCHED') return;
+  // Canvas scratch handlers
+  useEffect(() => {
+    if (scratchState === 'UNSCRATCHED' && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
 
-    setScratchState('SCRATCHING');
-    setTimeout(() => {
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = 160 * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Draw dark graphite scratch layer
+      const gradient = ctx.createLinearGradient(0, 0, rect.width, 160);
+      gradient.addColorStop(0, '#111827');
+      gradient.addColorStop(0.5, '#1f2937');
+      gradient.addColorStop(1, '#0f172a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, rect.width, 160);
+
+      // Draw subtle neon dashed borders inside canvas
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(8, 8, rect.width - 16, 160 - 16);
+      ctx.setLineDash([]);
+
+      // Draw shiny diagonal stripes
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.05)';
+      ctx.lineWidth = 2;
+      for (let i = -rect.width; i < rect.width; i += 25) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + 160, 160);
+        ctx.stroke();
+      }
+
+      // Draw call-to-action texts
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('SCRATCH FOIL TO REVEAL', rect.width / 2, 68);
+      ctx.font = '800 8px sans-serif';
+      ctx.fillStyle = '#10b981';
+      ctx.fillText('TAP & SWIPE WITH CURSOR', rect.width / 2, 88);
+    }
+  }, [scratchState]);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    isDrawingRef.current = true;
+    scratch(e);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    e.preventDefault();
+    scratch(e);
+  };
+
+  const handlePointerUp = () => {
+    isDrawingRef.current = false;
+  };
+
+  const scratch = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    const nextVal = scratchedArea + 1;
+    setScratchedArea(nextVal);
+    if (nextVal >= 28 && scratchState === 'UNSCRATCHED') {
       setScratchState('REVEALED');
-      toast.success('💥 40% OFF Secret Voucher Revealed!', {
+      toast.success('💥 40% OFF Secret Voucher Unlocked!', {
         icon: '🔥',
         duration: 4000,
       });
-    }, 1500);
+    }
+  };
+
+  // Direct Apply Code handler
+  const handleApplyCode = (code: string) => {
+    setCalcCoupon(code);
+    toast.success(`Coupon "${code}" applied to estimator!`);
+
+    const calculatorElement = document.getElementById('savings-calculator');
+    if (calculatorElement) {
+      calculatorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      gsap.fromTo(
+        calculatorElement,
+        { borderColor: 'rgba(16, 185, 129, 0.8)', boxShadow: '0 0 25px rgba(16, 185, 129, 0.3)' },
+        { borderColor: '#0f172a', boxShadow: 'none', duration: 1.2, ease: 'power2.out' }
+      );
+    }
   };
 
   // Title 3D letters split helper
@@ -492,30 +576,39 @@ export default function OffersPage() {
                     </span>
                   </div>
 
-                  {/* Copy Coupon Box */}
-                  <div className="flex items-center gap-2 bg-[#050811] border border-slate-900 p-1.5 rounded-xl">
-                    <div className="flex-1 font-mono text-center text-xs font-bold tracking-widest text-emerald-400 bg-emerald-500/5 py-1.5 rounded-lg border border-emerald-500/10">
-                      {offer.code}
+                  {/* Copy & Apply Coupon Box */}
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex items-center gap-2 bg-[#050811] border border-slate-900 p-1.5 rounded-xl">
+                      <div className="flex-1 font-mono text-center text-xs font-bold tracking-widest text-emerald-400 bg-emerald-500/5 py-1.5 rounded-lg border border-emerald-500/10 font-black">
+                        {offer.code}
+                      </div>
+
+                      <Magnetic range={15} actionStrength={0.2}>
+                        <button
+                          onClick={(e) => handleCopyCode(offer.code, e)}
+                          className="h-8 px-4 rounded-lg bg-slate-900 hover:bg-slate-850 hover:text-white text-slate-350 font-bold text-[9px] uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 border border-slate-850"
+                        >
+                          {copiedCode === offer.code ? (
+                            <>
+                              <Check className="h-3 w-3 text-emerald-400 stroke-[3]" />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 text-slate-400" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </Magnetic>
                     </div>
 
-                    <Magnetic range={15} actionStrength={0.2}>
-                      <button
-                        onClick={(e) => handleCopyCode(offer.code, e)}
-                        className="h-8 px-4 rounded-lg bg-slate-900 hover:bg-slate-850 hover:text-white text-slate-350 font-bold text-[9px] uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 border border-slate-850"
-                      >
-                        {copiedCode === offer.code ? (
-                          <>
-                            <Check className="h-3 w-3 text-emerald-400 stroke-[3]" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3 w-3 text-slate-400" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </Magnetic>
+                    <button
+                      onClick={() => handleApplyCode(offer.code)}
+                      className="w-full py-2 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-97"
+                    >
+                      Apply Code
+                    </button>
                   </div>
                 </div>
               </div>
@@ -552,59 +645,57 @@ export default function OffersPage() {
 
             {/* Interactive Scratch Canvas widget */}
             <div
-              onClick={handleScratchReveal}
-              className={`h-[160px] rounded-2xl border relative overflow-hidden flex flex-col items-center justify-center text-center p-4 transition-all duration-500 ${
+              className={`h-[160px] rounded-2xl border relative overflow-hidden flex flex-col items-center justify-center text-center transition-all duration-500 ${
                 scratchState === 'UNSCRATCHED'
-                  ? 'bg-gradient-to-br from-[#1e6b3e]/30 via-[#0f3d23]/20 to-[#050811] border-emerald-500/20 hover:border-emerald-500/40 cursor-pointer shadow-lg'
-                  : scratchState === 'SCRATCHING'
-                    ? 'bg-[#050811] border-emerald-500/10 cursor-wait'
-                    : 'bg-emerald-500/5 border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
+                  ? 'bg-slate-950 border-emerald-500/20'
+                  : 'bg-emerald-500/5 border-emerald-500/25 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
               }`}
             >
+              {/* Confetti Explosion on Unlocked */}
+              {scratchState === 'REVEALED' && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  {[...Array(20)].map((_, i) => {
+                    const angle = (i / 20) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+                    const velocity = 60 + Math.random() * 80;
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                        animate={{
+                          x: Math.cos(angle) * velocity,
+                          y: Math.sin(angle) * velocity,
+                          scale: 0,
+                          opacity: 0,
+                        }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                        className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full"
+                        style={{
+                          backgroundColor: ['#10b981', '#34d399', '#60a5fa', '#f59e0b', '#ec4899'][i % 5],
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
               <AnimatePresence mode="wait">
-                {scratchState === 'UNSCRATCHED' && (
-                  <motion.div
-                    key="unscratched"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="space-y-2.5"
-                  >
-                    <div className="p-3 bg-emerald-500/15 border border-emerald-500/30 rounded-full w-fit mx-auto animate-bounce">
-                      <Gift className="h-6 w-6 text-emerald-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-black text-white uppercase tracking-wider">
-                        Tap to Scratch & Reveal
-                      </p>
-                      <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
-                        সিক্রেট প্রোমো কোড আনলক করতে এখানে ক্লিক করুন
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-
-                {scratchState === 'SCRATCHING' && (
-                  <motion.div
-                    key="scratching"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-3"
-                  >
-                    <RefreshCw className="h-7 w-7 text-emerald-400 animate-spin mx-auto" />
-                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest font-mono">
-                      Scratching digital foil...
-                    </p>
-                  </motion.div>
-                )}
-
-                {scratchState === 'REVEALED' && (
+                {scratchState === 'UNSCRATCHED' ? (
+                  <div className="absolute inset-0 z-30">
+                    <canvas
+                      ref={canvasRef}
+                      onPointerDown={handlePointerDown}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerLeave={handlePointerUp}
+                      className="w-full h-full cursor-crosshair touch-none"
+                    />
+                  </div>
+                ) : (
                   <motion.div
                     key="revealed"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className="space-y-4 w-full"
+                    className="space-y-4 w-full p-4 z-20"
                   >
                     <div className="flex items-center justify-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit mx-auto animate-pulse">
                       <Sparkles className="h-3 w-3 fill-emerald-400 text-emerald-400" />
@@ -615,17 +706,25 @@ export default function OffersPage() {
                       SECRET40
                     </div>
 
-                    {/* Copy Revealed button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigator.clipboard.writeText('SECRET40');
-                        toast.success('VIP Promo Code copied!');
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase tracking-widest transition-all cursor-pointer mx-auto block active:scale-95"
-                    >
-                      Copy Secret Code
-                    </button>
+                    {/* Copy & Apply Secret Code buttons */}
+                    <div className="flex gap-2 justify-center max-w-[240px] mx-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText('SECRET40');
+                          toast.success('VIP Promo Code copied!');
+                        }}
+                        className="flex-1 py-2 rounded-xl bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-350 hover:text-white font-bold text-[9px] uppercase tracking-widest transition-all cursor-pointer active:scale-95"
+                      >
+                        Copy
+                      </button>
+                      <button
+                        onClick={() => handleApplyCode('SECRET40')}
+                        className="flex-1 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-bold text-[9px] uppercase tracking-widest transition-all cursor-pointer active:scale-95"
+                      >
+                        Apply
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -637,7 +736,10 @@ export default function OffersPage() {
           </div>
 
           {/* Right Block: Interactive Pitch Pricing Calculator (Great Engineering!) */}
-          <div className="lg:col-span-6 p-6 rounded-3xl bg-gradient-to-b from-[#111a2d]/20 to-[#080d1a]/20 border border-slate-900 shadow-xl flex flex-col justify-between space-y-6 scroll-reveal relative overflow-hidden">
+          <div
+            id="savings-calculator"
+            className="lg:col-span-6 p-6 rounded-3xl bg-gradient-to-b from-[#111a2d]/20 to-[#080d1a]/20 border border-slate-900 shadow-xl flex flex-col justify-between space-y-6 scroll-reveal relative overflow-hidden"
+          >
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                 <Calculator className="h-3.5 w-3.5 text-emerald-400" />
@@ -654,28 +756,40 @@ export default function OffersPage() {
 
             {/* Calculator controls */}
             <div className="space-y-4 bg-[#050811]/60 p-4.5 rounded-2xl border border-slate-850">
-              {/* Select Arena */}
+              {/* Select Arena (Grid Cards) */}
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block font-jakarta">
                   Select Arena
                 </label>
-                <div className="relative">
-                  <select
-                    value={calcArena}
-                    onChange={(e) => setCalcArena(e.target.value as any)}
-                    className="w-full h-9 px-3 bg-[#050811] border border-slate-900 outline-none text-xs font-semibold text-white rounded-xl focus:border-emerald-500/25 appearance-none cursor-pointer"
-                  >
-                    <option value="gulshan">Chef's Table Courts (৳২,৫০০/hr)</option>
-                    <option value="dhanmondi">Jaff Arena (৳২,২০০/hr)</option>
-                    <option value="mirpur">Mirpur Turf City (৳১,৮০০/hr)</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 pointer-events-none" />
+                <div className="grid grid-cols-3 gap-2">
+                  {(['gulshan', 'dhanmondi', 'mirpur'] as const).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setCalcArena(key)}
+                      className={`p-2.5 rounded-xl border text-left transition-all duration-300 relative overflow-hidden group/arena cursor-pointer ${
+                        calcArena === key
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-white shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                          : 'bg-[#050811] border-slate-900 text-slate-400 hover:border-slate-800'
+                      }`}
+                    >
+                      <span className="text-[7px] text-slate-500 uppercase tracking-widest font-black block">
+                        {key === 'gulshan' ? 'Gulshan' : key === 'dhanmondi' ? 'Banani' : 'Mirpur'}
+                      </span>
+                      <span className="text-[9px] font-black block truncate mt-0.5">
+                        {key === 'gulshan' ? "Chef's Table" : key === 'dhanmondi' ? 'Jaff' : 'Turf City'}
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-450 mt-1 block">
+                        ৳{key === 'gulshan' ? '2.5k' : key === 'dhanmondi' ? '2.2k' : '1.8k'}/hr
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Slider for Hours */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-widest font-jakarta">
                   <span>Match Duration</span>
                   <span className="text-white font-mono">
                     {calcHours} Hour{calcHours > 1 ? 's' : ''}
@@ -693,7 +807,7 @@ export default function OffersPage() {
 
               {/* Select Active Promo Code */}
               <div className="space-y-1.5">
-                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block font-jakarta">
                   Select Voucher Code
                 </label>
                 <div className="relative">
@@ -715,7 +829,7 @@ export default function OffersPage() {
             </div>
 
             {/* Bill Receipt breakdown */}
-            <div className="bg-[#050811] p-4 rounded-xl border border-slate-850 space-y-2.5 font-mono text-[10px] text-slate-400">
+            <div className="bg-[#050811] p-4 rounded-xl border border-slate-850 space-y-3 font-mono text-[10px] text-slate-400">
               <div className="flex justify-between">
                 <span>Original Booking cost:</span>
                 <span className="text-white">৳{originalPrice.toLocaleString()}</span>
@@ -725,11 +839,28 @@ export default function OffersPage() {
                 <span>- ৳{discountAmount.toLocaleString()}</span>
               </div>
 
+              {discountAmount > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex justify-between text-[7px] font-black text-slate-500 uppercase tracking-widest">
+                    <span>Discount Percentage</span>
+                    <span className="text-emerald-400">
+                      {Math.round((discountAmount / originalPrice) * 100)}% SAVED
+                    </span>
+                  </div>
+                  <div className="h-1 bg-[#050811] rounded-full overflow-hidden border border-slate-850">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                      style={{ width: `${(discountAmount / originalPrice) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="h-[1px] bg-slate-900 w-full" />
 
-              <div className="flex justify-between text-xs font-black text-white">
+              <div className="flex justify-between text-xs font-black text-white font-jakarta">
                 <span>Grand Total:</span>
-                <span className="text-emerald-400">৳{finalPrice.toLocaleString()}</span>
+                <span className="text-emerald-400 text-sm font-black">৳{finalPrice.toLocaleString()}</span>
               </div>
             </div>
 

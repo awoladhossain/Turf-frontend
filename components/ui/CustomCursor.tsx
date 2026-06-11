@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 export default function CustomCursor() {
   const dotRef = useRef<HTMLDivElement>(null);
   const followerRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [cursorText, setCursorText] = useState('');
-  const [isMagneticActive, setIsMagneticActive] = useState(false);
 
   useEffect(() => {
     // Mobile / touch devices check to prevent rendering custom cursor
@@ -24,6 +20,7 @@ export default function CustomCursor() {
 
     const dot = dotRef.current;
     const follower = followerRef.current;
+    const label = labelRef.current;
     if (!dot || !follower) return;
 
     // Set initial positions
@@ -37,10 +34,12 @@ export default function CustomCursor() {
     const xToFollower = gsap.quickTo(follower, 'x', { duration: 0.4, ease: 'power3.out' });
     const yToFollower = gsap.quickTo(follower, 'y', { duration: 0.4, ease: 'power3.out' });
 
+    let isVisible = false;
+
     // Show cursor on first mouse move
     const onMouseMove = (e: MouseEvent) => {
       if (!isVisible) {
-        setIsVisible(true);
+        isVisible = true;
         gsap.to([dot, follower], { opacity: 1, duration: 0.3 });
       }
 
@@ -51,12 +50,12 @@ export default function CustomCursor() {
     };
 
     const onMouseEnterWindow = () => {
-      setIsVisible(true);
+      isVisible = true;
       gsap.to([dot, follower], { opacity: 1, duration: 0.3 });
     };
 
     const onMouseLeaveWindow = () => {
-      setIsVisible(false);
+      isVisible = false;
       gsap.to([dot, follower], { opacity: 0, duration: 0.3 });
     };
 
@@ -69,12 +68,14 @@ export default function CustomCursor() {
       const interactiveEl = target.closest('a, button, input, select, textarea, [data-cursor], [data-magnetic]');
 
       if (interactiveEl) {
-        setIsHovered(true);
-
         // Check if there is custom text to show
         const text = interactiveEl.getAttribute('data-cursor-text');
         if (text) {
-          setCursorText(text);
+          if (label) {
+            label.textContent = text;
+            label.classList.remove('opacity-0', 'scale-50');
+            label.classList.add('opacity-100', 'scale-100');
+          }
           // Scale up follower to contain text
           gsap.to(follower, {
             width: 80,
@@ -86,6 +87,11 @@ export default function CustomCursor() {
           });
           gsap.to(dot, { scale: 0, duration: 0.2 });
         } else {
+          if (label) {
+            label.textContent = '';
+            label.classList.remove('opacity-100', 'scale-100');
+            label.classList.add('opacity-0', 'scale-50');
+          }
           // Standard hover effect: scale up, make translucent emerald glow
           const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(interactiveEl.tagName);
           gsap.to(follower, {
@@ -105,11 +111,6 @@ export default function CustomCursor() {
             duration: 0.3,
           });
         }
-
-        // Magnetic check
-        if (interactiveEl.hasAttribute('data-magnetic')) {
-          setIsMagneticActive(true);
-        }
       }
     };
 
@@ -123,9 +124,11 @@ export default function CustomCursor() {
         // Only reset if we are moving completely out of the interactive boundary
         const relatedTarget = e.relatedTarget as HTMLElement;
         if (!relatedTarget || !relatedTarget.closest('a, button, input, select, textarea, [data-cursor], [data-magnetic]')) {
-          setIsHovered(false);
-          setCursorText('');
-          setIsMagneticActive(false);
+          if (label) {
+            label.textContent = '';
+            label.classList.remove('opacity-100', 'scale-100');
+            label.classList.add('opacity-0', 'scale-50');
+          }
 
           // Reset styles
           gsap.to(follower, {
@@ -165,11 +168,10 @@ export default function CustomCursor() {
       document.removeEventListener('mouseout', handleMouseOut);
       document.documentElement.classList.remove('custom-cursor-active');
     };
-  }, [isVisible]);
+  }, []);
 
   return (
     <>
-
       {/* Follower Ring */}
       <div
         ref={followerRef}
@@ -181,11 +183,9 @@ export default function CustomCursor() {
       >
         <span
           ref={labelRef}
-          className={`text-[9px] font-black tracking-widest text-[#090d16] uppercase select-none transition-all duration-200 ${
-            cursorText ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
-          }`}
+          className="text-[9px] font-black tracking-widest text-[#090d16] uppercase select-none transition-all duration-200 opacity-0 scale-50"
         >
-          {cursorText}
+          {/* Managed directly via DOM API to avoid React renders */}
         </span>
       </div>
 

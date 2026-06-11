@@ -1,6 +1,8 @@
 'use client';
+import { useSpotlight } from '@/hooks/useSpotlight';
 
 import Magnetic from '@/components/ui/Magnetic';
+import Image from 'next/image';
 import gsap from 'gsap';
 import {
   Clock,
@@ -48,7 +50,7 @@ const LIVE_BROADCASTS: LiveMatch[] = [
     arena: 'Jaff Arena',
     sport: 'Football',
     spectators: 1840,
-    videoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2',
+    videoUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b',
     status: 'LIVE',
     logoA: 'BF',
     logoB: 'DT',
@@ -127,7 +129,7 @@ export default function LiveStreamPage() {
   const [activeTab, setActiveTab] = useState<'CHAT' | 'STATS' | 'LINEUPS'>('CHAT');
 
   // Animation Refs
-  const pageContainerRef = useRef<HTMLDivElement>(null);
+  const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const badgeRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const mainStreamRef = useRef<HTMLDivElement>(null);
@@ -281,23 +283,7 @@ export default function LiveStreamPage() {
 
     return () => ctx.revert();
   }, []);
-
-  // --- Mouse Spotlight Coordinate Tracker ---
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const container = pageContainerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    gsap.to(container, {
-      '--spotlight-x': `${x}px`,
-      '--spotlight-y': `${y}px`,
-      duration: 0.5,
-      ease: 'power3.out',
-    });
-  };
+;
 
   // Submit chat message handler
   const handleSendMessage = (e: React.FormEvent) => {
@@ -447,11 +433,7 @@ export default function LiveStreamPage() {
               {/* Aspect Ratio Image Overlay placeholder (Simulated high-end stream stream) */}
               <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-[#050811]/40 group-hover:bg-[#050811]/10 transition-colors duration-300 pointer-events-none z-10" />
-                <img
-                  src={selectedMatch.videoUrl}
-                  alt={selectedMatch.title}
-                  className="w-full h-full object-cover pointer-events-none"
-                />
+                <Image src={selectedMatch.videoUrl} alt={selectedMatch.title} fill sizes="(max-width: 1024px) 100vw, 800px" className="w-full h-full object-cover pointer-events-none" />
               </div>
 
               {/* Player Top Interface: Live scoreboard overlay */}
@@ -704,11 +686,7 @@ export default function LiveStreamPage() {
                 >
                   {/* Aspect ratio thumb */}
                   <div className="aspect-[4/3] w-20 rounded-xl overflow-hidden bg-slate-900 relative flex-shrink-0">
-                    <img
-                      src={broadcast.videoUrl}
-                      alt={broadcast.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <Image src={broadcast.videoUrl} alt={broadcast.title} fill sizes="80px" className="w-full h-full object-cover" />
 
                     {broadcast.status === 'LIVE' && (
                       <div className="absolute top-1 left-1 bg-rose-600 text-[6px] font-black uppercase px-1 py-0.5 rounded text-white animate-pulse">
