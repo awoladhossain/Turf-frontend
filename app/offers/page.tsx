@@ -331,17 +331,15 @@ export default function OffersPage() {
     ctx.arc(x, y, 16, 0, Math.PI * 2);
     ctx.fill();
 
-    setScratchedArea((prev) => {
-      const next = prev + 1;
-      if (next >= 28 && scratchState === 'UNSCRATCHED') {
-        setScratchState('REVEALED');
-        toast.success('💥 40% OFF Secret Voucher Unlocked!', {
-          icon: '🔥',
-          duration: 4000,
-        });
-      }
-      return next;
-    });
+    const nextVal = scratchedArea + 1;
+    setScratchedArea(nextVal);
+    if (nextVal >= 28 && scratchState === 'UNSCRATCHED') {
+      setScratchState('REVEALED');
+      toast.success('💥 40% OFF Secret Voucher Unlocked!', {
+        icon: '🔥',
+        duration: 4000,
+      });
+    }
   };
 
   // Direct Apply Code handler
