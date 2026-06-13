@@ -865,9 +865,8 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* --- OUR JOURNEY STICKY SCROLL SECTION --- */}
-        <section className="space-y-8 max-w-5xl mx-auto scroll-fade-in pt-6">
-          <div className="text-center space-y-1.5 pb-2">
+        <section className="space-y-8 max-w-5xl mx-auto pt-6">
+          <div className="text-center space-y-1.5 pb-2 scroll-fade-in">
             <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
               <Clock className="h-3 w-3" />
               <span>Our Legacy</span>
@@ -880,7 +879,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="rounded-3xl border border-slate-900 bg-[#0d1425]/10 backdrop-blur-3xl overflow-hidden shadow-2xl">
+          <div className="scroll-fade-in rounded-3xl border border-slate-900 bg-[#0d1425]/10 backdrop-blur-3xl overflow-hidden shadow-2xl">
             <StickyScroll content={stickyScrollContent} />
           </div>
         </section>
