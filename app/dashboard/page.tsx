@@ -50,10 +50,23 @@ export default function DashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'analytics' | 'bookings' | 'turfs'>('analytics');
   const [mounted, setMounted] = useState(false);
+  const [renderCharts, setRenderCharts] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Defer chart rendering until tab animations finish
+  useEffect(() => {
+    if (activeTab === 'analytics' && mounted) {
+      const timer = setTimeout(() => {
+        setRenderCharts(true);
+      }, 250);
+      return () => clearTimeout(timer);
+    } else {
+      setRenderCharts(false);
+    }
+  }, [activeTab, mounted]);
 
   // Auth Guard redirect
   useEffect(() => {
@@ -379,29 +392,35 @@ export default function DashboardPage() {
                         <span className="text-[9px] font-black text-slate-500 uppercase">Recent bookings activity</span>
                       </div>
                       <div className="h-64 w-full min-w-0 relative">
-                        {revenueTrendData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                            <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                              <defs>
-                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid stroke="#0e1628" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip 
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
-                                labelStyle={{ color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}
-                                itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
-                              />
-                              <Area type="monotone" dataKey="Revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                        {renderCharts ? (
+                          revenueTrendData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                              <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid stroke="#0e1628" strokeDasharray="3 3" />
+                                <XAxis dataKey="name" stroke="#475569" fontSize={9} />
+                                <YAxis stroke="#475569" fontSize={9} />
+                                <Tooltip 
+                                  contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
+                                  labelStyle={{ color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}
+                                  itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
+                                />
+                                <Area type="monotone" dataKey="Revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="h-full flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest font-black">
+                              No Sales Logged
+                            </div>
+                          )
                         ) : (
-                          <div className="h-full flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest font-black">
-                            No Sales Logged
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
                           </div>
                         )}
                       </div>
@@ -411,31 +430,37 @@ export default function DashboardPage() {
                     <div className="p-5 rounded-2xl bg-gradient-to-br from-[#060a16]/80 to-[#04060f]/60 border border-slate-900 shadow-xl shadow-slate-950/20 space-y-4 flex flex-col justify-between">
                       <h3 className="text-xs font-black text-white uppercase tracking-wider">Booking Status Share</h3>
                       <div className="h-44 w-full min-w-0 relative flex justify-center items-center">
-                        {statusPieData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                            <PieChart>
-                              <Pie
-                                data={statusPieData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={45}
-                                outerRadius={60}
-                                paddingAngle={4}
-                                dataKey="value"
-                              >
-                                {statusPieData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '8px' }}
-                                itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                        {renderCharts ? (
+                          statusPieData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                              <PieChart>
+                                <Pie
+                                  data={statusPieData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={45}
+                                  outerRadius={60}
+                                  paddingAngle={4}
+                                  dataKey="value"
+                                >
+                                  {statusPieData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '8px' }}
+                                  itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="text-xs text-slate-500 uppercase tracking-widest font-black">
+                              No Status Data
+                            </div>
+                          )
                         ) : (
-                          <div className="text-xs text-slate-500 uppercase tracking-widest font-black">
-                            No Status Data
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
                           </div>
                         )}
                       </div>
@@ -456,22 +481,28 @@ export default function DashboardPage() {
                     <div className="lg:col-span-3 p-5 rounded-2xl bg-gradient-to-br from-[#060a16]/80 to-[#04060f]/60 border border-slate-900 shadow-xl shadow-slate-950/20 space-y-4">
                       <h3 className="text-xs font-black text-white uppercase tracking-wider">Sport Popularity Distribution</h3>
                       <div className="h-56 w-full min-w-0 relative">
-                        {sportChartData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                            <BarChart data={sportChartData}>
-                              <CartesianGrid stroke="#0e1628" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip 
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
-                                itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
-                              />
-                              <Bar dataKey="Arenas" fill="#10b981" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
+                        {renderCharts ? (
+                          sportChartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                              <BarChart data={sportChartData}>
+                                <CartesianGrid stroke="#0e1628" strokeDasharray="3 3" />
+                                <XAxis dataKey="name" stroke="#475569" fontSize={9} />
+                                <YAxis stroke="#475569" fontSize={9} />
+                                <Tooltip 
+                                  contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
+                                  itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
+                                />
+                                <Bar dataKey="Arenas" fill="#10b981" radius={[4, 4, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="h-full flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest font-black">
+                              No Sport Distribution Available
+                            </div>
+                          )
                         ) : (
-                          <div className="h-full flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest font-black">
-                            No Sport Distribution Available
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
                           </div>
                         )}
                       </div>
