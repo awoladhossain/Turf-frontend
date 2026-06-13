@@ -155,7 +155,7 @@
   /* Global desktop cursor hide override */
   @media (pointer: fine) {
     .custom-cursor-active,
-    .custom-cursor-active * {
+    .custom-cursor-active *:not(iframe) {
       cursor: none !important;
     }
   }
