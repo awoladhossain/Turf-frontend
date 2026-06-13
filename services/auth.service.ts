@@ -23,15 +23,7 @@ class AuthService {
   }
 
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
-    const response = await api.post<AuthTokens>(
-      '/auth/refresh',
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${refreshToken}`,
-        },
-      }
-    );
+    const response = await api.post<AuthTokens>('/auth/refresh', { refreshToken });
     return response.data;
   }
 
