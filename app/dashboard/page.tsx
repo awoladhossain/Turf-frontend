@@ -57,13 +57,24 @@ function useContainerWidth() {
     }
 
     if (node) {
-      // Set initial width
-      setWidth(node.getBoundingClientRect().width);
+      // Set initial width and poll if 0 (due to mounting/animation phase)
+      const updateWidth = () => {
+        if (!node.isConnected) return;
+        const w = node.getBoundingClientRect().width || node.offsetWidth;
+        if (w > 0) {
+          setWidth(w);
+        } else {
+          setTimeout(updateWidth, 50);
+        }
+      };
+
+      updateWidth();
 
       const observer = new ResizeObserver((entries) => {
         for (let entry of entries) {
-          if (entry.contentRect.width > 0) {
-            setWidth(entry.contentRect.width);
+          const w = entry.contentRect.width || entry.target.getBoundingClientRect().width;
+          if (w > 0) {
+            setWidth(w);
           }
         }
       });
