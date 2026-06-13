@@ -6,9 +6,10 @@ import turfService from '@/services/turf.service';
 import healthService from '@/services/health.service';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useOutsideClick } from '@/hooks/use-outside-click';
 import {
   Calendar,
   Clock,
@@ -86,6 +87,30 @@ function useContainerWidth() {
   return [ref, width] as const;
 }
 
+const CloseIcon = () => {
+  return (
+    <motion.svg
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.05 } }}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 text-white"
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M18 6l-12 12" />
+      <path d="M6 6l12 12" />
+    </motion.svg>
+  );
+};
+
 export default function DashboardPage() {
   const { user, isAuthenticated, isFetchingMe } = useAuth();
   const router = useRouter();
@@ -100,6 +125,30 @@ export default function DashboardPage() {
   const [revenueChartRef, revenueChartWidth] = useContainerWidth();
   const [statusChartRef, statusChartWidth] = useContainerWidth();
   const [sportsChartRef, sportsChartWidth] = useContainerWidth();
+
+  // Player Dashboard Expandable Card State
+  const [activeBooking, setActiveBooking] = useState<any>(null);
+  const activeBookingRef = useRef<HTMLDivElement>(null);
+  const activeBookingId = useId();
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setActiveBooking(null);
+      }
+    }
+
+    if (activeBooking) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeBooking]);
+
+  useOutsideClick(activeBookingRef as any, () => setActiveBooking(null));
 
   useEffect(() => {
     setMounted(true);
@@ -764,83 +813,240 @@ export default function DashboardPage() {
           </div>
         ) : (
           /* REGULAR PLAYER VIEW (ACTIVE RESERVATIONS SUMMARY) */
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-6">
-            <div className="flex justify-between items-center border-b border-slate-900/60 pb-4">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">Your Games Log</h3>
-              <span className="text-[9px] font-black text-slate-500 uppercase">{myBookingsList.length} Reservations</span>
-            </div>
+          <>
+            <AnimatePresence>
+              {activeBooking && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-[#03060f]/80 backdrop-blur-md h-full w-full z-50"
+                />
+              )}
+            </AnimatePresence>
 
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
-              {myBookingsList.length > 0 ? (
-                myBookingsList.map((booking) => {
-                  const dateStr = booking.slot?.date
-                    ? new Date(booking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                    : 'Confirmed Date';
-                  const isPending = booking.status === 'PENDING';
-                  const isConfirmed = booking.status === 'CONFIRMED';
+            <AnimatePresence>
+              {activeBooking ? (
+                <div className="fixed inset-0 grid place-items-center z-[100] p-4">
+                  <motion.button
+                    key={`button-${activeBooking.id}-${activeBookingId}`}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.05 } }}
+                    className="flex absolute top-4 right-4 items-center justify-center bg-[#0d1527] hover:bg-[#16223f] border border-slate-800 rounded-full h-9 w-9 cursor-pointer transition-colors"
+                    onClick={() => setActiveBooking(null)}
+                  >
+                    <CloseIcon />
+                  </motion.button>
+                  
+                  <motion.div
+                    layoutId={`card-${activeBooking.id}-${activeBookingId}`}
+                    ref={activeBookingRef}
+                    className="w-full max-w-[500px] h-fit max-h-[90vh] flex flex-col bg-[#070c18] border border-slate-900 rounded-3xl overflow-hidden shadow-2xl"
+                  >
+                    {/* Card Image */}
+                    <motion.div layoutId={`image-${activeBooking.id}-${activeBookingId}`} className="relative h-64 w-full">
+                      <img
+                        src={
+                          turfsData?.data?.find(t => t.id === activeBooking.turfId)?.images?.[0] || 
+                          'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?q=80&w=600&auto=format&fit=crop'
+                        }
+                        alt={activeBooking.turf?.name}
+                        className="w-full h-full object-cover object-center"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#070c18] via-transparent to-black/30" />
+                      
+                      {/* Status Badge in Image overlay */}
+                      <div className="absolute bottom-4 left-4">
+                        {activeBooking.status === 'CONFIRMED' ? (
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/20 text-emerald-450 px-3 py-1.5 rounded-full">
+                            Confirmed
+                          </span>
+                        ) : activeBooking.status === 'PENDING' ? (
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-amber-500/15 border border-amber-500/20 text-amber-450 px-3 py-1.5 rounded-full animate-pulse">
+                            Pending
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/20 text-rose-455 px-3 py-1.5 rounded-full">
+                            Cancelled
+                          </span>
+                        )}
+                      </div>
+                    </motion.div>
 
-                  return (
-                    <div
-                      key={booking.id}
-                      className="group p-5 rounded-xl bg-slate-950/40 border border-slate-900/80 hover:border-slate-800/80 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5"
-                    >
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-black text-white truncate">{booking.turf?.name || 'Sports Arena'}</h4>
-                        
-                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold text-slate-500">
-                          <span className="flex items-center gap-1.5 text-slate-400">
-                            <Calendar className="h-4 w-4 text-emerald-400" />
-                            {dateStr}
-                          </span>
-                          <span className="flex items-center gap-1.5 text-slate-400">
-                            <Clock className="h-4 w-4 text-emerald-400" />
-                            {booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time Slot'}
-                          </span>
-                          <span className="flex items-center gap-1.5 text-slate-400">
-                            <MapPin className="h-4 w-4 text-emerald-400" />
-                            {booking.turf?.address}
-                          </span>
+                    {/* Card Title & CTA */}
+                    <div className="p-6 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <motion.h3
+                            layoutId={`title-${activeBooking.id}-${activeBookingId}`}
+                            className="font-black text-white text-lg"
+                          >
+                            {activeBooking.turf?.name || 'Sports Arena'}
+                          </motion.h3>
+                          <motion.p
+                            layoutId={`description-${activeBooking.id}-${activeBookingId}`}
+                            className="text-xs text-slate-400 mt-1 flex items-center gap-1"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-emerald-450" />
+                            {activeBooking.turf?.address}, {activeBooking.turf?.city}
+                          </motion.p>
                         </div>
+
+                        <motion.a
+                          layoutId={`button-cta-${activeBooking.id}-${activeBookingId}`}
+                          href={`/turfs/${activeBooking.turfId}`}
+                          className="h-9 px-4.5 text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-450 hover:to-teal-500 text-white rounded-xl flex items-center justify-center transition-all cursor-pointer hover:scale-102"
+                        >
+                          Arena Details
+                        </motion.a>
                       </div>
 
-                      <div className="flex items-center gap-4.5 self-end sm:self-center">
-                        <div className="text-right">
-                          <span className="text-[7.5px] font-black text-slate-655 uppercase tracking-widest block leading-none">Total Cost</span>
-                          <span className="text-white font-extrabold text-xs mt-1 block">৳{booking.totalAmount}</span>
-                        </div>
+                      {/* Card Detailed Scrollable Content */}
+                      <div className="border-t border-slate-900 pt-4">
+                        <motion.div
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-slate-400 text-xs space-y-3.5 pb-2 max-h-[30vh] overflow-y-auto pr-1"
+                        >
+                          <div className="grid grid-cols-2 gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-900">
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Reference ID</span>
+                              <span className="text-white font-mono font-bold mt-1 block">#{activeBooking.id.slice(0, 8)}</span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Payment status</span>
+                              <span className="text-emerald-400 font-bold mt-1 block uppercase">{activeBooking.payment?.status || 'PAID'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Time Slot</span>
+                              <span className="text-white font-bold mt-1 block flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5 text-emerald-400" />
+                                {activeBooking.slot ? `${activeBooking.slot.startTime} - ${activeBooking.slot.endTime}` : 'N/A'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Reservation Date</span>
+                              <span className="text-white font-bold mt-1 block flex items-center gap-1">
+                                <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+                                {activeBooking.slot?.date ? new Date(activeBooking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
 
-                        <div>
-                          {isConfirmed ? (
-                            <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">
-                              Confirmed
-                            </span>
-                          ) : isPending ? (
-                            <span className="text-[8px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 px-3 py-1 rounded-full animate-pulse">
-                              Pending
-                            </span>
-                          ) : (
-                            <span className="text-[8px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-455 px-3 py-1 rounded-full">
-                              Cancelled
-                            </span>
+                          <div className="flex justify-between items-center bg-slate-950/40 px-4 py-3 rounded-2xl border border-slate-900">
+                            <span className="text-[10px] font-bold text-slate-300">Total Charged Amount</span>
+                            <span className="text-white font-black text-sm">৳{activeBooking.totalAmount}</span>
+                          </div>
+
+                          {activeBooking.notes && (
+                            <div className="bg-slate-950/20 p-3.5 rounded-2xl border border-slate-900/60">
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Booking Notes</span>
+                              <p className="text-slate-350 italic">"{activeBooking.notes}"</p>
+                            </div>
                           )}
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12 space-y-4">
-                  <div className="h-12 w-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
-                    <Calendar className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xs font-black text-slate-450 uppercase tracking-wider">No Reservations Yet</h3>
-                  <Link href="/turfs" className="text-[9.5px] font-black uppercase text-emerald-400 hover:underline">
-                    Book your first sports slot now →
-                  </Link>
+                  </motion.div>
                 </div>
-              )}
+              ) : null}
+            </AnimatePresence>
+
+            <div className="p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-6">
+              <div className="flex justify-between items-center border-b border-slate-900/60 pb-4">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider">Your Games Log</h3>
+                <span className="text-[9px] font-black text-slate-500 uppercase">{myBookingsList.length} Reservations</span>
+              </div>
+
+              <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                {myBookingsList.length > 0 ? (
+                  myBookingsList.map((booking) => {
+                    const dateStr = booking.slot?.date
+                      ? new Date(booking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : 'Confirmed Date';
+                    const isPending = booking.status === 'PENDING';
+                    const isConfirmed = booking.status === 'CONFIRMED';
+                    const turfDetails = turfsData?.data?.find(t => t.id === booking.turfId);
+
+                    return (
+                      <motion.div
+                        layoutId={`card-${booking.id}-${activeBookingId}`}
+                        key={`card-${booking.id}-${activeBookingId}`}
+                        onClick={() => setActiveBooking(booking)}
+                        className="group p-4 flex flex-col md:flex-row justify-between items-center bg-slate-950/40 border border-slate-900/80 hover:border-slate-800/80 hover:bg-[#070c18] rounded-xl cursor-pointer transition-all gap-4"
+                      >
+                        <div className="flex gap-4 flex-col md:flex-row items-center w-full md:w-auto">
+                          <motion.div layoutId={`image-${booking.id}-${activeBookingId}`}>
+                            <img
+                              width={80}
+                              height={80}
+                              src={
+                                turfDetails?.images?.[0] ||
+                                'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?q=80&w=600&auto=format&fit=crop'
+                              }
+                              alt={booking.turf?.name}
+                              className="h-16 w-16 md:h-14 md:w-14 rounded-lg object-cover object-center shadow-md border border-slate-900 group-hover:border-slate-800 transition-all"
+                            />
+                          </motion.div>
+                          
+                          <div className="text-center md:text-left space-y-1">
+                            <motion.h3
+                              layoutId={`title-${booking.id}-${activeBookingId}`}
+                              className="font-black text-white text-xs"
+                            >
+                              {booking.turf?.name || 'Sports Arena'}
+                            </motion.h3>
+                            
+                            <motion.div
+                              layoutId={`description-${booking.id}-${activeBookingId}`}
+                              className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 text-[9px] font-semibold text-slate-500"
+                            >
+                              <span className="flex items-center gap-1 text-slate-400">
+                                <Calendar className="h-3.5 w-3.5 text-emerald-455" />
+                                {dateStr}
+                              </span>
+                              <span className="flex items-center gap-1 text-slate-400">
+                                <Clock className="h-3.5 w-3.5 text-emerald-455" />
+                                {booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time'}
+                              </span>
+                            </motion.div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                          <div className="text-left md:text-right">
+                            <span className="text-[7.5px] font-black text-slate-655 uppercase tracking-widest block leading-none">Total Cost</span>
+                            <span className="text-white font-extrabold text-xs mt-1 block">৳{booking.totalAmount}</span>
+                          </div>
+
+                          <motion.button
+                            layoutId={`button-cta-${booking.id}-${activeBookingId}`}
+                            className="px-4 py-2 text-[9px] rounded-full font-black uppercase bg-slate-900 border border-slate-850 hover:bg-emerald-500 hover:text-white hover:border-emerald-450 text-slate-350 cursor-pointer transition-colors"
+                          >
+                            View details
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12 space-y-4">
+                    <div className="h-12 w-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
+                      <Calendar className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xs font-black text-slate-450 uppercase tracking-wider">No Reservations Yet</h3>
+                    <Link href="/turfs" className="text-[9.5px] font-black uppercase text-emerald-400 hover:underline">
+                      Book your first sports slot now →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </>
         )}
 
       </div>
