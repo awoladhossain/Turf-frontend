@@ -2,6 +2,7 @@
 
 import Magnetic from '@/components/ui/Magnetic';
 import { CometCard } from '@/components/ui/comet-card';
+import { StickyScroll } from '@/components/ui/sticky-scroll-reveal';
 import Image from 'next/image';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import gsap from 'gsap';
@@ -32,42 +33,116 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Minimalist Uniform Chronology Data
-const TIMELINE_EVENTS = [
+const stickyScrollContent = [
   {
-    year: '2022',
-    title: 'দ্য ফ্রিকশন (The Friction)',
-    subtitle: 'A Late Night Double-Booking Chaos',
-    desc: 'বনানীর একটি মাঠে ৭-এ-সাইড ম্যাচের জন্য আমরা বন্ধুরা জড়ো হয়েছিলাম। ৫ দিন আগে ফোনে মাঠ বুক করার পরেও বুকিং রেজিস্টারে নামের গোঁজামিলের কারণে অন্য টিম খেলছিল। এই প্রাচীন অ্যানালগ হ্যাসেল আমাদের ভাবিয়ে তোলে। সেই রাতেই জন্ম নেয় টার্ফবুক আইডিয়া।',
-    icon: <Clock className="h-4 w-4 text-emerald-400" />,
+    title: "2022: দ্য ফ্রিকশন (The Friction)",
+    description: "A Late Night Double-Booking Chaos\n\nবনানীর একটি মাঠে ৭-এ-সাইড ম্যাচের জন্য আমরা বন্ধুরা জড়ো হয়েছিলাম। ৫ দিন আগে ফোনে মাঠ বুক করার পরেও বুকিং রেজিস্টারে নামের গোঁজামিলের কারণে অন্য টিম খেলছিল। এই প্রাচীন অ্যানালগ হ্যাসেল আমাদের ভাবিয়ে তোলে। সেই রাতেই জন্ম নেয় টার্ফবুক আইডিয়া।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600"
+          alt="The Friction"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Clock className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2022 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2023',
-    title: 'দ্য জেনেসিস (The Genesis)',
-    subtitle: 'Developing the Automated Concurrency Lock',
-    desc: 'একটি ছোট কফি শপে শুরু হয় প্রথম কোড লাইন। ডাবল বুকিং চিরতরে বন্ধ করতে আমরা তৈরি করলাম অ্যাডভান্সড রিয়েল-টাইম স্লট লকিং মেকানিজম। ঢাকার ৫টি প্রিমিয়াম এরেনা যুক্ত করে খেলোয়াড়দের জন্য ইনস্ট্যান্ট বুকিং গেটওয়ে ওপেন করা হলো।',
-    icon: <Zap className="h-4 w-4 text-emerald-400" />,
+    title: "2023: দ্য জেনেসিস (The Genesis)",
+    description: "Developing the Automated Concurrency Lock\n\nএকটি ছোট কফি শপে শুরু হয় প্রথম কোড লাইন। ডাবল বুকিং চিরতরে বন্ধ করতে আমরা তৈরি করলাম অ্যাডভান্সড রিয়েল-টাইম স্লট লকিং মেকানিজম। ঢাকার ৫টি প্রিমিয়াম এরেনা যুক্ত করে খেলোয়াড়দের জন্য ইনস্ট্যান্ট বুকিং গেটওয়ে ওপেন করা হলো।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=600"
+          alt="The Genesis"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Zap className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2023 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2024',
-    title: 'দ্য রেভোলিউশন (The Revolution)',
-    subtitle: 'Onboarding 50+ Arenas and 10,000+ Players',
-    desc: 'টার্ফবুক পরিণত হলো ঢাকার সবচেয়ে বিশ্বস্ত স্পোর্টস প্ল্যাটফর্মে। ধানমন্ডি, গুলশান, বনানী এবং মিরপুরের ৫০টিরও বেশি প্রিমিয়াম এরেনা যুক্ত হলো। ডাবল বুকিং এর হার নেমে আসলো শূন্যের কোঠায়। আমরা ঢাকার ক্রীড়াপ্রেমী খেলোয়াড়দের অফিসিয়াল বুকিং পার্টনার হলাম।',
-    icon: <Trophy className="h-4 w-4 text-emerald-400" />,
+    title: "2024: দ্য রেভোলিউশন (The Revolution)",
+    description: "Onboarding 50+ Arenas and 10,000+ Players\n\nটার্ফবুক পরিণত হলো ঢাকার সবচেয়ে বিশ্বস্ত স্পোর্টস প্ল্যাটফর্মে। ধানমন্ডি, গুলশান, বনানী এবং মিরপুরের ৫০টিরও বেশি প্রিমিয়াম এরেনা যুক্ত হলো। ডাবল বুকিং এর হার নেমে আসলো শূন্যের কোঠায়। আমরা ঢাকার ক্রীড়াপ্রেমী খেলোয়াড়দের অফিসিয়াল বুকিং পার্টনার হলাম।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=600"
+          alt="The Revolution"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Trophy className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2024 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2025',
-    title: 'দ্য এক্সপ্যানশন (The Expansion)',
-    subtitle: 'AI Matchmaking & Regional Onboarding',
-    desc: 'ঢাকার বাইরে চট্টগ্রাম ও সিলেটে আমাদের কার্যক্রম প্রসারিত করা হয়েছে। একই সাথে প্লেয়ার ম্যাচমেকিং লবি এবং ইন-অ্যাপ স্প্লিট পেমেন্ট ফিচার যুক্ত করা হয়েছে, যা বন্ধুদের মধ্যে মাঠের ভাড়া ভাগাভাগি করার প্রক্রিয়াকে আরও সহজ করেছে।',
-    icon: <Users className="h-4 w-4 text-emerald-400" />,
+    title: "2025: দ্য এক্সপ্যানশন (The Expansion)",
+    description: "AI Matchmaking & Regional Onboarding\n\nঢাকার বাইরে চট্টগ্রাম ও সিলেটে আমাদের কার্যক্রম প্রসারিত করা হয়েছে। একই সাথে প্লেয়ার ম্যাচমেকিং লবি এবং ইন-অ্যাপ স্প্লিট পেমেন্ট ফিচার যুক্ত করা হয়েছে, যা বন্ধুদের মধ্যে মাঠের ভাড়া ভাগাভাগি করার প্রক্রিয়াকে আরও সহজ করেছে।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600"
+          alt="The Expansion"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Users className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2025 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2026',
-    title: 'দ্য ফিউচার ইকোসিস্টেম (The Future Ecosystem)',
-    subtitle: 'Live Video Broadcasts & Career Analytics',
-    desc: 'আমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, লাইভ ভিডিও সম্প্রচার এবং প্লেয়ার ক্যারিয়ার স্ট্যাটস কার্ড ড্যাশবোর্ড নিয়ে এসেছি লাইভ। প্রতিটি প্লেয়ার এখন তাদের ম্যাচের ভিডিও এবং পারফরম্যান্স অ্যানালিটিক্স পাচ্ছেন সরাসরি প্রোফাইলে।',
-    icon: <Flame className="h-4 w-4 text-emerald-400" />,
+    title: "2026: দ্য ফিউচার ইকোসিস্টেম (The Future)",
+    description: "Live Video Broadcasts & Career Analytics\n\nআমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, লাইভ ভিডিও সম্প্রচার এবং প্লেয়ার ক্যারিয়ার স্ট্যাটস কার্ড ড্যাশবোর্ড নিয়ে এসেছি লাইভ। প্রতিটি প্লেয়ার এখন তাদের ম্যাচের ভিডিও এবং পারফরম্যান্স অ্যানালিটিক্স পাচ্ছেন সরাসরি প্রোফাইলে।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1431324155629-1a6edd1d224a?auto=format&fit=crop&q=80&w=600"
+          alt="The Future Ecosystem"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Flame className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2026 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
 ];
 
@@ -790,13 +865,14 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* --- THE LEGACY CHRONOLOGY (Minimal Vertical Timeline) --- */}
-        <div className="timeline-container space-y-10 relative max-w-3xl mx-auto pt-6">
-          {/* Vertical central pipeline (Uniform color) */}
-          <div className="absolute left-6 md:left-1/2 top-4 bottom-4 w-[1px] bg-slate-800/40 -translate-x-1/2 hidden md:block" />
-
-          <div className="text-center space-y-1.5 pb-4 scroll-fade-in">
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
+        {/* --- OUR JOURNEY STICKY SCROLL SECTION --- */}
+        <section className="space-y-8 max-w-5xl mx-auto scroll-fade-in pt-6">
+          <div className="text-center space-y-1.5 pb-2">
+            <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              <Clock className="h-3 w-3" />
+              <span>Our Legacy</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               Our Journey Chronicle
             </h2>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
@@ -804,56 +880,10 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="space-y-10">
-            {TIMELINE_EVENTS.map((event, index) => {
-              const isEven = index % 2 === 0;
-              return (
-                <div
-                  key={index}
-                  className="timeline-node relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0 will-change-transform"
-                >
-                  {/* Left / Right Card placement */}
-                  <div
-                    className={`w-full md:w-[46%] ${isEven ? 'md:order-1' : 'md:order-2 md:text-left'}`}
-                  >
-                    <div className="p-5.5 rounded-2xl bg-[#0d1425]/20 border border-slate-900/80 backdrop-blur-2xl shadow-sm space-y-3 hover:border-emerald-500/10 hover:bg-[#0d1425]/30 transition-all duration-300">
-                      {/* Timeline Card Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#050811] rounded-full border border-slate-850 flex items-center justify-center">
-                          {event.icon}
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                            {event.year} Milestone
-                          </span>
-                          <h3 className="text-sm font-black tracking-tight text-white">
-                            {event.title}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div className="h-[1px] bg-slate-800/30 w-full" />
-
-                      <p className="text-[11px] sm:text-xs text-slate-400 font-medium leading-relaxed">
-                        {event.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Centered Timeline Node Dot */}
-                  <div className="absolute left-6 md:left-1/2 top-7 md:top-1/2 w-6 h-6 rounded-full bg-[#050811] border border-slate-800 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center pointer-events-none md:flex">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  </div>
-
-                  {/* Empty Spacer Column for layout balancing */}
-                  <div
-                    className={`w-full md:w-[46%] hidden md:block ${isEven ? 'md:order-2' : 'md:order-1'}`}
-                  />
-                </div>
-              );
-            })}
+          <div className="rounded-3xl border border-slate-900 bg-[#0d1425]/10 backdrop-blur-3xl overflow-hidden shadow-2xl">
+            <StickyScroll content={stickyScrollContent} />
           </div>
-        </div>
+        </section>
 
         {/* --- MEET THE FOUNDERS & TEAM GRID --- */}
         <section className="team-section space-y-10">
