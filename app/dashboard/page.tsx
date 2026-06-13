@@ -6,7 +6,7 @@ import turfService from '@/services/turf.service';
 import healthService from '@/services/health.service';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -47,25 +47,29 @@ import {
 // --- CUSTOM RESIZE OBSERVER HOOK ---
 // This measures the parent container width in real time and bypasses Recharts' buggy ResponsiveContainer
 function useContainerWidth() {
-  const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const observerRef = useRef<ResizeObserver | null>(null);
 
-  useEffect(() => {
-    if (!ref.current) return;
-    
-    // Set initial width
-    setWidth(ref.current.getBoundingClientRect().width);
+  const ref = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
 
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        if (entry.contentRect.width > 0) {
-          setWidth(entry.contentRect.width);
+    if (node) {
+      // Set initial width
+      setWidth(node.getBoundingClientRect().width);
+
+      const observer = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          if (entry.contentRect.width > 0) {
+            setWidth(entry.contentRect.width);
+          }
         }
-      }
-    });
-    
-    observer.observe(ref.current);
-    return () => observer.disconnect();
+      });
+      observer.observe(node);
+      observerRef.current = observer;
+    }
   }, []);
 
   return [ref, width] as const;
