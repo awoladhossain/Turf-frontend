@@ -49,13 +49,18 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isFetchingMe } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'analytics' | 'bookings' | 'turfs'>('analytics');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auth Guard redirect
   useEffect(() => {
-    if (!isFetchingMe && !isAuthenticated) {
+    if (mounted && !isFetchingMe && !isAuthenticated) {
       router.push('/login?redirect=/dashboard');
     }
-  }, [isAuthenticated, isFetchingMe, router]);
+  }, [isAuthenticated, isFetchingMe, router, mounted]);
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -88,7 +93,7 @@ export default function DashboardPage() {
     refetchInterval: 30000, // refresh every 30s
   });
 
-  if (isFetchingMe || (isAdmin ? isAdminBookingsLoading : isUserBookingsLoading) || isTurfsLoading) {
+  if (!mounted || isFetchingMe || (isAdmin ? isAdminBookingsLoading : isUserBookingsLoading) || isTurfsLoading) {
     return (
       <div className="min-h-screen bg-[#03060f] flex flex-col items-center justify-center gap-4">
         <Loader2 className="h-10 w-10 text-emerald-400 animate-spin" />
@@ -373,9 +378,9 @@ export default function DashboardPage() {
                         <h3 className="text-xs font-black text-white uppercase tracking-wider">Revenue Trendline</h3>
                         <span className="text-[9px] font-black text-slate-500 uppercase">Recent bookings activity</span>
                       </div>
-                      <div className="h-64 w-full">
+                      <div className="h-64 w-full min-w-0 relative">
                         {revenueTrendData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
+                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                               <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -405,9 +410,9 @@ export default function DashboardPage() {
                     {/* Pie Chart: Status Share */}
                     <div className="p-5 rounded-2xl bg-gradient-to-br from-[#060a16]/80 to-[#04060f]/60 border border-slate-900 shadow-xl shadow-slate-950/20 space-y-4 flex flex-col justify-between">
                       <h3 className="text-xs font-black text-white uppercase tracking-wider">Booking Status Share</h3>
-                      <div className="h-44 w-full flex justify-center items-center">
+                      <div className="h-44 w-full min-w-0 relative flex justify-center items-center">
                         {statusPieData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
+                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <PieChart>
                               <Pie
                                 data={statusPieData}
@@ -450,9 +455,9 @@ export default function DashboardPage() {
                     {/* Bar Chart: Sport type distribution */}
                     <div className="lg:col-span-3 p-5 rounded-2xl bg-gradient-to-br from-[#060a16]/80 to-[#04060f]/60 border border-slate-900 shadow-xl shadow-slate-950/20 space-y-4">
                       <h3 className="text-xs font-black text-white uppercase tracking-wider">Sport Popularity Distribution</h3>
-                      <div className="h-56 w-full">
+                      <div className="h-56 w-full min-w-0 relative">
                         {sportChartData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
+                          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <BarChart data={sportChartData}>
                               <CartesianGrid stroke="#0e1628" strokeDasharray="3 3" />
                               <XAxis dataKey="name" stroke="#475569" fontSize={9} />
