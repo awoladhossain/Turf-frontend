@@ -30,6 +30,11 @@ export interface Booking {
   };
   slot?: Slot;
   payment?: Payment;
+  user?: {
+    id: string;
+    name: string;
+    phone?: string;
+  };
 }
 
 export interface Payment {
