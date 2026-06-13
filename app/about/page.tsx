@@ -879,7 +879,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="scroll-fade-in rounded-3xl border border-slate-900 bg-[#0d1425]/10 backdrop-blur-3xl overflow-hidden shadow-2xl">
+          <div className="scroll-fade-in w-full">
             <StickyScroll content={stickyScrollContent} />
           </div>
         </section>
