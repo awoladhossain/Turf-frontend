@@ -1,12 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 export const StickyScroll = ({
   content,
@@ -21,60 +15,34 @@ export const StickyScroll = ({
 }) => {
   const [activeCard, setActiveCard] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const stickyWrapperRef = useRef<HTMLDivElement>(null);
-  const stickyCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    // Detect when each card passes the center of the viewport
+    const observerOptions = {
+      root: null,
+      rootMargin: "-45% 0px -45% 0px", // Middle 10% of the screen
+      threshold: 0,
+    };
 
-    const container = containerRef.current;
-    const stickyWrapper = stickyWrapperRef.current;
-    const stickyCard = stickyCardRef.current;
-
-    if (!container || !stickyWrapper || !stickyCard) return;
-
-    // Pin the card inside the wrapper using GSAP ScrollTrigger
-    const pinTrigger = ScrollTrigger.create({
-      trigger: container,
-      start: "top 20%",
-      end: "bottom 70%",
-      pin: stickyCard,
-      anticipatePin: 1,
-    });
-
-    // Animate left-side cards and trigger active card change
-    const cards = gsap.utils.toArray(".journey-card") as HTMLElement[];
-    const tweens = cards.map((card, index) => {
-      return gsap.fromTo(
-        card,
-        { opacity: 0.15, scale: 0.98, x: -15 },
-        {
-          opacity: 1,
-          scale: 1.02,
-          x: 0,
-          duration: 0.4,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: card,
-            start: "top 60%",
-            end: "bottom 40%",
-            toggleActions: "play reverse play reverse",
-            onEnter: () => setActiveCard(index),
-            onEnterBack: () => setActiveCard(index),
-          },
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = Number(entry.target.getAttribute("data-index"));
+          if (!isNaN(index)) {
+            setActiveCard(index);
+          }
         }
-      );
-    });
+      });
+    };
 
-    // Refresh ScrollTrigger to ensure all dimensions are correctly calculated
-    ScrollTrigger.refresh();
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    // Observe each card element
+    const cards = containerRef.current?.querySelectorAll(".journey-card");
+    cards?.forEach((card) => observer.observe(card));
 
     return () => {
-      pinTrigger.kill();
-      tweens.forEach((t) => {
-        t.kill();
-        t.scrollTrigger?.kill();
-      });
+      observer.disconnect();
     };
   }, [content]);
 
@@ -84,18 +52,24 @@ export const StickyScroll = ({
       className="relative flex flex-col lg:flex-row justify-center items-start lg:space-x-12 xl:space-x-20 py-12 px-4 max-w-6xl mx-auto"
     >
       {/* Left side text cards */}
-      <div className="w-full lg:w-1/2 flex flex-col">
+      <div className="w-full lg:w-1/2 flex flex-col space-y-[20vh] py-[10vh]">
         {content.map((item, index) => {
+          const isActive = activeCard === index;
           return (
             <div
               key={item.title + index}
-              className="journey-card min-h-[50vh] flex flex-col justify-center py-16 first:pt-0 last:pb-24 origin-left"
+              data-index={index}
+              className="journey-card min-h-[40vh] flex flex-col justify-center transition-all duration-500 ease-out origin-left"
+              style={{
+                opacity: isActive ? 1 : 0.15,
+                transform: isActive ? "scale(1.03) translateX(0px)" : "scale(1) translateX(-15px)",
+              }}
             >
               <div className="space-y-4">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white transition-colors duration-500">
                   {item.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-semibold whitespace-pre-line max-w-lg">
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-semibold whitespace-pre-line max-w-lg transition-colors duration-500">
                   {item.description}
                 </p>
               </div>
@@ -104,34 +78,30 @@ export const StickyScroll = ({
         })}
       </div>
 
-      {/* Right side sticky wrapper */}
+      {/* Right side sticky card container */}
       <div
-        ref={stickyWrapperRef}
-        className="hidden lg:block w-full lg:w-[480px] xl:w-[520px] self-stretch relative"
+        className={cn(
+          "hidden lg:block sticky top-[22vh] w-full lg:w-[480px] xl:w-[520px] aspect-[4/3] rounded-3xl border border-slate-900 bg-[#0d1425]/40 backdrop-blur-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 ease-in-out",
+          contentClassName
+        )}
       >
-        {/* Pinned Card */}
-        <div
-          ref={stickyCardRef}
-          className="w-full aspect-[4/3] rounded-3xl border border-slate-900 bg-[#0d1425]/40 backdrop-blur-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-        >
-          <div className="relative w-full h-full">
-            {content.map((item, index) => {
-              const isActive = activeCard === index;
-              return (
-                <div
-                  key={index}
-                  className={cn(
-                    "absolute inset-0 w-full h-full transition-all duration-700 ease-in-out transform origin-center",
-                    isActive
-                      ? "opacity-100 scale-100 rotate-0 z-10"
-                      : "opacity-0 scale-95 -rotate-1 z-0 pointer-events-none"
-                  )}
-                >
-                  {item.content}
-                </div>
-              );
-            })}
-          </div>
+        <div className="relative w-full h-full">
+          {content.map((item, index) => {
+            const isActive = activeCard === index;
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "absolute inset-0 w-full h-full transition-all duration-700 ease-in-out transform origin-center",
+                  isActive
+                    ? "opacity-100 scale-100 rotate-0 z-10"
+                    : "opacity-0 scale-95 z-0 pointer-events-none"
+                )}
+              >
+                {item.content}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

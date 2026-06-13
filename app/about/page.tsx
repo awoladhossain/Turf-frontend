@@ -541,7 +541,7 @@ export default function AboutPage() {
     <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
-      className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
+      className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-x-clip select-none"
       style={
         {
           '--spotlight-x': '50%',
