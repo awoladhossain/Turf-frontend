@@ -6,7 +6,7 @@ import Magnetic from '@/components/ui/Magnetic';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import turfService from '@/services/turf.service';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import gsap from 'gsap';
 import {
   ArrowRight,
@@ -48,12 +48,14 @@ export default function TurfDetailPage() {
   const {
     data: slotsData,
     isLoading,
+    isFetching,
     error,
   } = useQuery({
     queryKey: ['turf-slots', id, selectedDate],
     queryFn: () => turfService.getTurfSlots(id, selectedDate),
     enabled: !!id && !!selectedDate && isAuthenticated,
     retry: 1,
+    placeholderData: keepPreviousData,
   });
 
   const turf = slotsData?.turf;
@@ -90,11 +92,10 @@ export default function TurfDetailPage() {
     }
   }, [dateOptions]);
 
-  // Setup GSAP entrance animations for details page
+  // Setup GSAP animation for login alert warning card
   useEffect(() => {
     if (!isAuthenticated) {
-      // Animate the login warning card
-      gsap.context(() => {
+      const ctx = gsap.context(() => {
         gsap.set(loginAlertRef.current, { opacity: 0, scale: 0.95, y: 30 });
         gsap.to(loginAlertRef.current, {
           opacity: 1,
@@ -104,10 +105,14 @@ export default function TurfDetailPage() {
           ease: 'power3.out',
         });
       }, pageContainerRef);
-      return;
+      return () => ctx.revert();
     }
+  }, [isAuthenticated]);
 
-    if (isLoading || !turf) return;
+  // Setup GSAP entrance animations for details page once loaded
+  const isInitialLoad = !isLoading && !!turf;
+  useEffect(() => {
+    if (!isInitialLoad) return;
 
     const ctx = gsap.context(() => {
       // Set initial state
@@ -134,8 +139,7 @@ export default function TurfDetailPage() {
     }, pageContainerRef);
 
     return () => ctx.revert();
-  }, [isAuthenticated, isLoading, turf]);
-;
+  }, [isInitialLoad]);
 
   // Handle mock booking process
   const handleBooking = () => {
@@ -343,7 +347,7 @@ export default function TurfDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Banner Section */}
             <div className="animate-fade relative h-72 sm:h-96 w-full rounded-3xl overflow-hidden border border-slate-900 bg-slate-950 shadow-2xl">
-              <Image src={displayImage} alt={turf.name} fill sizes="100vw" className="h-full w-full object-cover opacity-80" priority />
+              <Image src={displayImage} alt={turf.name} fill sizes="(max-width: 1024px) 100vw, 768px" className="h-full w-full object-cover opacity-80" priority />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
               {/* Rating & Sport Badges on Banner */}
@@ -470,37 +474,47 @@ export default function TurfDetailPage() {
                   Available Slots
                 </label>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {slots.map((slot) => {
-                    const isSelected = selectedSlotId === slot.id;
-                    const isBooked = slot.isBooked;
+                <div className="relative">
+                  {isFetching && (
+                    <div className="absolute inset-0 bg-[#050811]/60 backdrop-blur-[1px] rounded-2xl flex items-center justify-center z-10">
+                      <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-4 py-2 rounded-full shadow-lg">
+                        <div className="h-3.5 w-3.5 rounded-full border-2 border-emerald-500/20 border-t-emerald-450 animate-spin" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Updating slots...</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3 transition-all duration-300 ${isFetching ? 'opacity-40 pointer-events-none filter blur-[0.5px]' : ''}`}>
+                    {slots.map((slot) => {
+                      const isSelected = selectedSlotId === slot.id;
+                      const isBooked = slot.isBooked;
 
-                    return (
-                      <button
-                        key={slot.id}
-                        onClick={() => !isBooked && setSelectedSlotId(slot.id)}
-                        disabled={isBooked}
-                        className={`h-12 px-4 rounded-xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${
-                          isBooked
-                            ? 'bg-[#050811]/40 border-slate-950 text-slate-600 cursor-not-allowed'
-                            : isSelected
-                              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
-                              : 'bg-[#050811] border-slate-900 text-slate-350 hover:border-slate-800 hover:text-white'
-                        }`}
-                      >
-                        <div className="text-left leading-none">
-                          <p className="text-xs font-black">{slot.startTime}</p>
-                          <p className="text-[8px] font-bold opacity-60 mt-0.5">
-                            until {slot.endTime}
-                          </p>
-                        </div>
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => !isBooked && setSelectedSlotId(slot.id)}
+                          disabled={isBooked}
+                          className={`h-12 px-4 rounded-xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${
+                            isBooked
+                              ? 'bg-[#050811]/40 border-slate-950 text-slate-600 cursor-not-allowed'
+                              : isSelected
+                                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                                : 'bg-[#050811] border-slate-900 text-slate-350 hover:border-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <div className="text-left leading-none">
+                            <p className="text-xs font-black">{slot.startTime}</p>
+                            <p className="text-[8px] font-bold opacity-60 mt-0.5">
+                              until {slot.endTime}
+                            </p>
+                          </div>
 
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${isBooked ? 'bg-slate-700' : isSelected ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-600'}`}
-                        />
-                      </button>
-                    );
-                  })}
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${isBooked ? 'bg-slate-700' : isSelected ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-600'}`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
