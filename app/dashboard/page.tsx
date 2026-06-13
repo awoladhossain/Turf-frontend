@@ -148,7 +148,10 @@ export default function DashboardPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [activeBooking]);
 
-  useOutsideClick(activeBookingRef as any, () => setActiveBooking(null));
+  useOutsideClick(activeBookingRef as any, () => {
+    console.log('Outside click callback fired! Resetting activeBooking.');
+    setActiveBooking(null);
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -976,7 +979,13 @@ export default function DashboardPage() {
                       <motion.div
                         layoutId={`card-${booking.id}-${activeBookingId}`}
                         key={`card-${booking.id}-${activeBookingId}`}
-                        onClick={() => setActiveBooking(booking)}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Item clicked! Setting activeBooking to:', booking.id);
+                          setActiveBooking(booking);
+                        }}
                         className="group p-4 flex flex-col md:flex-row justify-between items-center bg-slate-950/40 border border-slate-900/80 hover:border-slate-800/80 hover:bg-[#070c18] rounded-xl cursor-pointer transition-all gap-4"
                       >
                         <div className="flex gap-4 flex-col md:flex-row items-center w-full md:w-auto">
