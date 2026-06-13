@@ -337,11 +337,11 @@ export default function RegisterPage() {
           <div className="pt-2 will-change-transform">
             <Magnetic range={25} actionStrength={0.25}>
               <Button
-                disabled={isRegistering}
+                loading={isRegistering}
                 className="w-full h-12 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-emerald-950/40 border border-emerald-500/20 active:scale-95 cursor-pointer"
                 data-cursor-text="JOIN"
               >
-                {isRegistering ? 'Creating Account...' : 'Get Started'}
+                Get Started
               </Button>
             </Magnetic>
           </div>

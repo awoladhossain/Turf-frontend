@@ -1,6 +1,8 @@
 'use client';
 
 import Magnetic from '@/components/ui/Magnetic';
+import { CometCard } from '@/components/ui/comet-card';
+import { StickyScroll } from '@/components/ui/sticky-scroll-reveal';
 import Image from 'next/image';
 import { useSpotlight } from '@/hooks/useSpotlight';
 import gsap from 'gsap';
@@ -31,42 +33,116 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Minimalist Uniform Chronology Data
-const TIMELINE_EVENTS = [
+const stickyScrollContent = [
   {
-    year: '2022',
-    title: 'দ্য ফ্রিকশন (The Friction)',
-    subtitle: 'A Late Night Double-Booking Chaos',
-    desc: 'বনানীর একটি মাঠে ৭-এ-সাইড ম্যাচের জন্য আমরা বন্ধুরা জড়ো হয়েছিলাম। ৫ দিন আগে ফোনে মাঠ বুক করার পরেও বুকিং রেজিস্টারে নামের গোঁজামিলের কারণে অন্য টিম খেলছিল। এই প্রাচীন অ্যানালগ হ্যাসেল আমাদের ভাবিয়ে তোলে। সেই রাতেই জন্ম নেয় টার্ফবুক আইডিয়া।',
-    icon: <Clock className="h-4 w-4 text-emerald-400" />,
+    title: "2022: দ্য ফ্রিকশন (The Friction)",
+    description: "A Late Night Double-Booking Chaos\n\nবনানীর একটি মাঠে ৭-এ-সাইড ম্যাচের জন্য আমরা বন্ধুরা জড়ো হয়েছিলাম। ৫ দিন আগে ফোনে মাঠ বুক করার পরেও বুকিং রেজিস্টারে নামের গোঁজামিলের কারণে অন্য টিম খেলছিল। এই প্রাচীন অ্যানালগ হ্যাসেল আমাদের ভাবিয়ে তোলে। সেই রাতেই জন্ম নেয় টার্ফবুক আইডিয়া।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=600"
+          alt="The Friction"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Clock className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2022 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2023',
-    title: 'দ্য জেনেসিস (The Genesis)',
-    subtitle: 'Developing the Automated Concurrency Lock',
-    desc: 'একটি ছোট কফি শপে শুরু হয় প্রথম কোড লাইন। ডাবল বুকিং চিরতরে বন্ধ করতে আমরা তৈরি করলাম অ্যাডভান্সড রিয়েল-টাইম স্লট লকিং মেকানিজম। ঢাকার ৫টি প্রিমিয়াম এরেনা যুক্ত করে খেলোয়াড়দের জন্য ইনস্ট্যান্ট বুকিং গেটওয়ে ওপেন করা হলো।',
-    icon: <Zap className="h-4 w-4 text-emerald-400" />,
+    title: "2023: দ্য জেনেসিস (The Genesis)",
+    description: "Developing the Automated Concurrency Lock\n\nএকটি ছোট কফি শপে শুরু হয় প্রথম কোড লাইন। ডাবল বুকিং চিরতরে বন্ধ করতে আমরা তৈরি করলাম অ্যাডভান্সড রিয়েল-টাইম স্লট লকিং মেকানিজম। ঢাকার ৫টি প্রিমিয়াম এরেনা যুক্ত করে খেলোয়াড়দের জন্য ইনস্ট্যান্ট বুকিং গেটওয়ে ওপেন করা হলো।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=600"
+          alt="The Genesis"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Zap className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2023 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2024',
-    title: 'দ্য রেভোলিউশন (The Revolution)',
-    subtitle: 'Onboarding 50+ Arenas and 10,000+ Players',
-    desc: 'টার্ফবুক পরিণত হলো ঢাকার সবচেয়ে বিশ্বস্ত স্পোর্টস প্ল্যাটফর্মে। ধানমন্ডি, গুলশান, বনানী এবং মিরপুরের ৫০টিরও বেশি প্রিমিয়াম এরেনা যুক্ত হলো। ডাবল বুকিং এর হার নেমে আসলো শূন্যের কোঠায়। আমরা ঢাকার ক্রীড়াপ্রেমী খেলোয়াড়দের অফিসিয়াল বুকিং পার্টনার হলাম।',
-    icon: <Trophy className="h-4 w-4 text-emerald-400" />,
+    title: "2024: দ্য রেভোলিউশন (The Revolution)",
+    description: "Onboarding 50+ Arenas and 10,000+ Players\n\nটার্ফবুক পরিণত হলো ঢাকার সবচেয়ে বিশ্বস্ত স্পোর্টস প্ল্যাটফর্মে। ধানমন্ডি, গুলশান, বনানী এবং মিরপুরের ৫০টিরও বেশি প্রিমিয়াম এরেনা যুক্ত হলো। ডাবল বুকিং এর হার নেমে আসলো শূন্যের কোঠায়। আমরা ঢাকার ক্রীড়াপ্রেমী খেলোয়াড়দের অফিসিয়াল বুকিং পার্টনার হলাম।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=600"
+          alt="The Revolution"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Trophy className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2024 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2025',
-    title: 'দ্য এক্সপ্যানশন (The Expansion)',
-    subtitle: 'AI Matchmaking & Regional Onboarding',
-    desc: 'ঢাকার বাইরে চট্টগ্রাম ও সিলেটে আমাদের কার্যক্রম প্রসারিত করা হয়েছে। একই সাথে প্লেয়ার ম্যাচমেকিং লবি এবং ইন-অ্যাপ স্প্লিট পেমেন্ট ফিচার যুক্ত করা হয়েছে, যা বন্ধুদের মধ্যে মাঠের ভাড়া ভাগাভাগি করার প্রক্রিয়াকে আরও সহজ করেছে।',
-    icon: <Users className="h-4 w-4 text-emerald-400" />,
+    title: "2025: দ্য এক্সপ্যানশন (The Expansion)",
+    description: "AI Matchmaking & Regional Onboarding\n\nঢাকার বাইরে চট্টগ্রাম ও সিলেটে আমাদের কার্যক্রম প্রসারিত করা হয়েছে। একই সাথে প্লেয়ার ম্যাচমেকিং লবি এবং ইন-অ্যাপ স্প্লিট পেমেন্ট ফিচার যুক্ত করা হয়েছে, যা বন্ধুদের মধ্যে মাঠের ভাড়া ভাগাভাগি করার প্রক্রিয়াকে আরও সহজ করেছে।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=600"
+          alt="The Expansion"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Users className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2025 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    year: '2026',
-    title: 'দ্য ফিউচার ইকোসিস্টেম (The Future Ecosystem)',
-    subtitle: 'Live Video Broadcasts & Career Analytics',
-    desc: 'আমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, লাইভ ভিডিও সম্প্রচার এবং প্লেয়ার ক্যারিয়ার স্ট্যাটস কার্ড ড্যাশবোর্ড নিয়ে এসেছি লাইভ। প্রতিটি প্লেয়ার এখন তাদের ম্যাচের ভিডিও এবং পারফরম্যান্স অ্যানালিটিক্স পাচ্ছেন সরাসরি প্রোফাইলে।',
-    icon: <Flame className="h-4 w-4 text-emerald-400" />,
+    title: "2026: দ্য ফিউচার ইকোসিস্টেম (The Future)",
+    description: "Live Video Broadcasts & Career Analytics\n\nআমাদের লক্ষ্য শুধু মাঠ বুকিং নয়—আমরা গড়ছি বাংলাদেশের প্রথম কমপ্লিট স্পোর্টস ইকোসিস্টেম। অটোমেটেড ম্যাচমেকিং, লাইভ ভিডিও সম্প্রচার এবং প্লেয়ার ক্যারিয়ার স্ট্যাটস কার্ড ড্যাশবোর্ড নিয়ে এসেছি লাইভ। প্রতিটি প্লেয়ার এখন তাদের ম্যাচের ভিডিও এবং পারফরম্যান্স অ্যানালিটিক্স পাচ্ছেন সরাসরি প্রোফাইলে।",
+    content: (
+      <div className="h-full w-full relative flex items-center justify-center text-white overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1431324155629-1a6edd1d224a?auto=format&fit=crop&q=80&w=600"
+          alt="The Future Ecosystem"
+          fill
+          sizes="300px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[#050811]/45 backdrop-blur-[0.5px]" />
+        <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2 bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-full shadow-lg">
+          <Flame className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+            2026 Milestone
+          </span>
+        </div>
+      </div>
+    ),
   },
 ];
 
@@ -465,7 +541,7 @@ export default function AboutPage() {
     <div
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
-      className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
+      className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-x-clip select-none"
       style={
         {
           '--spotlight-x': '50%',
@@ -789,13 +865,13 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* --- THE LEGACY CHRONOLOGY (Minimal Vertical Timeline) --- */}
-        <div className="timeline-container space-y-10 relative max-w-3xl mx-auto pt-6">
-          {/* Vertical central pipeline (Uniform color) */}
-          <div className="absolute left-6 md:left-1/2 top-4 bottom-4 w-[1px] bg-slate-800/40 -translate-x-1/2 hidden md:block" />
-
-          <div className="text-center space-y-1.5 pb-4 scroll-fade-in">
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight">
+        <section className="space-y-8 max-w-5xl mx-auto pt-6">
+          <div className="text-center space-y-1.5 pb-2 scroll-fade-in">
+            <div className="inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+              <Clock className="h-3 w-3" />
+              <span>Our Legacy</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               Our Journey Chronicle
             </h2>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
@@ -803,56 +879,10 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="space-y-10">
-            {TIMELINE_EVENTS.map((event, index) => {
-              const isEven = index % 2 === 0;
-              return (
-                <div
-                  key={index}
-                  className="timeline-node relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0 will-change-transform"
-                >
-                  {/* Left / Right Card placement */}
-                  <div
-                    className={`w-full md:w-[46%] ${isEven ? 'md:order-1' : 'md:order-2 md:text-left'}`}
-                  >
-                    <div className="p-5.5 rounded-2xl bg-[#0d1425]/20 border border-slate-900/80 backdrop-blur-2xl shadow-sm space-y-3 hover:border-emerald-500/10 hover:bg-[#0d1425]/30 transition-all duration-300">
-                      {/* Timeline Card Header */}
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#050811] rounded-full border border-slate-850 flex items-center justify-center">
-                          {event.icon}
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                            {event.year} Milestone
-                          </span>
-                          <h3 className="text-sm font-black tracking-tight text-white">
-                            {event.title}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <div className="h-[1px] bg-slate-800/30 w-full" />
-
-                      <p className="text-[11px] sm:text-xs text-slate-400 font-medium leading-relaxed">
-                        {event.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Centered Timeline Node Dot */}
-                  <div className="absolute left-6 md:left-1/2 top-7 md:top-1/2 w-6 h-6 rounded-full bg-[#050811] border border-slate-800 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center pointer-events-none md:flex">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  </div>
-
-                  {/* Empty Spacer Column for layout balancing */}
-                  <div
-                    className={`w-full md:w-[46%] hidden md:block ${isEven ? 'md:order-2' : 'md:order-1'}`}
-                  />
-                </div>
-              );
-            })}
+          <div className="scroll-fade-in w-full">
+            <StickyScroll content={stickyScrollContent} />
           </div>
-        </div>
+        </section>
 
         {/* --- MEET THE FOUNDERS & TEAM GRID --- */}
         <section className="team-section space-y-10">
@@ -872,65 +902,64 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {TEAM_MEMBERS.map((member, i) => (
-              <div
-                key={i}
-                className="scroll-fade-in p-5 rounded-2xl bg-[#0d1425]/15 border border-slate-900 hover:border-emerald-500/20 hover:bg-[#0d1425]/35 transition-all duration-300 group flex flex-col justify-between space-y-5"
-              >
-                <div className="space-y-4">
-                  {/* Profile Frame */}
-                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-850 group-hover:border-emerald-500/20 relative shadow-inner">
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050811] via-transparent to-transparent opacity-60 z-10" />
-                    <Image src={member.image} alt={member.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out grayscale group-hover:grayscale-0" />
-                  </div>
+              <CometCard key={i} className="scroll-fade-in h-full">
+                <div className="h-full p-5 rounded-2xl bg-[#0d1425]/15 border border-slate-900 hover:border-emerald-500/20 hover:bg-[#0d1425]/35 transition-all duration-300 group flex flex-col justify-between space-y-5">
+                  <div className="space-y-4">
+                    {/* Profile Frame */}
+                    <div className="aspect-square w-full rounded-xl overflow-hidden bg-slate-900 border border-slate-850 group-hover:border-emerald-500/20 relative shadow-inner">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#050811] via-transparent to-transparent opacity-60 z-10" />
+                      <Image src={member.image} alt={member.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out grayscale group-hover:grayscale-0" />
+                    </div>
 
-                  {/* Text details */}
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black text-white group-hover:text-emerald-400 transition-colors duration-200">
-                      {member.name}
-                    </h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                      {member.role}
+                    {/* Text details */}
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-black text-white group-hover:text-emerald-400 transition-colors duration-200">
+                        {member.name}
+                      </h3>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        {member.role}
+                      </p>
+                    </div>
+
+                    <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed font-medium">
+                      {member.bio}
                     </p>
                   </div>
 
-                  <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed font-medium">
-                    {member.bio}
-                  </p>
-                </div>
+                  {/* Bottom details & skills */}
+                  <div className="space-y-3.5 pt-3 border-t border-slate-850">
+                    <div className="flex flex-wrap gap-1">
+                      {member.skills.map((skill, si) => (
+                        <span
+                          key={si}
+                          className="text-[8px] font-bold text-slate-500 bg-[#050811] border border-slate-850 px-2 py-0.5 rounded"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
 
-                {/* Bottom details & skills */}
-                <div className="space-y-3.5 pt-3 border-t border-slate-850">
-                  <div className="flex flex-wrap gap-1">
-                    {member.skills.map((skill, si) => (
-                      <span
-                        key={si}
-                        className="text-[8px] font-bold text-slate-500 bg-[#050811] border border-slate-850 px-2 py-0.5 rounded"
+                    <div className="flex items-center gap-3.5 text-slate-500">
+                      <a
+                        href={member.github}
+                        className="hover:text-emerald-400 transition-colors duration-200"
                       >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-3.5 text-slate-500">
-                    <a
-                      href={member.github}
-                      className="hover:text-emerald-400 transition-colors duration-200"
-                    >
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                      </svg>
-                    </a>
-                    <a
-                      href={member.linkedin}
-                      className="hover:text-emerald-400 transition-colors duration-200"
-                    >
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                      </svg>
-                    </a>
+                        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                      </a>
+                      <a
+                        href={member.linkedin}
+                        className="hover:text-emerald-400 transition-colors duration-200"
+                      >
+                        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </CometCard>
             ))}
           </div>
         </section>
