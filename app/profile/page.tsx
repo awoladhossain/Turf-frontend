@@ -469,99 +469,117 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     bookingsData.data.map((booking) => {
-                      const dateStr = booking.slot?.date
-                        ? new Date(booking.slot.date).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : 'Confirmed Date';
+                      const dateObj = booking.slot?.date ? new Date(booking.slot.date) : null;
+                      const dayNum = dateObj ? dateObj.getDate() : '--';
+                      const monthStr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short' }) : 'Date';
+                      const dayName = dateObj ? dateObj.toLocaleDateString('en-US', { weekday: 'short' }) : '';
 
                       const isPendingPayment = booking.status === 'PENDING';
                       const isConfirmed = booking.status === 'CONFIRMED';
                       const isCancelled = booking.status === 'CANCELLED';
+                      const turfName = booking.turf?.name?.trim() || 'Sports Arena';
 
                       return (
                         <div
                           key={booking.id}
-                          className="p-4 rounded-2xl bg-[#050811] border border-slate-900 hover:border-slate-800 transition-all duration-300 space-y-3.5"
+                          className="group p-5 rounded-2xl bg-gradient-to-br from-[#070b16] to-[#04060f] border border-slate-900/90 hover:border-slate-800/80 hover:bg-gradient-to-br hover:from-[#090f20] hover:to-[#050914] transition-all duration-300 flex flex-col sm:flex-row gap-4 relative overflow-hidden shadow-lg shadow-slate-950/20"
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-1 max-w-[170px]">
-                              <span className="inline-flex items-center gap-1 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                                <Trophy className="h-2.5 w-2.5" />
-                                {booking.turf?.name || 'Arena'}
-                              </span>
-                              <h4 className="text-xs font-black text-white truncate">
-                                {booking.turf?.name}
-                              </h4>
-                            </div>
+                          {/* Accent left border based on status */}
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
+                            isConfirmed ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
+                            isPendingPayment ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]' :
+                            isCancelled ? 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' :
+                            'bg-slate-700'
+                          }`} />
 
-                            {/* Status Badging */}
-                            {isConfirmed ? (
-                              <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 px-2 py-0.5 rounded-md select-none">
-                                Confirmed
-                              </span>
-                            ) : isPendingPayment ? (
-                              <span className="text-[8px] font-black uppercase tracking-wider bg-amber-500/15 border border-amber-500/25 text-amber-400 px-2 py-0.5 rounded-md select-none animate-pulse">
-                                Pending Payment
-                              </span>
-                            ) : isCancelled ? (
-                              <span className="text-[8px] font-black uppercase tracking-wider bg-rose-500/15 border border-rose-500/25 text-rose-400 px-2 py-0.5 rounded-md select-none">
-                                Cancelled
-                              </span>
-                            ) : (
-                              <span className="text-[8px] font-black uppercase tracking-wider bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded-md select-none">
-                                Completed
-                              </span>
-                            )}
+                          {/* Left: Date Ticket */}
+                          <div className="flex sm:flex-col items-center justify-center bg-slate-950/80 border border-slate-900 rounded-xl p-3 sm:w-16 sm:h-20 h-12 w-full shrink-0 gap-2 sm:gap-0.5 text-center shadow-inner group-hover:border-emerald-500/20 transition-all duration-300 pl-4 sm:pl-3">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 leading-none sm:mb-1">{monthStr}</span>
+                            <span className="text-xl sm:text-2xl font-black text-white leading-none">{dayNum}</span>
+                            {dayName && <span className="text-[8px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider hidden sm:block">{dayName}</span>}
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 border-t border-b border-slate-950 py-2.5 my-1">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 text-slate-655 shrink-0" />
-                              <span>{dateStr}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 text-slate-655 shrink-0" />
-                              <span>{booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time Slot'}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 col-span-2">
-                              <MapPin className="h-3.5 w-3.5 text-slate-655 shrink-0" />
-                              <span className="truncate max-w-[210px]">{booking.turf?.address}, {booking.turf?.city}</span>
-                            </div>
-                          </div>
+                          {/* Middle: Details */}
+                          <div className="flex-grow space-y-2.5 min-w-0">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div className="space-y-0.5 min-w-0">
+                                <h4 className="text-xs font-black text-white tracking-wide truncate group-hover:text-emerald-400 transition-colors duration-300">
+                                  {turfName}
+                                </h4>
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider block">
+                                  ID: #{booking.id.slice(0, 8)}
+                                </span>
+                              </div>
 
-                          <div className="flex items-center justify-between pt-0.5">
-                            <div>
-                              <span className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest block leading-none">Total Cost</span>
-                              <span className="text-white font-black text-xs mt-1 block">৳{booking.totalAmount}</span>
-                            </div>
-
-                            {/* Actions block */}
-                            <div className="flex gap-2 shrink-0">
-                              {/* Pay Now Button (if pending checkout) */}
-                              {isPendingPayment && (
-                                <Link
-                                  href={`/checkout/${booking.id}`}
-                                  className="h-7 px-3 text-[9px] font-black uppercase bg-emerald-500 hover:bg-emerald-450 border border-emerald-400/20 text-white rounded-md flex items-center gap-1 shadow-sm transition-all shrink-0"
-                                >
-                                  <CreditCard className="h-3 w-3" />
-                                  Pay Now
-                                </Link>
+                              {/* Status Badge */}
+                              {isConfirmed ? (
+                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full select-none shadow-sm shadow-emerald-500/5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-450 animate-pulse" />
+                                  Confirmed
+                                </span>
+                              ) : isPendingPayment ? (
+                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full select-none shadow-sm shadow-amber-500/5 animate-pulse">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-450 animate-ping" />
+                                  Pending Payment
+                                </span>
+                              ) : isCancelled ? (
+                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-455 px-2 py-0.5 rounded-full select-none shadow-sm shadow-rose-500/5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-455" />
+                                  Cancelled
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider bg-slate-800/80 border border-slate-700/60 text-slate-400 px-2 py-0.5 rounded-full select-none">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                                  Completed
+                                </span>
                               )}
+                            </div>
 
-                              {/* Cancel Button (if pending or confirmed) */}
-                              {(isConfirmed || isPendingPayment) && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  className="h-7 px-2.5 text-[9px] font-black uppercase bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-md hover:bg-rose-500/15 cursor-pointer flex items-center gap-1 transition-all shrink-0"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  Cancel
-                                </button>
-                              )}
+                            {/* Booking Info Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] font-bold text-slate-400 border-t border-b border-slate-950/60 py-2.5 my-1">
+                              <div className="flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                                <span>{booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time Slot'}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                                <span className="truncate" title={`${booking.turf?.address || ''}, ${booking.turf?.city || ''}`}>
+                                  {booking.turf?.address || 'Mirpur, Dhaka'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Price and Actions */}
+                            <div className="flex items-center justify-between pt-1">
+                              <div>
+                                <span className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest block leading-none">Total Cost</span>
+                                <span className="text-white font-black text-xs mt-1 block">৳{booking.totalAmount}</span>
+                              </div>
+
+                              <div className="flex gap-2 shrink-0">
+                                {/* Pay Now Button */}
+                                {isPendingPayment && (
+                                  <Link
+                                    href={`/checkout/${booking.id}`}
+                                    className="h-7 px-3 text-[9px] font-black uppercase bg-emerald-500 hover:bg-emerald-450 border border-emerald-400/20 text-white rounded-lg flex items-center gap-1 shadow-sm transition-all shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+                                  >
+                                    <CreditCard className="h-3.5 w-3.5" />
+                                    Pay Now
+                                  </Link>
+                                )}
+
+                                {/* Cancel Button */}
+                                {(isConfirmed || isPendingPayment) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelBooking(booking.id)}
+                                    className="h-7 px-2.5 text-[9px] font-black uppercase bg-rose-500/10 border border-rose-500/20 text-rose-450 rounded-lg hover:bg-rose-500/15 cursor-pointer flex items-center gap-1 transition-all shrink-0 hover:scale-105 active:scale-95"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Cancel
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
