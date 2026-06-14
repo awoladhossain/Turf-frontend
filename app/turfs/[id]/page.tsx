@@ -199,6 +199,16 @@ export default function TurfDetailPage() {
     return slots.find((s) => s.id === selectedSlotId);
   }, [selectedSlotId, slots]);
 
+  const durationHours = useMemo(() => {
+    if (!selectedSlotDetails) return 1;
+    const [startH, startM] = selectedSlotDetails.startTime.split(':').map(Number);
+    const [endH, endM] = selectedSlotDetails.endTime.split(':').map(Number);
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 1;
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    return diff / 60;
+  }, [selectedSlotDetails]);
+
   // --- protected State for Unauthenticated Guest Users ---
   if (!isAuthenticated) {
     return (
@@ -633,13 +643,13 @@ export default function TurfDetailPage() {
                       Total Budget
                     </p>
                     <p className="text-xl font-black text-white tracking-tight">
-                      ৳{Number(turf.pricePerHour) * 1.5}
-                      <span className="text-[9px] text-slate-500 font-normal"> / 2 hrs</span>
+                      ৳{selectedSlotDetails ? Number(turf.pricePerHour) * durationHours : Number(turf.pricePerHour)}
+                      <span className="text-[9px] text-slate-500 font-normal"> / {durationHours} {durationHours === 1 ? 'hr' : 'hrs'}</span>
                     </p>
                   </div>
 
                   <span className="text-[8px] font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                    1.5 Hours Slot
+                    {durationHours} {durationHours === 1 ? 'Hour' : 'Hours'} Slot
                   </span>
                 </div>
               </div>

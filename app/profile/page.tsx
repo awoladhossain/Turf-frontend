@@ -127,6 +127,7 @@ export default function ProfilePage() {
     onSuccess: () => {
       toast.success('Booking cancelled successfully! ❌');
       refetchBookings();
+      setBookingToCancel(null);
     },
     onError: (error: AxiosError<ApiError>) => {
       const message = error?.response?.data?.message || 'Failed to cancel booking. Try again!';
@@ -641,7 +642,6 @@ export default function ProfilePage() {
                 <button
                   onClick={() => {
                     cancelBookingMutation.mutate(bookingToCancel);
-                    setBookingToCancel(null);
                   }}
                   disabled={cancelBookingMutation.isPending}
                   className="w-full h-11 bg-gradient-to-r from-rose-600 to-rose-800 hover:from-rose-500 hover:to-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-950/40 border border-rose-500/10 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-2"
