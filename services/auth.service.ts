@@ -1,5 +1,5 @@
 import api from './api';
-import { AuthResponse, LoginDto, RegisterDto, User } from '@/types/auth.types';
+import { AuthResponse, LoginDto, RegisterDto, User, AuthTokens } from '@/types/auth.types';
 
 class AuthService {
   async login(credentials: LoginDto): Promise<AuthResponse> {
@@ -21,7 +21,23 @@ class AuthService {
     const response = await api.put<User>('/auth/update-profile', profileData);
     return response.data;
   }
+
+  async refreshTokens(refreshToken: string): Promise<AuthTokens> {
+    const response = await api.post<AuthTokens>('/auth/refresh', { refreshToken });
+    return response.data;
+  }
+
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/logout', { refreshToken });
+    return response.data;
+  }
+
+  async logoutAll(): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/logout-all');
+    return response.data;
+  }
 }
 
 const authService = new AuthService();
 export default authService;
+

@@ -8,13 +8,15 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import axios, { AxiosError } from 'axios';
+import { ApiError } from '@/types/api.types';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   // 1. Redux from Auth State
-  const { user, isAuthenticated, accessToken } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, accessToken, refreshToken } = useAppSelector((state) => state.auth);
 
   // 2. TanStack Query: GET ME (Auto-sync fresh profile details on mount/refresh)
   const {
@@ -38,8 +40,8 @@ export function useAuth() {
 
   // Handle unauthorized getMe error (Expired token)
   useEffect(() => {
-    if (meError) {
-      const status = (meError as any)?.response?.status;
+    if (meError && axios.isAxiosError(meError)) {
+      const status = meError.response?.status;
       if (status === 401) {
         dispatch(logoutAction());
       }
@@ -58,7 +60,7 @@ export function useAuth() {
           : '/';
       router.push(redirectPath);
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ApiError>) => {
       const message = error?.response?.data?.message || 'Invalid email or password!';
       toast.error(message);
     },
@@ -72,7 +74,7 @@ export function useAuth() {
       toast.success('Account created successfully! 🏆');
       router.push('/');
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ApiError>) => {
       const message = error?.response?.data?.message || 'Registration failed. Try again!';
       toast.error(message);
     },
@@ -87,7 +89,7 @@ export function useAuth() {
       toast.success('Profile updated successfully! 👤');
       refetchMe(); // Refresh the getMe query
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ApiError>) => {
       const message = error?.response?.data?.message || 'Failed to update profile. Try again!';
       toast.error(message);
     },
@@ -95,6 +97,11 @@ export function useAuth() {
 
   // 6. LOGOUT Action
   const logout = () => {
+    if (refreshToken) {
+      authService.logout(refreshToken).catch((err) => {
+        console.error('Failed to revoke token on backend:', err);
+      });
+    }
     dispatch(logoutAction());
     toast.success('Logged out successfully.');
     router.push('/login');

@@ -35,9 +35,15 @@ export default function CustomCursor() {
     const yToFollower = gsap.quickTo(follower, 'y', { duration: 0.4, ease: 'power3.out' });
 
     let isVisible = false;
+    let isOverIframe = false;
 
     // Show cursor on first mouse move
     const onMouseMove = (e: MouseEvent) => {
+      if (isOverIframe) {
+        isOverIframe = false;
+        gsap.to([dot, follower], { opacity: 1, duration: 0.2 });
+      }
+
       if (!isVisible) {
         isVisible = true;
         gsap.to([dot, follower], { opacity: 1, duration: 0.3 });
@@ -63,6 +69,17 @@ export default function CustomCursor() {
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
+
+      if (target.tagName === 'IFRAME') {
+        isOverIframe = true;
+        gsap.to([dot, follower], { opacity: 0, duration: 0.2 });
+        return;
+      }
+
+      if (isOverIframe) {
+        isOverIframe = false;
+        gsap.to([dot, follower], { opacity: 1, duration: 0.2 });
+      }
 
       // Find nearest interactive element (a, button, input, select, textarea or element with 'data-cursor')
       const interactiveEl = target.closest('a, button, input, select, textarea, [data-cursor], [data-magnetic]');

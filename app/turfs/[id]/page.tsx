@@ -6,7 +6,10 @@ import Magnetic from '@/components/ui/Magnetic';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import turfService from '@/services/turf.service';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import bookingService from '@/services/booking.service';
+import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { ApiError } from '@/types/api.types';
 import gsap from 'gsap';
 import {
   ArrowRight,
@@ -141,13 +144,32 @@ export default function TurfDetailPage() {
     return () => ctx.revert();
   }, [isInitialLoad]);
 
-  // Handle mock booking process
+  // TanStack Query Mutation: CREATE BOOKING
+  const bookingMutation = useMutation({
+    mutationFn: (dto: { turfId: string; slotId: string; date: string; notes?: string }) =>
+      bookingService.createBooking(dto),
+    onSuccess: (data) => {
+      toast.success('Successfully reserved slot! Proceeding to Payment... ⚽💳');
+      router.push(`/checkout/${data.id}`);
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message = error?.response?.data?.message || 'Failed to reserve booking. Try again!';
+      toast.error(message);
+    },
+  });
+
+  // Handle booking process
   const handleBooking = () => {
     if (!selectedSlotId) {
       toast.error('Please select a slot to book!');
       return;
     }
-    toast.success('Successfully reserved slot! Proceeding to Payment... ⚽💳');
+    bookingMutation.mutate({
+      turfId: id,
+      slotId: selectedSlotId,
+      date: selectedDate,
+      notes: notes || undefined,
+    });
   };
 
   // Sport type display mapping helper
@@ -176,6 +198,16 @@ export default function TurfDetailPage() {
   const selectedSlotDetails = useMemo(() => {
     return slots.find((s) => s.id === selectedSlotId);
   }, [selectedSlotId, slots]);
+
+  const durationHours = useMemo(() => {
+    if (!selectedSlotDetails) return 1;
+    const [startH, startM] = selectedSlotDetails.startTime.split(':').map(Number);
+    const [endH, endM] = selectedSlotDetails.endTime.split(':').map(Number);
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 1;
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    return diff / 60;
+  }, [selectedSlotDetails]);
 
   // --- protected State for Unauthenticated Guest Users ---
   if (!isAuthenticated) {
@@ -611,13 +643,13 @@ export default function TurfDetailPage() {
                       Total Budget
                     </p>
                     <p className="text-xl font-black text-white tracking-tight">
-                      ৳{Number(turf.pricePerHour) * 1.5}
-                      <span className="text-[9px] text-slate-500 font-normal"> / 2 hrs</span>
+                      ৳{selectedSlotDetails ? Number(turf.pricePerHour) * durationHours : Number(turf.pricePerHour)}
+                      <span className="text-[9px] text-slate-500 font-normal"> / {durationHours} {durationHours === 1 ? 'hr' : 'hrs'}</span>
                     </p>
                   </div>
 
                   <span className="text-[8px] font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                    1.5 Hours Slot
+                    {durationHours} {durationHours === 1 ? 'Hour' : 'Hours'} Slot
                   </span>
                 </div>
               </div>
@@ -627,10 +659,10 @@ export default function TurfDetailPage() {
                 <Magnetic range={20} actionStrength={0.25}>
                   <Button
                     onClick={handleBooking}
-                    disabled={!selectedSlotId}
+                    disabled={!selectedSlotId || bookingMutation.isPending}
                     className="w-full h-11 bg-gradient-to-r from-emerald-600 to-[#1e6b3e] hover:from-emerald-500 hover:to-[#195933] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg border border-emerald-500/10 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
-                    <span>Proceed to Book</span>
+                    <span>{bookingMutation.isPending ? 'Processing...' : 'Proceed to Book'}</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Magnetic>
