@@ -249,7 +249,7 @@ export default function ProfilePage() {
         className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-[#1e6b3e]/6 blur-[120px] rounded-full pointer-events-none will-change-transform"
       />
 
-      <div className="max-w-4xl mx-auto relative z-10 space-y-8">
+      <div className="max-w-6xl mx-auto relative z-10 space-y-8">
         {/* Header section */}
         <div className="space-y-2">
           <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
@@ -263,7 +263,7 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Column: Premium User Badge Card */}
           <div
             ref={cardRef}
@@ -351,7 +351,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Right Column: Edit Profile Credentials Form OR Booking History */}
-          <div className="lg:col-span-2 bg-[#0d1425]/20 backdrop-blur-2xl rounded-3xl border border-slate-900 p-6 sm:p-8 space-y-6 shadow-xl min-h-[350px]">
+          <div className="lg:col-span-3 bg-[#0d1425]/20 backdrop-blur-2xl rounded-3xl border border-slate-900 p-6 sm:p-8 space-y-6 shadow-xl min-h-[350px]">
             {activeTab === 'profile' ? (
               <>
                 <div className="border-b border-slate-900/80 pb-3">
@@ -482,10 +482,10 @@ export default function ProfilePage() {
                       return (
                         <div
                           key={booking.id}
-                          className="group p-5 rounded-2xl bg-gradient-to-br from-[#070b16] to-[#04060f] border border-slate-900/90 hover:border-slate-800/80 hover:bg-gradient-to-br hover:from-[#090f20] hover:to-[#050914] transition-all duration-300 flex flex-col sm:flex-row gap-4 relative overflow-hidden shadow-lg shadow-slate-950/20"
+                          className="group p-5 rounded-2xl bg-gradient-to-br from-[#070b16] to-[#04060f] border border-slate-900/90 hover:border-slate-800/80 hover:bg-gradient-to-br hover:from-[#090f20] hover:to-[#050914] transition-all duration-300 flex flex-col sm:flex-row gap-4 relative shadow-lg shadow-slate-950/20"
                         >
                           {/* Accent left border based on status */}
-                          <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 ${
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300 ${
                             isConfirmed ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
                             isPendingPayment ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]' :
                             isCancelled ? 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' :
@@ -493,7 +493,7 @@ export default function ProfilePage() {
                           }`} />
 
                           {/* Left: Date Ticket */}
-                          <div className="flex sm:flex-col items-center justify-center bg-slate-950/80 border border-slate-900 rounded-xl p-3 sm:w-16 sm:h-20 h-12 w-full shrink-0 gap-2 sm:gap-0.5 text-center shadow-inner group-hover:border-emerald-500/20 transition-all duration-300 pl-4 sm:pl-3">
+                          <div className="flex sm:flex-col items-center justify-center bg-slate-950/80 border border-slate-900 rounded-xl p-3 sm:w-16 sm:h-20 h-12 w-full shrink-0 gap-2 sm:gap-0.5 text-center shadow-inner group-hover:border-emerald-500/20 transition-all duration-300">
                             <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 leading-none sm:mb-1">{monthStr}</span>
                             <span className="text-xl sm:text-2xl font-black text-white leading-none">{dayNum}</span>
                             {dayName && <span className="text-[8px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider hidden sm:block">{dayName}</span>}
