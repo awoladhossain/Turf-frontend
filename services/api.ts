@@ -20,7 +20,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => Promise.reject(error)
 );
 
 interface FailedRequest {
@@ -45,7 +45,24 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 // response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      'success' in response.data &&
+      'data' in response.data
+    ) {
+      if ('meta' in response.data) {
+        response.data = {
+          data: response.data.data,
+          meta: response.data.meta,
+        };
+      } else {
+        response.data = response.data.data;
+      }
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -82,12 +99,12 @@ api.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post<{ accessToken: string; refreshToken: string }>(
-          `${api.defaults.baseURL}/auth/refresh`,
-          { refreshToken }
-        );
+        const response = await axios.post<{
+          success: boolean;
+          data: { accessToken: string; refreshToken: string };
+        }>(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
 
         store.dispatch(
           setTokens({
@@ -112,8 +129,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;
-

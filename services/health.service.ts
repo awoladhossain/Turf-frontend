@@ -2,10 +2,16 @@ import api from './api';
 
 export interface HealthStatusResponse {
   status: string;
-  timestamp: string;
-  services: {
-    database: string;
-    redis: string;
+  timestamp?: string;
+  info?: {
+    database?: { status: string };
+    redis?: { status: string };
+    bull?: { status: string };
+  };
+  details?: {
+    database?: { status: string };
+    redis?: { status: string };
+    bull?: { status: string };
   };
 }
 
