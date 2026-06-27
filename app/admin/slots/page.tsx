@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import gsap from 'gsap';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   Calendar,
@@ -18,7 +19,11 @@ import {
   ShieldAlert,
   Sliders,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  Check,
+  Minus,
+  Plus,
 } from 'lucide-react';
 
 import { useSpotlight } from '@/hooks/useSpotlight';
@@ -42,6 +47,19 @@ export default function AdminSlotsPage() {
 
   const [days, setDays] = useState<number>(7);
   const [selectedTurfId, setSelectedTurfId] = useState<string>('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -55,7 +73,7 @@ export default function AdminSlotsPage() {
   });
 
   const activeTurfs = useMemo(() => {
-    return turfsData?.data?.filter(t => t.isActive) || [];
+    return turfsData?.data?.filter((t) => t.isActive) || [];
   }, [turfsData]);
 
   // Entrance animations
@@ -66,15 +84,12 @@ export default function AdminSlotsPage() {
       gsap.set('.animate-item', { opacity: 0, y: 15 });
 
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
-      tl.to(
-        '.animate-item',
-        {
-          opacity: 1,
-          y: 0,
-          stagger: 0.08,
-          duration: 0.6,
-        }
-      );
+      tl.to('.animate-item', {
+        opacity: 1,
+        y: 0,
+        stagger: 0.08,
+        duration: 0.6,
+      });
 
       // Continuous float neon orb
       gsap.to(orbitRef.current, {
@@ -101,7 +116,7 @@ export default function AdminSlotsPage() {
       const error = err as AxiosErrorLike;
       const msg = error.response?.data?.message || 'Failed to generate bulk slots!';
       toast.error(msg);
-    }
+    },
   });
 
   const cleanupMutation = useMutation({
@@ -113,7 +128,7 @@ export default function AdminSlotsPage() {
       const error = err as AxiosErrorLike;
       const msg = error.response?.data?.message || 'Failed to cleanup old slots!';
       toast.error(msg);
-    }
+    },
   });
 
   const generateSpecificMutation = useMutation({
@@ -126,7 +141,7 @@ export default function AdminSlotsPage() {
       const error = err as AxiosErrorLike;
       const msg = error.response?.data?.message || 'Failed to generate slots for specific turf!';
       toast.error(msg);
-    }
+    },
   });
 
   // Action handlers
@@ -135,7 +150,11 @@ export default function AdminSlotsPage() {
   };
 
   const handleCleanup = () => {
-    if (window.confirm('Are you sure you want to clean up expired unbooked slots? This optimizes database storage.')) {
+    if (
+      window.confirm(
+        'Are you sure you want to clean up expired unbooked slots? This optimizes database storage.'
+      )
+    ) {
       cleanupMutation.mutate();
     }
   };
@@ -216,7 +235,7 @@ export default function AdminSlotsPage() {
   }
 
   const currentTurfId = selectedTurfId || activeTurfs[0]?.id || '';
-  const selectedTurfDetails = activeTurfs.find(t => t.id === currentTurfId);
+  const selectedTurfDetails = activeTurfs.find((t) => t.id === currentTurfId);
 
   return (
     <div
@@ -275,16 +294,15 @@ export default function AdminSlotsPage() {
             Slots Control Center
           </h1>
           <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-            Generate scheduling calendars for active turf fields, optimize database space by purging expired slots, or customize generation duration per venue.
+            Generate scheduling calendars for active turf fields, optimize database space by purging
+            expired slots, or customize generation duration per venue.
           </p>
         </div>
 
         {/* Main Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-          
           {/* LEFT: Global Bulk Actions (2 Columns) */}
           <div className="lg:col-span-2 space-y-6 animate-item">
-            
             {/* Card 1: Bulk Generator */}
             <div className="bg-[#0d1425]/30 backdrop-blur-3xl rounded-3xl border border-slate-800/80 p-6 space-y-5 shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -299,7 +317,8 @@ export default function AdminSlotsPage() {
                   Generate All Arena Slots
                 </h3>
                 <p className="text-[10px] text-slate-400 leading-relaxed pt-1">
-                  Initializes time slots for <strong>all active sport arenas</strong> for the next 7 days based on their operating hours.
+                  Initializes time slots for <strong>all active sport arenas</strong> for the next 7
+                  days based on their operating hours.
                 </p>
               </div>
 
@@ -340,7 +359,8 @@ export default function AdminSlotsPage() {
                   Purge Expired Slots
                 </h3>
                 <p className="text-[10px] text-slate-400 leading-relaxed pt-1">
-                  Cleans up all unbooked slots in the past to free up database storage and maintain fast query response times.
+                  Cleans up all unbooked slots in the past to free up database storage and maintain
+                  fast query response times.
                 </p>
               </div>
 
@@ -366,7 +386,6 @@ export default function AdminSlotsPage() {
                 </Magnetic>
               </div>
             </div>
-
           </div>
 
           {/* RIGHT: Arena-Specific Selector (3 Columns) */}
@@ -385,35 +404,85 @@ export default function AdminSlotsPage() {
               {isTurfsLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <Loader2 className="h-6 w-6 text-emerald-450 animate-spin" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Loading active arenas list...</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                    Loading active arenas list...
+                  </p>
                 </div>
               ) : activeTurfs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
                   <AlertCircle className="h-8 w-8 text-slate-600" />
-                  <p className="text-xs font-bold text-slate-400">No active arenas registered in database.</p>
-                  <Link href="/admin/turfs/create" className="text-[10px] font-black uppercase text-emerald-400 hover:underline">
+                  <p className="text-xs font-bold text-slate-400">
+                    No active arenas registered in database.
+                  </p>
+                  <Link
+                    href="/admin/turfs/create"
+                    className="text-[10px] font-black uppercase text-emerald-400 hover:underline"
+                  >
                     Create your first arena now
                   </Link>
                 </div>
               ) : (
-                <form onSubmit={handleGenerateSpecific} className="space-y-6 font-semibold text-slate-400 text-xs">
+                <form
+                  onSubmit={handleGenerateSpecific}
+                  className="space-y-6 font-semibold text-slate-400 text-xs"
+                >
                   {/* Select Turf */}
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                       <Trophy className="h-3.5 w-3.5 text-slate-550" />
                       Select Sport Arena
                     </label>
-                    <select
-                      value={selectedTurfId || activeTurfs[0]?.id || ''}
-                      onChange={(e) => setSelectedTurfId(e.target.value)}
-                      className="w-full h-11 px-3 rounded-xl border border-slate-850 bg-[#070b14] focus:border-emerald-500/20 outline-none transition-all text-white cursor-pointer"
-                    >
-                      {activeTurfs.map((turf) => (
-                        <option key={turf.id} value={turf.id}>
-                          {turf.name} ({turf.city})
-                        </option>
-                      ))}
-                    </select>
+                    <div ref={dropdownRef} className="relative w-full">
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-[#070b14]/80 hover:border-slate-800 focus:border-emerald-500/40 outline-none transition-all text-white cursor-pointer flex items-center justify-between text-left"
+                      >
+                        <span className="truncate">
+                          {selectedTurfDetails
+                            ? `${selectedTurfDetails.name} (${selectedTurfDetails.city})`
+                            : 'Select an Arena'}
+                        </span>
+                        <ChevronDown
+                          className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${dropdownOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      <AnimatePresence>
+                        {dropdownOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute z-50 w-full mt-2 bg-[#080d1a]/95 backdrop-blur-md border border-slate-850 rounded-2xl shadow-2xl max-h-60 overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-slate-800"
+                          >
+                            {activeTurfs.map((turf) => (
+                              <button
+                                key={turf.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTurfId(turf.id);
+                                  setDropdownOpen(false);
+                                }}
+                                className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900/60 cursor-pointer ${
+                                  currentTurfId === turf.id
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10'
+                                    : 'text-slate-300 border border-transparent'
+                                }`}
+                              >
+                                <span>
+                                  {turf.name} ({turf.city})
+                                </span>
+                                {currentTurfId === turf.id && (
+                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                )}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   {/* Selected Turf Meta Summary Card */}
@@ -439,14 +508,18 @@ export default function AdminSlotsPage() {
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-slate-650 shrink-0" />
                           <span>
-                            Operating Hours: <strong className="text-white">{selectedTurfDetails.openTime} - {selectedTurfDetails.closeTime}</strong>
+                            Operating Hours:{' '}
+                            <strong className="text-white">
+                              {selectedTurfDetails.openTime} - {selectedTurfDetails.closeTime}
+                            </strong>
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <Trophy className="h-4 w-4 text-slate-655 shrink-0" />
                           <span>
-                            Discipline: <strong className="text-white">{selectedTurfDetails.sportType}</strong>
+                            Discipline:{' '}
+                            <strong className="text-white">{selectedTurfDetails.sportType}</strong>
                           </span>
                         </div>
                       </div>
@@ -459,15 +532,33 @@ export default function AdminSlotsPage() {
                       <Calendar className="h-3.5 w-3.5 text-slate-550" />
                       Provisioning Duration (Days)
                     </label>
-                    <input
-                      type="number"
-                      value={days}
-                      min={1}
-                      max={30}
-                      onChange={(e) => setDays(Number(e.target.value))}
-                      placeholder="e.g. 7"
-                      className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-emerald-500/20 outline-none transition-all text-white placeholder-slate-650"
-                    />
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setDays(Math.max(1, days - 1))}
+                        className="h-11 w-12 flex items-center justify-center bg-slate-900/40 hover:bg-slate-900/70 border border-slate-850 hover:border-slate-800 rounded-l-xl text-slate-400 hover:text-white transition-all cursor-pointer active:scale-95 select-none"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <input
+                        type="number"
+                        value={days}
+                        min={1}
+                        max={30}
+                        onChange={(e) =>
+                          setDays(Math.max(1, Math.min(30, Number(e.target.value) || 1)))
+                        }
+                        placeholder="e.g. 7"
+                        className="flex-1 h-11 px-4 bg-slate-950/40 focus:bg-slate-950/60 border-y border-slate-850 focus:border-emerald-500/20 outline-none transition-all text-center text-white placeholder-slate-650 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDays(Math.min(30, days + 1))}
+                        className="h-11 w-12 flex items-center justify-center bg-slate-900/40 hover:bg-slate-900/70 border border-slate-850 hover:border-slate-800 rounded-r-xl text-slate-400 hover:text-white transition-all cursor-pointer active:scale-95 select-none"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     <p className="text-[9px] text-slate-500 italic">
                       Maximum allowed provisioning duration is 30 days into the future.
                     </p>
@@ -499,7 +590,6 @@ export default function AdminSlotsPage() {
               )}
             </div>
           </div>
-
         </div>
       </div>
     </div>
