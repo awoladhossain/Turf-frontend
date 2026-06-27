@@ -515,7 +515,7 @@ export default function EditTurfPage() {
               </label>
 
               {/* Grid of uploaded images */}
-              {turf.images && turf.images.length > 0 && (
+              {turf && turf.images && turf.images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {turf.images.map((imageUrl: string, idx: number) => (
                     <div
