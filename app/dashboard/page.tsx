@@ -116,6 +116,71 @@ const CloseIcon = () => {
   );
 };
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    name: string;
+    color?: string;
+    payload: {
+      name: string;
+      value: number;
+      color?: string;
+    };
+  }>;
+  label?: string;
+}
+
+const CustomRevenueTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none border-emerald-500/10">
+        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">
+          {label}
+        </p>
+        <p className="text-xs font-black text-emerald-400">৳{payload[0].value.toLocaleString()}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomPieTooltip = ({ active, payload }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none">
+        <p
+          className="text-[9px] font-black uppercase tracking-widest mb-1.5"
+          style={{ color: data.color }}
+        >
+          {data.name}
+        </p>
+        <p className="text-xs font-black text-white">
+          {data.value} {data.value === 1 ? 'Booking' : 'Bookings'}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomBarTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none border-indigo-500/10">
+        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">
+          {label}
+        </p>
+        <p className="text-xs font-black text-indigo-400">
+          {payload[0].value} {payload[0].value === 1 ? 'Arena' : 'Arenas'}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function DashboardPage() {
   const { user, isAuthenticated, isFetchingMe } = useAuth();
   const router = useRouter();
@@ -300,20 +365,24 @@ export default function DashboardPage() {
   const myConfirmed = myBookingsList.filter((b) => b.status === 'CONFIRMED');
   const myTotalSpent = myConfirmed.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
-  // --- CHART DATA GENERATION (ADMIN) ---
-  const revenueTrendData = bookingsList
-    .slice()
-    .reverse()
-    .slice(-8)
-    .map((b) => {
-      const date = b.slot?.date
-        ? new Date(b.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : 'Date';
-      return {
-        name: date,
-        Revenue: b.status === 'CONFIRMED' ? Number(b.totalAmount) : 0,
-      };
-    });
+  const revenueByDate: Record<string, number> = {};
+  bookingsList.forEach((b) => {
+    if (b.status === 'CONFIRMED' && b.slot?.date) {
+      const dateStr = new Date(b.slot.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      revenueByDate[dateStr] = (revenueByDate[dateStr] || 0) + Number(b.totalAmount);
+    }
+  });
+
+  const revenueTrendData = Object.entries(revenueByDate)
+    .map(([date, revenue]) => ({
+      name: date,
+      Revenue: revenue,
+    }))
+    .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime())
+    .slice(-8);
 
   const statusPieData = [
     { name: 'Confirmed', value: confirmedBookings.length, color: '#10b981' },
@@ -345,7 +414,6 @@ export default function DashboardPage() {
     'from-purple-500 to-pink-600',
     'from-amber-500 to-orange-600',
   ];
-
   return (
     <div className="min-h-screen bg-[#03060f] text-slate-100 font-jakarta pb-24 select-none relative overflow-hidden">
       {/* Dynamic Aurora Ambient Background */}
@@ -661,37 +729,42 @@ export default function DashboardPage() {
                             >
                               <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                 </linearGradient>
                               </defs>
-                              <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '12px',
-                                }}
-                                labelStyle={{
-                                  color: '#94a3b8',
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
-                                }}
-                                itemStyle={{
-                                  color: '#10b981',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold',
-                                }}
+                              <CartesianGrid
+                                stroke="#0e1726"
+                                strokeDasharray="3 3"
+                                vertical={false}
                               />
+                              <XAxis
+                                dataKey="name"
+                                stroke="#475569"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                              />
+                              <YAxis
+                                stroke="#475569"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                              />
+                              <Tooltip content={<CustomRevenueTooltip />} />
                               <Area
                                 type="monotone"
                                 dataKey="Revenue"
                                 stroke="#10b981"
-                                strokeWidth={2}
+                                strokeWidth={2.5}
                                 fillOpacity={1}
                                 fill="url(#colorRevenue)"
+                                activeDot={{
+                                  r: 5,
+                                  stroke: '#10b981',
+                                  strokeWidth: 2,
+                                  fill: '#03060f',
+                                }}
                               />
                             </AreaChart>
                           ) : (
@@ -717,31 +790,39 @@ export default function DashboardPage() {
                       >
                         {statusChartWidth > 0 ? (
                           statusPieData.length > 0 ? (
-                            <PieChart width={statusChartWidth} height={176}>
-                              <Pie
-                                data={statusPieData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={42}
-                                outerRadius={56}
-                                paddingAngle={4}
-                                dataKey="value"
-                              >
-                                {statusPieData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '8px',
-                                }}
-                                itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
-                              />
-                            </PieChart>
+                            <>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">
+                                  Total
+                                </span>
+                                <span className="text-xl font-black text-white leading-none">
+                                  {statusPieData.reduce((acc, curr) => acc + curr.value, 0)}
+                                </span>
+                              </div>
+                              <PieChart width={statusChartWidth} height={176}>
+                                <Pie
+                                  data={statusPieData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={48}
+                                  outerRadius={62}
+                                  paddingAngle={6}
+                                  dataKey="value"
+                                >
+                                  {statusPieData.map((entry, index) => (
+                                    <Cell
+                                      key={`cell-${index}`}
+                                      fill={entry.color}
+                                      stroke="#060a16"
+                                      strokeWidth={3}
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomPieTooltip />} />
+                              </PieChart>
+                            </>
                           ) : (
-                            <div className="text-xs text-slate-550 uppercase tracking-widest font-black">
+                            <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
                               No Data
                             </div>
                           )
@@ -782,22 +863,37 @@ export default function DashboardPage() {
                         {sportsChartWidth > 0 ? (
                           sportChartData.length > 0 ? (
                             <BarChart width={sportsChartWidth} height={224} data={sportChartData}>
-                              <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '12px',
-                                }}
-                                itemStyle={{
-                                  color: '#10b981',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold',
-                                }}
+                              <defs>
+                                <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.95} />
+                                  <stop offset="100%" stopColor="#a855f7" stopOpacity={0.95} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid
+                                stroke="#0e1726"
+                                strokeDasharray="3 3"
+                                vertical={false}
                               />
-                              <Bar dataKey="Arenas" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                              <XAxis
+                                dataKey="name"
+                                stroke="#475569"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                              />
+                              <YAxis
+                                stroke="#475569"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                              />
+                              <Tooltip content={<CustomBarTooltip />} />
+                              <Bar
+                                dataKey="Arenas"
+                                fill="url(#colorBar)"
+                                barSize={40}
+                                radius={[10, 10, 0, 0]}
+                              />
                             </BarChart>
                           ) : (
                             <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
