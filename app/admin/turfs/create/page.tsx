@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Magnetic from '@/components/ui/Magnetic';
 import { useAuth } from '@/hooks/useAuth';
 import turfService from '@/services/turf.service';
+import adminService from '@/services/admin.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
 import {
@@ -18,10 +19,11 @@ import {
   ShieldAlert,
   Sparkles,
   Trophy,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function CreateTurfPage() {
@@ -38,26 +40,87 @@ export default function CreateTurfPage() {
   const [pricePerHour, setPricePerHour] = useState<number>(1500);
   const [openTime, setOpenTime] = useState('06:00');
   const [closeTime, setCloseTime] = useState('23:00');
-  const [imageUrl1, setImageUrl1] = useState('');
-  const [imageUrl2, setImageUrl2] = useState('');
+
+  // File Upload State
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Refs for animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const cardRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
 
-  // TanStack Mutation for turf creation
+  // Memoized local preview URLs
+  const previewUrls = useMemo(() => {
+    return selectedFiles.map((file) => URL.createObjectURL(file));
+  }, [selectedFiles]);
+
+  // Clean up object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const validFiles = filesArray.filter((file) => {
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`File "${file.name}" is larger than 5MB!`);
+          return false;
+        }
+        return true;
+      });
+      setSelectedFiles((prev) => [...prev, ...validFiles].slice(0, 4));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // TanStack Mutation for turf creation + file uploading
   const createMutation = useMutation({
-    mutationFn: (newTurf: any) => turfService.createTurf(newTurf),
+    mutationFn: async (newTurf: {
+      name: string;
+      description?: string;
+      address: string;
+      city: string;
+      sportType: 'FOOTBALL' | 'CRICKET' | 'BOTH';
+      pricePerHour: number;
+      openTime: string;
+      closeTime: string;
+    }) => {
+      // 1. Create the turf profile first
+      const createdTurf = await turfService.createTurf(newTurf);
+
+      // 2. Upload images sequentially if files were selected
+      if (selectedFiles.length > 0) {
+        setIsUploading(true);
+        for (let i = 0; i < selectedFiles.length; i++) {
+          toast.loading(`Uploading arena showcase image ${i + 1}/${selectedFiles.length}...`, {
+            id: `upload-${createdTurf.id}`,
+          });
+          await adminService.uploadTurfImage(createdTurf.id, selectedFiles[i]);
+        }
+        toast.dismiss(`upload-${createdTurf.id}`);
+      }
+      return createdTurf;
+    },
     onSuccess: () => {
-      // Invalidate the turfs list to ensure fresh data is fetched
       queryClient.invalidateQueries({ queryKey: ['turfs'] });
-      toast.success('Arena created successfully! 7-day slots generated ⚽✨');
+      toast.success('Arena profile deployed and images uploaded successfully! ⚽✨');
       router.push('/turfs');
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || 'Failed to create turf arena!';
+    onError: (err: unknown) => {
+      toast.dismiss();
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to create turf arena!';
       toast.error(msg);
+    },
+    onSettled: () => {
+      setIsUploading(false);
     },
   });
 
@@ -95,7 +158,7 @@ export default function CreateTurfPage() {
           stagger: 0.05,
           duration: 0.5,
         },
-        '-=0.5',
+        '-=0.5'
       );
 
       // Continuous float neon orb
@@ -111,8 +174,7 @@ export default function CreateTurfPage() {
     }, pageContainerRef);
 
     return () => ctx.revert();
-  }, [isAuthenticated, user]);
-;
+  }, [isAuthenticated, user, pageContainerRef]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,11 +183,6 @@ export default function CreateTurfPage() {
     if (!address.trim()) return toast.error('Address is required!');
     if (!city.trim()) return toast.error('City is required!');
     if (pricePerHour <= 0) return toast.error('Price per hour must be positive!');
-
-    // Gather images
-    const images: string[] = [];
-    if (imageUrl1.trim()) images.push(imageUrl1.trim());
-    if (imageUrl2.trim()) images.push(imageUrl2.trim());
 
     createMutation.mutate({
       name: name.trim(),
@@ -136,7 +193,6 @@ export default function CreateTurfPage() {
       pricePerHour: Number(pricePerHour),
       openTime,
       closeTime,
-      images: images.length > 0 ? images : undefined,
     });
   };
 
@@ -344,7 +400,7 @@ export default function CreateTurfPage() {
                 </label>
                 <select
                   value={sportType}
-                  onChange={(e) => setSportType(e.target.value as any)}
+                  onChange={(e) => setSportType(e.target.value as 'FOOTBALL' | 'CRICKET' | 'BOTH')}
                   className="w-full h-11 px-3 rounded-xl border border-slate-850 bg-[#070b14] focus:border-amber-500/20 outline-none transition-all text-white cursor-pointer"
                 >
                   <option value="BOTH">Football & Cricket (BOTH)</option>
@@ -399,29 +455,63 @@ export default function CreateTurfPage() {
               </div>
             </div>
 
-            {/* Row 6: Image URLs */}
+            {/* Image Files Upload */}
             <div className="space-y-3 animate-item pt-1">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <ImageIcon className="h-3.5 w-3.5 text-slate-550" />
-                Arena Showcase Image URLs (Optional)
+                Arena Showcase Images
               </label>
 
-              <div className="space-y-2">
+              {/* Drag and Drop Container */}
+              <div className="relative group border border-dashed border-slate-800 hover:border-amber-500/40 rounded-2xl p-6 bg-slate-950/20 hover:bg-slate-950/40 transition-all flex flex-col items-center justify-center cursor-pointer min-h-[140px] text-center">
                 <input
-                  type="text"
-                  value={imageUrl1}
-                  onChange={(e) => setImageUrl1(e.target.value)}
-                  placeholder="Primary Image URL (e.g. Unsplash URL)"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650 text-xs"
+                  type="file"
+                  multiple
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  disabled={isUploading}
                 />
-                <input
-                  type="text"
-                  value={imageUrl2}
-                  onChange={(e) => setImageUrl2(e.target.value)}
-                  placeholder="Secondary Showcase Image URL"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650 text-xs"
-                />
+                <ImageIcon className="h-8 w-8 text-slate-500 group-hover:text-amber-400 group-hover:scale-110 transition-all duration-300 mb-2" />
+                <span className="text-xs font-bold text-slate-350">
+                  Drag & drop images here or{' '}
+                  <span className="text-amber-400 group-hover:underline">browse</span>
+                </span>
+                <span className="text-[9px] text-slate-500 mt-1">
+                  Supports PNG, JPEG, WEBP up to 5MB (Max 4 images)
+                </span>
               </div>
+
+              {/* File Preview list */}
+              {selectedFiles.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  {selectedFiles.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-xl overflow-hidden border border-slate-850 bg-slate-950/60 p-1.5 flex flex-col gap-1.5 animate-in fade-in zoom-in duration-300"
+                    >
+                      <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-slate-900">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={previewUrls[idx]}
+                          alt={file.name}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFile(idx)}
+                          className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 border border-slate-800 text-rose-405 hover:bg-rose-950/80 hover:text-rose-400 hover:border-rose-900/40 flex items-center justify-center transition-all cursor-pointer z-10"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="px-1 text-[8px] font-black text-slate-400 truncate uppercase tracking-wider">
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -429,12 +519,14 @@ export default function CreateTurfPage() {
               <Magnetic range={20} actionStrength={0.2}>
                 <Button
                   type="submit"
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || isUploading}
                   className="w-full h-12 bg-gradient-to-r from-amber-500 to-[#b57a07] hover:from-amber-400 hover:to-[#996403] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-950/30 border border-amber-500/10 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="h-4 w-4 text-amber-200" />
                   <span>
-                    {createMutation.isPending ? 'Deploying Arena...' : 'Create Arena Profile'}
+                    {createMutation.isPending || isUploading
+                      ? 'Deploying Arena & Uploading Images...'
+                      : 'Create Arena Profile'}
                   </span>
                 </Button>
               </Magnetic>

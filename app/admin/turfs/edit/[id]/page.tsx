@@ -8,9 +8,20 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import turfService from '@/services/turf.service';
-import { 
-  Trophy, Sparkles, ChevronLeft, ShieldAlert, 
-  MapPin, Clock, DollarSign, PenSquare, FileText, Image as ImageIcon, Trash2
+import adminService from '@/services/admin.service';
+import {
+  Trophy,
+  Sparkles,
+  ChevronLeft,
+  ShieldAlert,
+  MapPin,
+  Clock,
+  DollarSign,
+  PenSquare,
+  FileText,
+  Image as ImageIcon,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import gsap from 'gsap';
 import Magnetic from '@/components/ui/Magnetic';
@@ -31,8 +42,6 @@ export default function EditTurfPage() {
   const [pricePerHour, setPricePerHour] = useState<number>(1500);
   const [openTime, setOpenTime] = useState('06:00');
   const [closeTime, setCloseTime] = useState('23:00');
-  const [imageUrl1, setImageUrl1] = useState('');
-  const [imageUrl2, setImageUrl2] = useState('');
 
   // Refs for animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
@@ -40,7 +49,7 @@ export default function EditTurfPage() {
   const orbitRef = useRef<HTMLDivElement>(null);
 
   // 1. Fetch existing turf details
-  const { data: turf, isLoading: isFetchingTurf, error: fetchError } = useQuery({
+  const { data: turf, isLoading: isFetchingTurf } = useQuery({
     queryKey: ['turf-edit', id],
     queryFn: () => turfService.getTurfById(id),
     enabled: !!id && isAuthenticated && user?.role === 'ADMIN',
@@ -50,6 +59,7 @@ export default function EditTurfPage() {
   // Pre-fill form fields once data is fetched successfully
   useEffect(() => {
     if (turf) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setName(turf.name || '');
       setDescription(turf.description || '');
       setAddress(turf.address || '');
@@ -58,19 +68,22 @@ export default function EditTurfPage() {
       setPricePerHour(Number(turf.pricePerHour) || 1500);
       setOpenTime(turf.openTime || '06:00');
       setCloseTime(turf.closeTime || '23:00');
-      
-      if (turf.images && turf.images.length > 0) {
-        setImageUrl1(turf.images[0]);
-        if (turf.images.length > 1) {
-          setImageUrl2(turf.images[1]);
-        }
-      }
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [turf]);
 
   // 2. TanStack Mutation: UPDATE (PATCH)
   const updateMutation = useMutation({
-    mutationFn: (updatedFields: any) => turfService.updateTurf(id, updatedFields),
+    mutationFn: (updatedFields: {
+      name: string;
+      description: string;
+      address: string;
+      city: string;
+      sportType: 'FOOTBALL' | 'CRICKET' | 'BOTH';
+      pricePerHour: number;
+      openTime: string;
+      closeTime: string;
+    }) => turfService.updateTurf(id, updatedFields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['turfs'] });
       queryClient.invalidateQueries({ queryKey: ['turf', id] });
@@ -78,10 +91,11 @@ export default function EditTurfPage() {
       toast.success('Arena profile updated successfully! ⚽🔥');
       router.push(`/turfs/${id}`);
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || 'Failed to update turf arena!';
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to update turf arena!';
       toast.error(msg);
-    }
+    },
   });
 
   // 3. TanStack Mutation: DELETE
@@ -92,10 +106,42 @@ export default function EditTurfPage() {
       toast.success('Arena has been successfully deactivated! 🔒');
       router.push('/turfs');
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || 'Failed to delete turf arena!';
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to delete turf arena!';
       toast.error(msg);
-    }
+    },
+  });
+
+  // 4. TanStack Mutations for Image upload/delete directly
+  const uploadImageMutation = useMutation({
+    mutationFn: (file: File) => adminService.uploadTurfImage(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['turfs'] });
+      queryClient.invalidateQueries({ queryKey: ['turf', id] });
+      queryClient.invalidateQueries({ queryKey: ['turf-edit', id] });
+      toast.success('Showcase image uploaded successfully! 📸⚽');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to upload image!';
+      toast.error(msg);
+    },
+  });
+
+  const deleteImageMutation = useMutation({
+    mutationFn: (imageUrl: string) => adminService.deleteTurfImage(id, imageUrl),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['turfs'] });
+      queryClient.invalidateQueries({ queryKey: ['turf', id] });
+      queryClient.invalidateQueries({ queryKey: ['turf-edit', id] });
+      toast.success('Showcase image removed successfully! 🗑️');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to delete image!';
+      toast.error(msg);
+    },
   });
 
   // Entrance animations setup
@@ -108,7 +154,7 @@ export default function EditTurfPage() {
           scale: 1,
           y: 0,
           duration: 0.8,
-          ease: 'power3.out'
+          ease: 'power3.out',
         });
       }, pageContainerRef);
       return;
@@ -122,13 +168,17 @@ export default function EditTurfPage() {
 
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
       tl.to(cardRef.current, { opacity: 1, y: 0, duration: 1 });
-      
-      tl.to('.animate-item', {
-        opacity: 1,
-        y: 0,
-        stagger: 0.05,
-        duration: 0.5
-      }, '-=0.5');
+
+      tl.to(
+        '.animate-item',
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.05,
+          duration: 0.5,
+        },
+        '-=0.5'
+      );
 
       // Continuous float neon orb
       gsap.to(orbitRef.current, {
@@ -138,13 +188,12 @@ export default function EditTurfPage() {
         duration: 9,
         repeat: -1,
         yoyo: true,
-        ease: 'sine.inOut'
+        ease: 'sine.inOut',
       });
     }, pageContainerRef);
 
     return () => ctx.revert();
-  }, [isAuthenticated, user, isFetchingTurf, turf]);
-;
+  }, [isAuthenticated, user, isFetchingTurf, turf, pageContainerRef]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,7 +205,7 @@ export default function EditTurfPage() {
     if (!address.trim()) return toast.error('Address is required!');
     if (!city.trim()) return toast.error('City is required!');
     if (pricePerHour < 100) return toast.error('Price per hour must be at least 100!');
-    
+
     // Time regex validation matching class-validator
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
     if (!timeRegex.test(openTime)) {
@@ -165,11 +214,6 @@ export default function EditTurfPage() {
     if (!timeRegex.test(closeTime)) {
       return toast.error('Closing time must be in HH:mm 24-hour format!');
     }
-
-    // Gather images
-    const images: string[] = [];
-    if (imageUrl1.trim()) images.push(imageUrl1.trim());
-    if (imageUrl2.trim()) images.push(imageUrl2.trim());
 
     updateMutation.mutate({
       name: name.trim(),
@@ -180,12 +224,15 @@ export default function EditTurfPage() {
       pricePerHour: Number(pricePerHour),
       openTime,
       closeTime,
-      images: images.length > 0 ? images : undefined
     });
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you absolutely sure you want to deactivate this Arena? This action will set isActive to false.')) {
+    if (
+      window.confirm(
+        'Are you absolutely sure you want to deactivate this Arena? This action will set isActive to false.'
+      )
+    ) {
       deleteMutation.mutate();
     }
   };
@@ -201,27 +248,32 @@ export default function EditTurfPage() {
   // --- protection: Authenticated but NOT Admin ---
   if (!isFetchingMe && isAuthenticated && user?.role !== 'ADMIN') {
     return (
-      <div 
+      <div
         ref={pageContainerRef}
         onMouseMove={handleMouseMove}
         className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050811] text-white p-4 font-jakarta relative overflow-hidden"
-        style={{
-          '--spotlight-x': '50%',
-          '--spotlight-y': '50%'
-        } as React.CSSProperties}
+        style={
+          {
+            '--spotlight-x': '50%',
+            '--spotlight-y': '50%',
+          } as React.CSSProperties
+        }
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.12] pointer-events-none" />
-        
-        <div 
+
+        <div
           ref={cardRef}
           className="relative z-10 text-center space-y-6 max-w-md p-8 sm:p-10 rounded-[32px] bg-[#0d1425]/30 border border-slate-800/80 backdrop-blur-3xl shadow-2xl"
         >
           <div className="h-16 w-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-4">
             <ShieldAlert className="h-8 w-8 text-amber-400" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Access Restricted</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Access Restricted
+          </h2>
           <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-            Unauthorized action. Managing platform inventories and editing turf profiles is strictly restricted to platform administrators.
+            Unauthorized action. Managing platform inventories and editing turf profiles is strictly
+            restricted to platform administrators.
           </p>
           <Magnetic range={15} actionStrength={0.2}>
             <Button
@@ -250,23 +302,26 @@ export default function EditTurfPage() {
       ref={pageContainerRef}
       onMouseMove={handleMouseMove}
       className="min-h-screen w-full bg-[#050811] font-jakarta text-white py-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none"
-      style={{
-        '--spotlight-x': '50%',
-        '--spotlight-y': '50%'
-      } as React.CSSProperties}
+      style={
+        {
+          '--spotlight-x': '50%',
+          '--spotlight-y': '50%',
+        } as React.CSSProperties
+      }
     >
       {/* 🌌 Grid & Spotlight */}
-      <div 
+      <div
         className="absolute inset-0 bg-[linear-gradient(to_right,#111b2d_1px,transparent_1px),linear-gradient(to_bottom,#111b2d_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.16] pointer-events-none"
         style={{
           maskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
-          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)'
+          WebkitMaskImage: 'radial-gradient(circle at center, white 40%, transparent 95%)',
         }}
       />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
-          background: 'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(245,158,11,0.03), transparent 50%)'
+          background:
+            'radial-gradient(450px circle at var(--spotlight-x) var(--spotlight-y), rgba(245,158,11,0.03), transparent 50%)',
         }}
       />
 
@@ -277,7 +332,6 @@ export default function EditTurfPage() {
       />
 
       <div className="max-w-3xl mx-auto space-y-6 relative z-10">
-        
         {/* Back Link */}
         <div className="animate-item">
           <Link
@@ -290,7 +344,7 @@ export default function EditTurfPage() {
         </div>
 
         {/* --- FORM CARD --- */}
-        <div 
+        <div
           ref={cardRef}
           className="relative bg-[#0d1425]/40 backdrop-blur-3xl rounded-[32px] border border-slate-800/80 p-8 sm:p-10 shadow-[0_30px_70px_rgba(0,0,0,0.65)] overflow-hidden"
         >
@@ -301,7 +355,7 @@ export default function EditTurfPage() {
                 <Sparkles className="h-3 w-3" />
                 <span>Admin Settings</span>
               </div>
-              
+
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 Modify Arena Details
               </h1>
@@ -325,8 +379,10 @@ export default function EditTurfPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 pt-6 font-semibold text-slate-400 text-xs">
-            
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 pt-6 font-semibold text-slate-400 text-xs"
+          >
             {/* Row 1: Name */}
             <div className="space-y-2 animate-item">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -396,7 +452,7 @@ export default function EditTurfPage() {
                 </label>
                 <select
                   value={sportType}
-                  onChange={(e) => setSportType(e.target.value as any)}
+                  onChange={(e) => setSportType(e.target.value as 'FOOTBALL' | 'CRICKET' | 'BOTH')}
                   className="w-full h-11 px-3 rounded-xl border border-slate-850 bg-[#070b14] focus:border-amber-500/20 outline-none transition-all text-white cursor-pointer"
                 >
                   <option value="BOTH">Football & Cricket (BOTH)</option>
@@ -451,28 +507,82 @@ export default function EditTurfPage() {
               </div>
             </div>
 
-            {/* Row 6: Image URLs */}
+            {/* Showcase Images Manager */}
             <div className="space-y-3 animate-item pt-1">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <ImageIcon className="h-3.5 w-3.5 text-slate-550" />
-                Arena Showcase Image URLs
+                Manage Showcase Images
               </label>
-              
-              <div className="space-y-2">
+
+              {/* Grid of uploaded images */}
+              {turf.images && turf.images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {turf.images.map((imageUrl: string, idx: number) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-xl overflow-hidden border border-slate-850 bg-slate-950/60 p-1.5 flex flex-col gap-1"
+                    >
+                      <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-slate-900">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrl}
+                          alt={`Showcase ${idx + 1}`}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
+                        />
+                        {/* Delete image button overlay */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Delete this showcase image from Cloudinary?')) {
+                              deleteImageMutation.mutate(imageUrl);
+                            }
+                          }}
+                          disabled={deleteImageMutation.isPending}
+                          className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/60 border border-slate-800 text-rose-405 hover:bg-rose-950/80 hover:text-rose-450 hover:border-rose-900/40 flex items-center justify-center transition-all cursor-pointer z-10 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload Dropzone */}
+              <div className="relative group border border-dashed border-slate-800 hover:border-amber-500/40 rounded-2xl p-6 bg-slate-950/20 hover:bg-slate-950/40 transition-all flex flex-col items-center justify-center cursor-pointer min-h-[120px] text-center">
                 <input
-                  type="text"
-                  value={imageUrl1}
-                  onChange={(e) => setImageUrl1(e.target.value)}
-                  placeholder="Primary Image URL"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650 text-xs"
+                  type="file"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error('File size must be less than 5MB!');
+                        return;
+                      }
+                      uploadImageMutation.mutate(file);
+                    }
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  disabled={uploadImageMutation.isPending || deleteImageMutation.isPending}
                 />
-                <input
-                  type="text"
-                  value={imageUrl2}
-                  onChange={(e) => setImageUrl2(e.target.value)}
-                  placeholder="Secondary Showcase Image URL"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650 text-xs"
-                />
+                {uploadImageMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-8 w-8 text-amber-500 animate-spin mb-2" />
+                    <span className="text-xs font-bold text-amber-400">
+                      Uploading file to Cloudinary...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="h-7 w-7 text-slate-500 group-hover:text-amber-400 group-hover:scale-110 transition-all duration-300 mb-2" />
+                    <span className="text-xs font-bold text-slate-350">
+                      Upload new image file to gallery
+                    </span>
+                    <span className="text-[9px] text-slate-500 mt-1">
+                      Supports PNG, JPEG, WEBP up to 5MB (Direct cloud sync)
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -485,15 +595,14 @@ export default function EditTurfPage() {
                   className="w-full h-12 bg-gradient-to-r from-amber-500 to-[#b57a07] hover:from-amber-400 hover:to-[#996403] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg border border-amber-500/10 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="h-4 w-4 text-amber-200" />
-                  <span>{updateMutation.isPending ? 'Saving Changes...' : 'Save Arena Settings'}</span>
+                  <span>
+                    {updateMutation.isPending ? 'Saving Changes...' : 'Save Arena Settings'}
+                  </span>
                 </Button>
               </Magnetic>
             </div>
-
           </form>
-
         </div>
-
       </div>
     </div>
   );
