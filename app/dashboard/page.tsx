@@ -224,7 +224,9 @@ export default function DashboardPage() {
       if (activeBooking && activeBooking.id === data.bookingId) {
         setActiveBooking({
           ...activeBooking,
-          payment: { ...activeBooking.payment, status: 'REFUNDED' },
+          payment: activeBooking.payment
+            ? { ...activeBooking.payment, status: 'REFUNDED' }
+            : undefined,
         });
       }
       toast.success('Payment successfully refunded to customer! 💳💰');
