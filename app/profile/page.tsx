@@ -30,9 +30,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, updateProfile, isUpdatingProfile, isFetchingMe } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    updateProfile,
+    isUpdatingProfile,
+    isFetchingMe,
+    logoutAll,
+    isLoggingOutAll,
+  } = useAuth();
   const router = useRouter();
 
   // Tab State
@@ -44,17 +53,24 @@ export default function ProfilePage() {
 
   // Custom Cancellation Modal State
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [isLogoutAllModalOpen, setIsLogoutAllModalOpen] = useState(false);
 
   // Refs for entrance and spotlight animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
   const cardRef = useRef<HTMLDivElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
 
+  const handleLogoutAll = () => {
+    setIsLogoutAllModalOpen(true);
+  };
+
   // Sync profile values on load
   useEffect(() => {
     if (user) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setName(user.name || '');
       setPhone(user.phone || '');
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [user]);
 
@@ -63,7 +79,9 @@ export default function ProfilePage() {
     if (typeof window !== 'undefined') {
       const tab = new URLSearchParams(window.location.search).get('tab');
       if (tab === 'bookings') {
+        /* eslint-disable react-hooks/set-state-in-effect */
         setActiveTab('bookings');
+        /* eslint-enable react-hooks/set-state-in-effect */
       }
     }
   }, []);
@@ -428,6 +446,41 @@ export default function ProfilePage() {
                     </Magnetic>
                   </div>
                 </form>
+
+                {/* Account Security (Logout All Devices) */}
+                <div className="pt-6 mt-6 border-t border-slate-900/80 space-y-4">
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <Shield className="h-4.5 w-4.5 text-rose-500" />
+                    Account Security
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                    If you believe your account session is compromised, or you logged in from a
+                    public device, you can log out of all active devices currently connected to your
+                    profile.
+                  </p>
+                  <div className="pt-1">
+                    <Magnetic range={15} actionStrength={0.2}>
+                      <button
+                        type="button"
+                        onClick={handleLogoutAll}
+                        disabled={isLoggingOutAll}
+                        className="h-10 px-5 text-[10px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/20 text-rose-450 hover:bg-rose-500/15 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        {isLoggingOutAll ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Invalidating Sessions...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="h-3.5 w-3.5" />
+                            <span>Log out of all devices</span>
+                          </>
+                        )}
+                      </button>
+                    </Magnetic>
+                  </div>
+                </div>
               </>
             ) : (
               <>
@@ -437,7 +490,9 @@ export default function ProfilePage() {
                     Booking History
                   </h2>
                   <span className="text-[9px] font-black text-slate-500 uppercase">
-                    {(bookingsData?.data?.length || 0) > 0 ? `${bookingsData?.data?.length} Reservations` : 'Empty Logs'}
+                    {(bookingsData?.data?.length || 0) > 0
+                      ? `${bookingsData?.data?.length} Reservations`
+                      : 'Empty Logs'}
                   </span>
                 </div>
 
@@ -458,7 +513,8 @@ export default function ProfilePage() {
                       <div className="space-y-1">
                         <h3 className="text-xs font-black text-slate-300">No Bookings Found</h3>
                         <p className="text-[10px] text-slate-500 font-semibold max-w-xs mx-auto">
-                          You haven't reserved any sports arenas yet. Ready to start your first game?
+                          You haven&apos;t reserved any sports arenas yet. Ready to start your first
+                          game?
                         </p>
                       </div>
                       <button
@@ -472,8 +528,12 @@ export default function ProfilePage() {
                     bookingsData.data.map((booking) => {
                       const dateObj = booking.slot?.date ? new Date(booking.slot.date) : null;
                       const dayNum = dateObj ? dateObj.getDate() : '--';
-                      const monthStr = dateObj ? dateObj.toLocaleDateString('en-US', { month: 'short' }) : 'Date';
-                      const dayName = dateObj ? dateObj.toLocaleDateString('en-US', { weekday: 'short' }) : '';
+                      const monthStr = dateObj
+                        ? dateObj.toLocaleDateString('en-US', { month: 'short' })
+                        : 'Date';
+                      const dayName = dateObj
+                        ? dateObj.toLocaleDateString('en-US', { weekday: 'short' })
+                        : '';
 
                       const isPendingPayment = booking.status === 'PENDING';
                       const isConfirmed = booking.status === 'CONFIRMED';
@@ -486,18 +546,31 @@ export default function ProfilePage() {
                           className="group p-5 rounded-2xl bg-gradient-to-br from-[#070b16] to-[#04060f] border border-slate-900/90 hover:border-slate-800/80 hover:bg-gradient-to-br hover:from-[#090f20] hover:to-[#050914] transition-all duration-300 flex flex-col sm:flex-row gap-4 relative shadow-lg shadow-slate-950/20"
                         >
                           {/* Accent left border based on status */}
-                          <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300 ${
-                            isConfirmed ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
-                            isPendingPayment ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]' :
-                            isCancelled ? 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]' :
-                            'bg-slate-700'
-                          }`} />
+                          <div
+                            className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300 ${
+                              isConfirmed
+                                ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                                : isPendingPayment
+                                  ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]'
+                                  : isCancelled
+                                    ? 'bg-rose-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]'
+                                    : 'bg-slate-700'
+                            }`}
+                          />
 
                           {/* Left: Date Ticket */}
                           <div className="flex sm:flex-col items-center justify-center bg-slate-950/80 border border-slate-900 rounded-xl p-3 sm:w-16 sm:h-20 h-12 w-full shrink-0 gap-2 sm:gap-0.5 text-center shadow-inner group-hover:border-emerald-500/20 transition-all duration-300">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 leading-none sm:mb-1">{monthStr}</span>
-                            <span className="text-xl sm:text-2xl font-black text-white leading-none">{dayNum}</span>
-                            {dayName && <span className="text-[8px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider hidden sm:block">{dayName}</span>}
+                            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 leading-none sm:mb-1">
+                              {monthStr}
+                            </span>
+                            <span className="text-xl sm:text-2xl font-black text-white leading-none">
+                              {dayNum}
+                            </span>
+                            {dayName && (
+                              <span className="text-[8px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider hidden sm:block">
+                                {dayName}
+                              </span>
+                            )}
                           </div>
 
                           {/* Middle: Details */}
@@ -540,11 +613,18 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] font-bold text-slate-400 border-t border-b border-slate-950/60 py-2.5 my-1">
                               <div className="flex items-center gap-1.5">
                                 <Clock className="h-3.5 w-3.5 text-slate-600 shrink-0" />
-                                <span>{booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time Slot'}</span>
+                                <span>
+                                  {booking.slot
+                                    ? `${booking.slot.startTime} - ${booking.slot.endTime}`
+                                    : 'Time Slot'}
+                                </span>
                               </div>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
-                                <span className="truncate" title={`${booking.turf?.address || ''}, ${booking.turf?.city || ''}`}>
+                                <span
+                                  className="truncate"
+                                  title={`${booking.turf?.address || ''}, ${booking.turf?.city || ''}`}
+                                >
                                   {booking.turf?.address || 'Mirpur, Dhaka'}
                                 </span>
                               </div>
@@ -553,8 +633,12 @@ export default function ProfilePage() {
                             {/* Price and Actions */}
                             <div className="flex items-center justify-between pt-1">
                               <div>
-                                <span className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest block leading-none">Total Cost</span>
-                                <span className="text-white font-black text-xs mt-1 block">৳{booking.totalAmount}</span>
+                                <span className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest block leading-none">
+                                  Total Cost
+                                </span>
+                                <span className="text-white font-black text-xs mt-1 block">
+                                  ৳{booking.totalAmount}
+                                </span>
                               </div>
 
                               <div className="flex gap-2 shrink-0">
@@ -627,7 +711,8 @@ export default function ProfilePage() {
                     Cancel Reservation?
                   </h3>
                   <p className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                    Are you sure you want to cancel this booking? This action is permanent and cannot be undone.
+                    Are you sure you want to cancel this booking? This action is permanent and
+                    cannot be undone.
                   </p>
                 </div>
               </div>
@@ -657,6 +742,21 @@ export default function ProfilePage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={isLogoutAllModalOpen}
+        onClose={() => setIsLogoutAllModalOpen(false)}
+        onConfirm={() => {
+          setIsLogoutAllModalOpen(false);
+          logoutAll();
+        }}
+        title="Revoke All Sessions?"
+        description="Are you sure you want to log out from all devices? This will invalidate all active sessions and require you to sign in again."
+        confirmText="Log out all"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isLoggingOutAll}
+      />
     </div>
   );
 }

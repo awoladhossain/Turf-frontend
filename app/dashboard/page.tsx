@@ -9,10 +9,11 @@ import paymentService from '@/services/payment.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import React, { useEffect, useState, useRef, useCallback, useId } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useId, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOutsideClick } from '@/hooks/use-outside-click';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import {
   Calendar,
   Clock,
@@ -115,6 +116,78 @@ const CloseIcon = () => {
   );
 };
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    name: string;
+    color?: string;
+    payload: {
+      name: string;
+      value: number;
+      color?: string;
+    };
+  }>;
+  label?: string;
+}
+
+const CustomRevenueTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px] border-emerald-500/10">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
+          {label}
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="text-slate-350">Revenue:</span>
+          <span className="ml-auto text-emerald-400">৳{payload[0].value.toLocaleString()}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomPieTooltip = ({ active, payload }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px]">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
+          {data.name}
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: data.color }} />
+          <span className="text-slate-350">Bookings:</span>
+          <span className="ml-auto" style={{ color: data.color }}>
+            {data.value}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomBarTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px] border-indigo-500/10">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
+          {label}
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full bg-indigo-500" />
+          <span className="text-slate-350">Arenas:</span>
+          <span className="ml-auto text-indigo-400">{payload[0].value}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function DashboardPage() {
   const { user, isAuthenticated, isFetchingMe } = useAuth();
   const router = useRouter();
@@ -136,6 +209,10 @@ export default function DashboardPage() {
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
   const activeBookingRef = useRef<HTMLDivElement>(null);
   const activeBookingId = useId();
+
+  // Confirmation Modal States
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [bookingToRefund, setBookingToRefund] = useState<string | null>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -246,6 +323,61 @@ export default function DashboardPage() {
     refetchInterval: 15000, // refresh every 15s for high-tech telemetry feel
   });
 
+  const bookingsList = adminBookings?.data || [];
+
+  // --- CHART DATA GENERATION (ADMIN) ---
+  // Pad the last 8 calendar days relative to the latest booking date to ensure a beautiful continuous line
+  const revenueTrendData = useMemo(() => {
+    const revenueByDateMap: Record<string, number> = {};
+    const datesWithBookings: Date[] = [];
+
+    bookingsList.forEach((b) => {
+      if (b.status === 'CONFIRMED' && b.slot?.date) {
+        const d = new Date(b.slot.date);
+        d.setHours(0, 0, 0, 0);
+        datesWithBookings.push(d);
+
+        const dateStr = d.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        revenueByDateMap[dateStr] = (revenueByDateMap[dateStr] || 0) + Number(b.totalAmount);
+      }
+    });
+
+    if (datesWithBookings.length === 0) {
+      const fallback: Array<{ name: string; Revenue: number }> = [];
+      for (let i = 7; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        fallback.push({
+          name: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          Revenue: 0,
+        });
+      }
+      return fallback;
+    }
+
+    const maxDate = new Date(Math.max(...datesWithBookings.map((d) => d.getTime())));
+    maxDate.setHours(0, 0, 0, 0);
+
+    const finalDataMap: Record<string, number> = {};
+    for (let i = 7; i >= 0; i--) {
+      const targetDate = new Date(maxDate);
+      targetDate.setDate(targetDate.getDate() - i);
+      const dateStr = targetDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      finalDataMap[dateStr] = revenueByDateMap[dateStr] || 0;
+    }
+
+    return Object.entries(finalDataMap).map(([date, revenue]) => ({
+      name: date,
+      Revenue: revenue,
+    }));
+  }, [bookingsList]);
+
   if (
     !mounted ||
     isFetchingMe ||
@@ -268,7 +400,6 @@ export default function DashboardPage() {
   if (!isAuthenticated || !user) return null;
 
   // --- STATS CALCULATIONS (ADMIN) ---
-  const bookingsList = adminBookings?.data || [];
   const totalBookingsCount = adminBookings?.meta?.total || bookingsList.length;
 
   const confirmedBookings = bookingsList.filter((b) => b.status === 'CONFIRMED');
@@ -295,21 +426,6 @@ export default function DashboardPage() {
   const myConfirmed = myBookingsList.filter((b) => b.status === 'CONFIRMED');
   const myTotalSpent = myConfirmed.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
-  // --- CHART DATA GENERATION (ADMIN) ---
-  const revenueTrendData = bookingsList
-    .slice()
-    .reverse()
-    .slice(-8)
-    .map((b) => {
-      const date = b.slot?.date
-        ? new Date(b.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : 'Date';
-      return {
-        name: date,
-        Revenue: b.status === 'CONFIRMED' ? Number(b.totalAmount) : 0,
-      };
-    });
-
   const statusPieData = [
     { name: 'Confirmed', value: confirmedBookings.length, color: '#10b981' },
     { name: 'Pending', value: pendingBookings.length, color: '#f59e0b' },
@@ -330,6 +446,8 @@ export default function DashboardPage() {
     healthData?.info?.database?.status === 'up' || healthData?.details?.database?.status === 'up';
   const redisUp =
     healthData?.info?.redis?.status === 'up' || healthData?.details?.redis?.status === 'up';
+  const bullUp =
+    healthData?.info?.bull?.status === 'up' || healthData?.details?.bull?.status === 'up';
 
   // Avatar Gradient list
   const avatarGradients = [
@@ -338,7 +456,6 @@ export default function DashboardPage() {
     'from-purple-500 to-pink-600',
     'from-amber-500 to-orange-600',
   ];
-
   return (
     <div className="min-h-screen bg-[#03060f] text-slate-100 font-jakarta pb-24 select-none relative overflow-hidden">
       {/* Dynamic Aurora Ambient Background */}
@@ -462,31 +579,45 @@ export default function DashboardPage() {
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
                     <Database
-                      className={`h-4 w-4 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                      className={`h-3.5 w-3.5 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
                     />
-                    <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
                         Database
                       </span>
-                      <span className="text-[9px] font-bold text-white uppercase">
+                      <span className="text-[8px] font-bold text-white uppercase">
                         {dbUp ? 'ONLINE' : 'OFFLINE'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
                     <Server
-                      className={`h-4 w-4 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                      className={`h-3.5 w-3.5 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
                     />
-                    <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
                         Redis
                       </span>
-                      <span className="text-[9px] font-bold text-white uppercase">
+                      <span className="text-[8px] font-bold text-white uppercase">
                         {redisUp ? 'ACTIVE' : 'OFFLINE'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
+                    <Activity
+                      className={`h-3.5 w-3.5 ${bullUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                    />
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
+                        Bull Queue
+                      </span>
+                      <span className="text-[8px] font-bold text-white uppercase">
+                        {bullUp ? 'ACTIVE' : 'OFFLINE'}
                       </span>
                     </div>
                   </div>
@@ -636,45 +767,55 @@ export default function DashboardPage() {
                               width={revenueChartWidth}
                               height={256}
                               data={revenueTrendData}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                             >
                               <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                 </linearGradient>
                               </defs>
-                              <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '12px',
-                                }}
-                                labelStyle={{
-                                  color: '#94a3b8',
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
-                                }}
-                                itemStyle={{
-                                  color: '#10b981',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold',
-                                }}
+                              <CartesianGrid
+                                stroke="#0e1726"
+                                strokeDasharray="3 3"
+                                vertical={false}
                               />
+                              <XAxis
+                                dataKey="name"
+                                stroke="#64748b"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                                dy={10}
+                              />
+                              <YAxis
+                                stroke="#64748b"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(val) =>
+                                  val >= 1000 ? `৳${(val / 1000).toFixed(0)}k` : `৳${val}`
+                                }
+                                dx={-5}
+                              />
+                              <Tooltip content={<CustomRevenueTooltip />} />
                               <Area
                                 type="monotone"
                                 dataKey="Revenue"
                                 stroke="#10b981"
-                                strokeWidth={2}
+                                strokeWidth={2.5}
                                 fillOpacity={1}
                                 fill="url(#colorRevenue)"
+                                activeDot={{
+                                  r: 5,
+                                  stroke: '#10b981',
+                                  strokeWidth: 2,
+                                  fill: '#03060f',
+                                }}
                               />
                             </AreaChart>
                           ) : (
-                            <div className="text-xs text-slate-550 uppercase tracking-widest font-black">
+                            <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
                               No Sales Logged
                             </div>
                           )
@@ -696,31 +837,42 @@ export default function DashboardPage() {
                       >
                         {statusChartWidth > 0 ? (
                           statusPieData.length > 0 ? (
-                            <PieChart width={statusChartWidth} height={176}>
-                              <Pie
-                                data={statusPieData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={42}
-                                outerRadius={56}
-                                paddingAngle={4}
-                                dataKey="value"
-                              >
-                                {statusPieData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '8px',
-                                }}
-                                itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
-                              />
-                            </PieChart>
+                            <>
+                              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                                <span className="text-[10px] font-semibold text-slate-450 uppercase tracking-widest leading-none mb-1.5">
+                                  Total
+                                </span>
+                                <span className="text-3xl font-extrabold text-white leading-none tracking-tight">
+                                  {statusPieData.reduce((acc, curr) => acc + curr.value, 0)}
+                                </span>
+                                <span className="text-[9px] text-slate-555 mt-1 uppercase font-semibold tracking-wider">
+                                  Bookings
+                                </span>
+                              </div>
+                              <PieChart width={statusChartWidth} height={176}>
+                                <Pie
+                                  data={statusPieData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={52}
+                                  outerRadius={68}
+                                  paddingAngle={6}
+                                  dataKey="value"
+                                >
+                                  {statusPieData.map((entry, index) => (
+                                    <Cell
+                                      key={`cell-${index}`}
+                                      fill={entry.color}
+                                      stroke="#060a16"
+                                      strokeWidth={3}
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomPieTooltip />} />
+                              </PieChart>
+                            </>
                           ) : (
-                            <div className="text-xs text-slate-550 uppercase tracking-widest font-black">
+                            <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
                               No Data
                             </div>
                           )
@@ -761,22 +913,40 @@ export default function DashboardPage() {
                         {sportsChartWidth > 0 ? (
                           sportChartData.length > 0 ? (
                             <BarChart width={sportsChartWidth} height={224} data={sportChartData}>
-                              <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
-                              <XAxis dataKey="name" stroke="#475569" fontSize={9} />
-                              <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: '#070c18',
-                                  border: '1px solid #1e293b',
-                                  borderRadius: '12px',
-                                }}
-                                itemStyle={{
-                                  color: '#10b981',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold',
-                                }}
+                              <defs>
+                                <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.9} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid
+                                stroke="#0e1726"
+                                strokeDasharray="3 3"
+                                vertical={false}
                               />
-                              <Bar dataKey="Arenas" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                              <XAxis
+                                dataKey="name"
+                                stroke="#64748b"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                                dy={10}
+                              />
+                              <YAxis
+                                stroke="#64748b"
+                                fontSize={9}
+                                tickLine={false}
+                                axisLine={false}
+                                allowDecimals={false}
+                                dx={-5}
+                              />
+                              <Tooltip content={<CustomBarTooltip />} />
+                              <Bar
+                                dataKey="Arenas"
+                                fill="url(#colorBar)"
+                                barSize={24}
+                                radius={[6, 6, 0, 0]}
+                              />
                             </BarChart>
                           ) : (
                             <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
@@ -919,13 +1089,7 @@ export default function DashboardPage() {
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          if (
-                                            window.confirm(
-                                              'Are you sure you want to cancel this booking?'
-                                            )
-                                          ) {
-                                            cancelBookingMutation.mutate(booking.id);
-                                          }
+                                          setBookingToCancel(booking.id);
                                         }}
                                         disabled={cancelBookingMutation.isPending}
                                         className="text-[9px] font-black uppercase tracking-wider text-rose-400 border border-rose-500/20 hover:border-rose-500/60 hover:bg-rose-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
@@ -939,13 +1103,7 @@ export default function DashboardPage() {
                                           type="button"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            if (
-                                              window.confirm(
-                                                'Are you sure you want to refund this booking payment?'
-                                              )
-                                            ) {
-                                              refundPaymentMutation.mutate(booking.id);
-                                            }
+                                            setBookingToRefund(booking.id);
                                           }}
                                           disabled={refundPaymentMutation.isPending}
                                           className="text-[9px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/20 hover:border-amber-500/60 hover:bg-amber-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
@@ -1221,16 +1379,10 @@ export default function DashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Are you sure you want to cancel this reservation?'
-                                    )
-                                  ) {
-                                    cancelBookingMutation.mutate(activeBooking.id);
-                                  }
+                                  setBookingToCancel(activeBooking.id);
                                 }}
                                 disabled={cancelBookingMutation.isPending}
-                                className="w-full h-11 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/20 hover:border-rose-500/50 text-rose-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full h-11 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/20 hover:border-rose-500/50 text-rose-450 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                               >
                                 {cancelBookingMutation.isPending
                                   ? 'Cancelling...'
@@ -1362,6 +1514,40 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={!!bookingToCancel}
+        onClose={() => setBookingToCancel(null)}
+        onConfirm={() => {
+          if (bookingToCancel) {
+            cancelBookingMutation.mutate(bookingToCancel);
+            setBookingToCancel(null);
+          }
+        }}
+        title="Cancel Reservation?"
+        description="Are you sure you want to cancel this booking? This action is permanent and cannot be undone."
+        confirmText="Cancel Reservation"
+        cancelText="Keep Booking"
+        variant="danger"
+        isLoading={cancelBookingMutation.isPending}
+      />
+
+      <ConfirmationModal
+        isOpen={!!bookingToRefund}
+        onClose={() => setBookingToRefund(null)}
+        onConfirm={() => {
+          if (bookingToRefund) {
+            refundPaymentMutation.mutate(bookingToRefund);
+            setBookingToRefund(null);
+          }
+        }}
+        title="Refund Booking Payment?"
+        description="Are you sure you want to refund this booking payment? This will return the payment amount to the client's account."
+        confirmText="Confirm Refund"
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={refundPaymentMutation.isPending}
+      />
     </div>
   );
 }
