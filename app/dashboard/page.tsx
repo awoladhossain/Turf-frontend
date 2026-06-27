@@ -30,6 +30,7 @@ import {
   Cpu,
   Layers,
   ChevronRight,
+  Sliders,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -318,13 +319,22 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-3 self-start md:self-center">
             {isAdmin ? (
-              <Link
-                href="/admin/turfs/create"
-                className="h-11 px-6 text-[10px] font-black uppercase tracking-wider bg-white hover:bg-slate-100 text-slate-950 rounded-2xl flex items-center gap-2 shadow-lg shadow-white/5 transition-all hover:scale-103 active:scale-97 cursor-pointer"
-              >
-                <Plus className="h-4 w-4 stroke-[3px]" />
-                Create Arena
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/admin/slots"
+                  className="h-11 px-5 text-[10px] font-black uppercase tracking-wider bg-[#0d1425]/45 hover:bg-slate-900 border border-slate-900 text-white rounded-2xl flex items-center gap-2 transition-all hover:scale-103 active:scale-97 cursor-pointer"
+                >
+                  <Sliders className="h-4 w-4" />
+                  Manage Slots
+                </Link>
+                <Link
+                  href="/admin/turfs/create"
+                  className="h-11 px-5 text-[10px] font-black uppercase tracking-wider bg-white hover:bg-slate-100 text-slate-950 rounded-2xl flex items-center gap-2 shadow-lg shadow-white/5 transition-all hover:scale-103 active:scale-97 cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 stroke-[3px]" />
+                  Create Arena
+                </Link>
+              </div>
             ) : (
               <Link
                 href="/turfs"
