@@ -159,17 +159,21 @@ export default function CreateTurfPage() {
 
   // Entrance animations
   useEffect(() => {
+    if (isFetchingMe || !user || !cardRef.current || !pageContainerRef.current) return;
+
     // If not admin, we skip entrance animations for the form and focus on warnings
     if (isAuthenticated && user?.role !== 'ADMIN') {
       gsap.context(() => {
-        gsap.set(cardRef.current, { opacity: 0, scale: 0.95, y: 30 });
-        gsap.to(cardRef.current, {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        });
+        if (cardRef.current) {
+          gsap.set(cardRef.current, { opacity: 0, scale: 0.95, y: 30 });
+          gsap.to(cardRef.current, {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+          });
+        }
       }, pageContainerRef);
       return;
     }
@@ -177,37 +181,41 @@ export default function CreateTurfPage() {
     if (!isAuthenticated || user?.role !== 'ADMIN') return;
 
     const ctx = gsap.context(() => {
-      gsap.set(cardRef.current, { opacity: 0, y: 40 });
-      gsap.set('.animate-item', { opacity: 0, y: 15 });
+      if (cardRef.current) {
+        gsap.set(cardRef.current, { opacity: 0, y: 40 });
+        gsap.set('.animate-item', { opacity: 0, y: 15 });
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
-      tl.to(cardRef.current, { opacity: 1, y: 0, duration: 1 });
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.8 } });
+        tl.to(cardRef.current, { opacity: 1, y: 0, duration: 1 });
 
-      tl.to(
-        '.animate-item',
-        {
-          opacity: 1,
-          y: 0,
-          stagger: 0.05,
-          duration: 0.5,
-        },
-        '-=0.5'
-      );
+        tl.to(
+          '.animate-item',
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.05,
+            duration: 0.5,
+          },
+          '-=0.5'
+        );
+      }
 
       // Continuous float neon orb
-      gsap.to(orbitRef.current, {
-        y: '+=20',
-        x: '-=10',
-        scale: 1.05,
-        duration: 9,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
+      if (orbitRef.current) {
+        gsap.to(orbitRef.current, {
+          y: '+=20',
+          x: '-=10',
+          scale: 1.05,
+          duration: 9,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+        });
+      }
     }, pageContainerRef);
 
     return () => ctx.revert();
-  }, [isAuthenticated, user, pageContainerRef]);
+  }, [isAuthenticated, user, pageContainerRef, isFetchingMe]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
