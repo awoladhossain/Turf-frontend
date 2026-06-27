@@ -8,6 +8,7 @@ import turfService from '@/services/turf.service';
 import adminService from '@/services/admin.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import gsap from 'gsap';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   Clock,
@@ -20,6 +21,8 @@ import {
   Sparkles,
   Trophy,
   Trash2,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -40,6 +43,36 @@ export default function CreateTurfPage() {
   const [pricePerHour, setPricePerHour] = useState<number>(1500);
   const [openTime, setOpenTime] = useState('06:00');
   const [closeTime, setCloseTime] = useState('23:00');
+
+  // Custom Time Dropdown states
+  const [openTimeOpen, setOpenTimeOpen] = useState(false);
+  const [closeTimeOpen, setCloseTimeOpen] = useState(false);
+  const openTimeRef = useRef<HTMLDivElement>(null);
+  const closeTimeRef = useRef<HTMLDivElement>(null);
+
+  // Close time dropdowns when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (openTimeRef.current && !openTimeRef.current.contains(event.target as Node)) {
+        setOpenTimeOpen(false);
+      }
+      if (closeTimeRef.current && !closeTimeRef.current.contains(event.target as Node)) {
+        setCloseTimeOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const timeOptions = useMemo(() => {
+    return Array.from({ length: 48 }).map((_, idx) => {
+      const hour = Math.floor(idx / 2)
+        .toString()
+        .padStart(2, '0');
+      const min = idx % 2 === 0 ? '00' : '30';
+      return `${hour}:${min}`;
+    });
+  }, []);
 
   // File Upload State
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -398,15 +431,22 @@ export default function CreateTurfPage() {
                   <Trophy className="h-3.5 w-3.5 text-slate-550" />
                   Discipline / Sport Type
                 </label>
-                <select
-                  value={sportType}
-                  onChange={(e) => setSportType(e.target.value as 'FOOTBALL' | 'CRICKET' | 'BOTH')}
-                  className="w-full h-11 px-3 rounded-xl border border-slate-850 bg-[#070b14] focus:border-amber-500/20 outline-none transition-all text-white cursor-pointer"
-                >
-                  <option value="BOTH">Football & Cricket (BOTH)</option>
-                  <option value="FOOTBALL">Football Only</option>
-                  <option value="CRICKET">Cricket Only</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['BOTH', 'FOOTBALL', 'CRICKET'] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setSportType(type)}
+                      className={`h-11 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex flex-col items-center justify-center gap-1 select-none active:scale-95 ${
+                        sportType === type
+                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 font-black shadow-[0_0_15px_rgba(245,158,11,0.1)]'
+                          : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-800 hover:text-slate-300'
+                      }`}
+                    >
+                      {type === 'BOTH' ? 'Both' : type === 'FOOTBALL' ? 'Football' : 'Cricket'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -414,44 +454,121 @@ export default function CreateTurfPage() {
                   <DollarSign className="h-3.5 w-3.5 text-slate-550" />
                   Hourly Price (৳)
                 </label>
-                <input
-                  type="number"
-                  value={pricePerHour}
-                  onChange={(e) => setPricePerHour(Number(e.target.value))}
-                  placeholder="e.g. 3200"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650"
-                />
+                <div className="relative flex items-center">
+                  <span className="absolute left-4 text-xs font-black text-slate-500 select-none">
+                    ৳
+                  </span>
+                  <input
+                    type="number"
+                    value={pricePerHour}
+                    onChange={(e) => setPricePerHour(Number(e.target.value))}
+                    placeholder="e.g. 3200"
+                    className="w-full h-11 pl-8 pr-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Row 5: Open Time & Close Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-item">
-              <div className="space-y-2">
+              <div className="space-y-2" ref={openTimeRef}>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-slate-550" />
                   Opening Hours
                 </label>
-                <input
-                  type="text"
-                  value={openTime}
-                  onChange={(e) => setOpenTime(e.target.value)}
-                  placeholder="e.g. 06:00"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650"
-                />
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => setOpenTimeOpen(!openTimeOpen)}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 hover:border-slate-800 focus:border-amber-500/20 outline-none transition-all text-white cursor-pointer flex items-center justify-between text-left font-bold"
+                  >
+                    <span>{openTime}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${openTimeOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {openTimeOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 w-full mt-2 bg-[#080d1a]/95 backdrop-blur-md border border-slate-850 rounded-2xl shadow-2xl max-h-60 overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-slate-800"
+                      >
+                        {timeOptions.map((time) => (
+                          <button
+                            key={`open-${time}`}
+                            type="button"
+                            onClick={() => {
+                              setOpenTime(time);
+                              setOpenTimeOpen(false);
+                            }}
+                            className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900/60 cursor-pointer ${
+                              openTime === time
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/10'
+                                : 'text-slate-300 border border-transparent'
+                            }`}
+                          >
+                            <span>{time}</span>
+                            {openTime === time && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2" ref={closeTimeRef}>
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-slate-550" />
                   Closing Hours
                 </label>
-                <input
-                  type="text"
-                  value={closeTime}
-                  onChange={(e) => setCloseTime(e.target.value)}
-                  placeholder="e.g. 23:30"
-                  className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 focus:border-amber-500/20 outline-none transition-all text-white placeholder-slate-650"
-                />
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => setCloseTimeOpen(!closeTimeOpen)}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-850 bg-slate-950/40 hover:border-slate-800 focus:border-amber-500/20 outline-none transition-all text-white cursor-pointer flex items-center justify-between text-left font-bold"
+                  >
+                    <span>{closeTime}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${closeTimeOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {closeTimeOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 w-full mt-2 bg-[#080d1a]/95 backdrop-blur-md border border-slate-850 rounded-2xl shadow-2xl max-h-60 overflow-y-auto p-1.5 scrollbar-thin scrollbar-thumb-slate-800"
+                      >
+                        {timeOptions.map((time) => (
+                          <button
+                            key={`close-${time}`}
+                            type="button"
+                            onClick={() => {
+                              setCloseTime(time);
+                              setCloseTimeOpen(false);
+                            }}
+                            className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all flex items-center justify-between hover:bg-slate-900/60 cursor-pointer ${
+                              closeTime === time
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/10'
+                                : 'text-slate-300 border border-transparent'
+                            }`}
+                          >
+                            <span>{time}</span>
+                            {closeTime === time && <Check className="h-3.5 w-3.5 text-amber-400" />}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
 
