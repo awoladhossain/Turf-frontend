@@ -30,6 +30,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 export default function ProfilePage() {
   const {
@@ -52,6 +53,7 @@ export default function ProfilePage() {
 
   // Custom Cancellation Modal State
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [isLogoutAllModalOpen, setIsLogoutAllModalOpen] = useState(false);
 
   // Refs for entrance and spotlight animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
@@ -59,13 +61,7 @@ export default function ProfilePage() {
   const orbitRef = useRef<HTMLDivElement>(null);
 
   const handleLogoutAll = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to log out from all devices? This will invalidate all active sessions and require you to sign in again.'
-      )
-    ) {
-      logoutAll();
-    }
+    setIsLogoutAllModalOpen(true);
   };
 
   // Sync profile values on load
@@ -746,6 +742,21 @@ export default function ProfilePage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={isLogoutAllModalOpen}
+        onClose={() => setIsLogoutAllModalOpen(false)}
+        onConfirm={() => {
+          setIsLogoutAllModalOpen(false);
+          logoutAll();
+        }}
+        title="Revoke All Sessions?"
+        description="Are you sure you want to log out from all devices? This will invalidate all active sessions and require you to sign in again."
+        confirmText="Log out all"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isLoggingOutAll}
+      />
     </div>
   );
 }

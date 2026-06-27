@@ -13,6 +13,7 @@ import React, { useEffect, useState, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOutsideClick } from '@/hooks/use-outside-click';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import {
   Calendar,
   Clock,
@@ -136,6 +137,10 @@ export default function DashboardPage() {
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
   const activeBookingRef = useRef<HTMLDivElement>(null);
   const activeBookingId = useId();
+
+  // Confirmation Modal States
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [bookingToRefund, setBookingToRefund] = useState<string | null>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -935,13 +940,7 @@ export default function DashboardPage() {
                                         type="button"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          if (
-                                            window.confirm(
-                                              'Are you sure you want to cancel this booking?'
-                                            )
-                                          ) {
-                                            cancelBookingMutation.mutate(booking.id);
-                                          }
+                                          setBookingToCancel(booking.id);
                                         }}
                                         disabled={cancelBookingMutation.isPending}
                                         className="text-[9px] font-black uppercase tracking-wider text-rose-400 border border-rose-500/20 hover:border-rose-500/60 hover:bg-rose-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
@@ -955,13 +954,7 @@ export default function DashboardPage() {
                                           type="button"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            if (
-                                              window.confirm(
-                                                'Are you sure you want to refund this booking payment?'
-                                              )
-                                            ) {
-                                              refundPaymentMutation.mutate(booking.id);
-                                            }
+                                            setBookingToRefund(booking.id);
                                           }}
                                           disabled={refundPaymentMutation.isPending}
                                           className="text-[9px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/20 hover:border-amber-500/60 hover:bg-amber-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
@@ -1237,16 +1230,10 @@ export default function DashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Are you sure you want to cancel this reservation?'
-                                    )
-                                  ) {
-                                    cancelBookingMutation.mutate(activeBooking.id);
-                                  }
+                                  setBookingToCancel(activeBooking.id);
                                 }}
                                 disabled={cancelBookingMutation.isPending}
-                                className="w-full h-11 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/20 hover:border-rose-500/50 text-rose-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="w-full h-11 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/20 hover:border-rose-500/50 text-rose-450 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                               >
                                 {cancelBookingMutation.isPending
                                   ? 'Cancelling...'
@@ -1378,6 +1365,40 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={!!bookingToCancel}
+        onClose={() => setBookingToCancel(null)}
+        onConfirm={() => {
+          if (bookingToCancel) {
+            cancelBookingMutation.mutate(bookingToCancel);
+            setBookingToCancel(null);
+          }
+        }}
+        title="Cancel Reservation?"
+        description="Are you sure you want to cancel this booking? This action is permanent and cannot be undone."
+        confirmText="Cancel Reservation"
+        cancelText="Keep Booking"
+        variant="danger"
+        isLoading={cancelBookingMutation.isPending}
+      />
+
+      <ConfirmationModal
+        isOpen={!!bookingToRefund}
+        onClose={() => setBookingToRefund(null)}
+        onConfirm={() => {
+          if (bookingToRefund) {
+            refundPaymentMutation.mutate(bookingToRefund);
+            setBookingToRefund(null);
+          }
+        }}
+        title="Refund Booking Payment?"
+        description="Are you sure you want to refund this booking payment? This will return the payment amount to the client's account."
+        confirmText="Confirm Refund"
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={refundPaymentMutation.isPending}
+      />
     </div>
   );
 }
