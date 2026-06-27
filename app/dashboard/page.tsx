@@ -4,8 +4,11 @@ import { useAuth } from '@/hooks/useAuth';
 import bookingService from '@/services/booking.service';
 import turfService from '@/services/turf.service';
 import healthService from '@/services/health.service';
-import { useQuery } from '@tanstack/react-query';
+import { Booking } from '@/types/booking.types';
+import paymentService from '@/services/payment.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import React, { useEffect, useState, useRef, useCallback, useId } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,7 +76,7 @@ function useContainerWidth() {
       updateWidth();
 
       const observer = new ResizeObserver((entries) => {
-        for (let entry of entries) {
+        for (const entry of entries) {
           const w = entry.contentRect.width || entry.target.getBoundingClientRect().width;
           if (w > 0) {
             setWidth(w);
@@ -117,10 +120,12 @@ export default function DashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'analytics' | 'bookings' | 'turfs'>('analytics');
   const [mounted, setMounted] = useState(false);
-  
+
   // Search and Filter States (Admin Bookings)
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CONFIRMED' | 'CANCELLED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'CONFIRMED' | 'CANCELLED'>(
+    'ALL'
+  );
 
   // Chart Container Refs
   const [revenueChartRef, revenueChartWidth] = useContainerWidth();
@@ -128,7 +133,7 @@ export default function DashboardPage() {
   const [sportsChartRef, sportsChartWidth] = useContainerWidth();
 
   // Player Dashboard Expandable Card State
-  const [activeBooking, setActiveBooking] = useState<any>(null);
+  const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
   const activeBookingRef = useRef<HTMLDivElement>(null);
   const activeBookingId = useId();
 
@@ -149,13 +154,15 @@ export default function DashboardPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [activeBooking]);
 
-  useOutsideClick(activeBookingRef as any, () => {
+  useOutsideClick(activeBookingRef, () => {
     console.log('Outside click callback fired! Resetting activeBooking.');
     setActiveBooking(null);
   });
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMounted(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   // Auth Guard redirect
@@ -188,6 +195,47 @@ export default function DashboardPage() {
     enabled: !!user,
   });
 
+  const queryClient = useQueryClient();
+
+  // Cancel Booking Mutation
+  const cancelBookingMutation = useMutation({
+    mutationFn: (bookingId: string) => bookingService.cancelBooking(bookingId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['user-bookings-dashboard'] });
+      if (activeBooking && activeBooking.id === data.id) {
+        setActiveBooking({ ...activeBooking, status: 'CANCELLED' });
+      }
+      toast.success('Reservation cancelled successfully! 🗑️⚽');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to cancel reservation!';
+      toast.error(msg);
+    },
+  });
+
+  // Refund Payment Mutation
+  const refundPaymentMutation = useMutation({
+    mutationFn: (bookingId: string) => paymentService.refundPayment(bookingId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['user-bookings-dashboard'] });
+      if (activeBooking && activeBooking.id === data.bookingId) {
+        setActiveBooking({
+          ...activeBooking,
+          payment: { ...activeBooking.payment, status: 'REFUNDED' },
+        });
+      }
+      toast.success('Payment successfully refunded to customer! 💳💰');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      const msg = error.response?.data?.message || 'Failed to refund payment!';
+      toast.error(msg);
+    },
+  });
+
   // 4. Fetch System Health Telemetry
   const { data: healthData } = useQuery({
     queryKey: ['system-health'],
@@ -196,7 +244,12 @@ export default function DashboardPage() {
     refetchInterval: 15000, // refresh every 15s for high-tech telemetry feel
   });
 
-  if (!mounted || isFetchingMe || (isAdmin ? isAdminBookingsLoading : isUserBookingsLoading) || isTurfsLoading) {
+  if (
+    !mounted ||
+    isFetchingMe ||
+    (isAdmin ? isAdminBookingsLoading : isUserBookingsLoading) ||
+    isTurfsLoading
+  ) {
     return (
       <div className="min-h-screen bg-[#03060f] flex flex-col items-center justify-center gap-4">
         <div className="relative flex items-center justify-center">
@@ -215,30 +268,29 @@ export default function DashboardPage() {
   // --- STATS CALCULATIONS (ADMIN) ---
   const bookingsList = adminBookings?.data || [];
   const totalBookingsCount = adminBookings?.meta?.total || bookingsList.length;
-  
-  const confirmedBookings = bookingsList.filter(b => b.status === 'CONFIRMED');
-  const pendingBookings = bookingsList.filter(b => b.status === 'PENDING');
-  const cancelledBookings = bookingsList.filter(b => b.status === 'CANCELLED');
-  
+
+  const confirmedBookings = bookingsList.filter((b) => b.status === 'CONFIRMED');
+  const pendingBookings = bookingsList.filter((b) => b.status === 'PENDING');
+  const cancelledBookings = bookingsList.filter((b) => b.status === 'CANCELLED');
+
   const totalRevenue = confirmedBookings.reduce((sum, b) => sum + Number(b.totalAmount), 0);
   const activeTurfsCount = turfsData?.meta?.total || turfsData?.data?.length || 0;
 
   // --- FILTERED BOOKINGS (ADMIN) ---
-  const filteredBookings = bookingsList.filter(booking => {
-    const matchesSearch = 
+  const filteredBookings = bookingsList.filter((booking) => {
+    const matchesSearch =
       booking.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (booking.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (booking.user?.phone || '').includes(searchQuery) ||
       (booking.turf?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'ALL' || booking.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   // --- STATS CALCULATIONS (REGULAR USER) ---
   const myBookingsList = userBookings?.data || [];
-  const myConfirmed = myBookingsList.filter(b => b.status === 'CONFIRMED');
-  const myPending = myBookingsList.filter(b => b.status === 'PENDING');
+  const myConfirmed = myBookingsList.filter((b) => b.status === 'CONFIRMED');
   const myTotalSpent = myConfirmed.reduce((sum, b) => sum + Number(b.totalAmount), 0);
 
   // --- CHART DATA GENERATION (ADMIN) ---
@@ -246,9 +298,9 @@ export default function DashboardPage() {
     .slice()
     .reverse()
     .slice(-8)
-    .map(b => {
-      const date = b.slot?.date 
-        ? new Date(b.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) 
+    .map((b) => {
+      const date = b.slot?.date
+        ? new Date(b.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         : 'Date';
       return {
         name: date,
@@ -260,19 +312,22 @@ export default function DashboardPage() {
     { name: 'Confirmed', value: confirmedBookings.length, color: '#10b981' },
     { name: 'Pending', value: pendingBookings.length, color: '#f59e0b' },
     { name: 'Cancelled', value: cancelledBookings.length, color: '#ef4444' },
-  ].filter(item => item.value > 0);
+  ].filter((item) => item.value > 0);
 
-  const sportTypeCount = turfsData?.data?.reduce((acc: Record<string, number>, t) => {
-    acc[t.sportType] = (acc[t.sportType] || 0) + 1;
-    return acc;
-  }, {}) || {};
+  const sportTypeCount =
+    turfsData?.data?.reduce((acc: Record<string, number>, t) => {
+      acc[t.sportType] = (acc[t.sportType] || 0) + 1;
+      return acc;
+    }, {}) || {};
   const sportChartData = Object.entries(sportTypeCount).map(([key, value]) => ({
     name: key === 'BOTH' ? 'Multi-Sport' : key,
-    Arenas: value
+    Arenas: value,
   }));
 
-  const dbUp = healthData?.services?.database === 'up';
-  const redisUp = healthData?.services?.redis === 'up';
+  const dbUp =
+    healthData?.info?.database?.status === 'up' || healthData?.details?.database?.status === 'up';
+  const redisUp =
+    healthData?.info?.redis?.status === 'up' || healthData?.details?.redis?.status === 'up';
 
   // Avatar Gradient list
   const avatarGradients = [
@@ -284,18 +339,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#03060f] text-slate-100 font-jakarta pb-24 select-none relative overflow-hidden">
-      
       {/* Dynamic Aurora Ambient Background */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-500/5 blur-[150px] pointer-events-none" />
       <div className="absolute top-[40%] right-[20%] w-[300px] h-[300px] rounded-full bg-violet-600/5 blur-[100px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10 space-y-8">
-        
         {/* --- DYNAMIC HEADER SECTION --- */}
         <div className="relative bg-[#070c19]/40 border border-slate-900/60 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-          
+
           <div className="space-y-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-1 rounded-full border border-emerald-400/20 text-white shadow-sm shadow-emerald-950/20">
@@ -310,10 +363,9 @@ export default function DashboardPage() {
               Welcome back, {user.name}
             </h1>
             <p className="text-xs text-slate-400 max-w-xl">
-              {isAdmin 
-                ? 'Central panel for monitoring scheduling operations, revenue insights, registration metrics, and cluster node telemetry.' 
-                : 'Instantly view your reserved time-slots, gaming expenses summary, and lock in new matches.'
-              }
+              {isAdmin
+                ? 'Central panel for monitoring scheduling operations, revenue insights, registration metrics, and cluster node telemetry.'
+                : 'Instantly view your reserved time-slots, gaming expenses summary, and lock in new matches.'}
             </p>
           </div>
 
@@ -351,17 +403,19 @@ export default function DashboardPage() {
         {isAdmin ? (
           /* Admin Dashboard HUD */
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            
             {/* Card 1: Revenue */}
             <div className="p-6 rounded-2xl bg-gradient-to-b from-[#090f1f]/80 to-[#050811]/90 border border-slate-900 hover:border-slate-800/80 transition-all duration-350 shadow-md relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <DollarSign className="h-16 w-16 text-emerald-400" />
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Gross Revenue</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Gross Revenue
+              </p>
               <h3 className="text-3xl font-black text-white mt-2">৳{totalRevenue}</h3>
               <span className="text-[9.5px] text-emerald-400 font-extrabold mt-2 flex items-center gap-1">
                 <TrendingUp className="h-3.5 w-3.5" />
-                +14.2% <span className="text-slate-500 font-semibold font-jakarta">vs last week</span>
+                +14.2%{' '}
+                <span className="text-slate-500 font-semibold font-jakarta">vs last week</span>
               </span>
             </div>
 
@@ -370,11 +424,14 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Calendar className="h-16 w-16 text-indigo-400" />
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Bookings</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Total Bookings
+              </p>
               <h3 className="text-3xl font-black text-white mt-2">{totalBookingsCount}</h3>
               <span className="text-[9.5px] text-indigo-400 font-extrabold mt-2 flex items-center gap-1">
                 <Layers className="h-3.5 w-3.5" />
-                {confirmedBookings.length} confirmed <span className="text-slate-500 font-semibold">slots</span>
+                {confirmedBookings.length} confirmed{' '}
+                <span className="text-slate-500 font-semibold">slots</span>
               </span>
             </div>
 
@@ -383,7 +440,9 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Trophy className="h-16 w-16 text-purple-400" />
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Fields</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Active Fields
+              </p>
               <h3 className="text-3xl font-black text-white mt-2">{activeTurfsCount}</h3>
               <span className="text-[9.5px] text-purple-400 font-extrabold mt-2 flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
@@ -395,24 +454,38 @@ export default function DashboardPage() {
             <div className="p-6 rounded-2xl bg-[#070c18] border border-slate-900 hover:border-slate-800/80 transition-all duration-350 shadow-md relative flex flex-col justify-between overflow-hidden">
               <div className="space-y-3.5">
                 <div className="flex justify-between items-center">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Nodes Telemetry</p>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                    Nodes Telemetry
+                  </p>
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
-                    <Database className={`h-4 w-4 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`} />
+                    <Database
+                      className={`h-4 w-4 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                    />
                     <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">Database</span>
-                      <span className="text-[9px] font-bold text-white uppercase">{dbUp ? 'ONLINE' : 'OFFLINE'}</span>
+                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                        Database
+                      </span>
+                      <span className="text-[9px] font-bold text-white uppercase">
+                        {dbUp ? 'ONLINE' : 'OFFLINE'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
-                    <Server className={`h-4 w-4 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`} />
+                    <Server
+                      className={`h-4 w-4 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                    />
                     <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">Redis</span>
-                      <span className="text-[9px] font-bold text-white uppercase">{redisUp ? 'ACTIVE' : 'OFFLINE'}</span>
+                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                        Redis
+                      </span>
+                      <span className="text-[9px] font-bold text-white uppercase">
+                        {redisUp ? 'ACTIVE' : 'OFFLINE'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -426,18 +499,18 @@ export default function DashboardPage() {
                 <span>Latency: 12ms</span>
               </div>
             </div>
-
           </div>
         ) : (
           /* Regular Player Dashboard HUD */
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
             {/* Card 1 */}
             <div className="p-6 rounded-2xl bg-gradient-to-b from-[#090f1f]/80 to-[#050811]/90 border border-slate-900 hover:border-slate-800/80 transition-all duration-350 shadow-md relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Trophy className="h-16 w-16 text-emerald-400" />
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Registered Matches</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Registered Matches
+              </p>
               <h3 className="text-3xl font-black text-white mt-2">{myBookingsList.length} Games</h3>
               <p className="text-[9.5px] text-emerald-400 font-extrabold mt-2 flex items-center gap-1">
                 {myConfirmed.length} Confirmed Slots
@@ -449,7 +522,9 @@ export default function DashboardPage() {
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <DollarSign className="h-16 w-16 text-indigo-400" />
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total Sports Investment</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Total Sports Investment
+              </p>
               <h3 className="text-3xl font-black text-white mt-2">৳{myTotalSpent}</h3>
               <p className="text-[9.5px] text-indigo-400 font-extrabold mt-2">
                 On finalized confirmed bookings
@@ -458,38 +533,49 @@ export default function DashboardPage() {
 
             {/* Card 3 */}
             <div className="p-6 rounded-2xl bg-gradient-to-b from-[#090f1f]/80 to-[#050811]/90 border border-slate-900 hover:border-slate-800/80 transition-all duration-350 shadow-md relative overflow-hidden group flex flex-col justify-between">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Upcoming Kick-off</p>
+              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                Upcoming Kick-off
+              </p>
               {myConfirmed.length > 0 && myConfirmed[0].slot?.date ? (
                 <div className="mt-2 space-y-1">
-                  <h4 className="text-sm font-black text-white truncate">{myConfirmed[0].turf?.name}</h4>
+                  <h4 className="text-sm font-black text-white truncate">
+                    {myConfirmed[0].turf?.name}
+                  </h4>
                   <p className="text-[9.5px] text-emerald-400 font-extrabold flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" />
-                    {new Date(myConfirmed[0].slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {myConfirmed[0].slot.startTime}
+                    {new Date(myConfirmed[0].slot.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}{' '}
+                    at {myConfirmed[0].slot.startTime}
                   </p>
                 </div>
               ) : (
                 <div className="mt-2 space-y-1">
                   <h4 className="text-sm font-bold text-slate-400">No slots booked</h4>
-                  <Link href="/turfs" className="text-[9px] text-emerald-400 font-black uppercase hover:underline flex items-center gap-1">
+                  <Link
+                    href="/turfs"
+                    className="text-[9px] text-emerald-400 font-black uppercase hover:underline flex items-center gap-1"
+                  >
                     Find active turfs <ArrowRight className="h-3 w-3" />
                   </Link>
                 </div>
               )}
             </div>
-
           </div>
         )}
 
         {/* --- MAIN INTERFACE WORKSPACE (TABS) --- */}
         {isAdmin ? (
           <div className="space-y-6">
-            
             {/* View Selector Tabs (Premium Minimalist Deck) */}
             <div className="flex border-b border-slate-900/60 pb-px gap-4">
               <button
                 onClick={() => setActiveTab('analytics')}
                 className={`pb-3.5 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'analytics' ? 'border-emerald-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-350'
+                  activeTab === 'analytics'
+                    ? 'border-emerald-500 text-white'
+                    : 'border-transparent text-slate-500 hover:text-slate-350'
                 }`}
               >
                 Analytics & Charts
@@ -497,7 +583,9 @@ export default function DashboardPage() {
               <button
                 onClick={() => setActiveTab('bookings')}
                 className={`pb-3.5 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'bookings' ? 'border-emerald-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-350'
+                  activeTab === 'bookings'
+                    ? 'border-emerald-500 text-white'
+                    : 'border-transparent text-slate-500 hover:text-slate-350'
                 }`}
               >
                 All Bookings List
@@ -505,7 +593,9 @@ export default function DashboardPage() {
               <button
                 onClick={() => setActiveTab('turfs')}
                 className={`pb-3.5 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all cursor-pointer ${
-                  activeTab === 'turfs' ? 'border-emerald-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-350'
+                  activeTab === 'turfs'
+                    ? 'border-emerald-500 text-white'
+                    : 'border-transparent text-slate-500 hover:text-slate-350'
                 }`}
               >
                 Turf Venues
@@ -523,33 +613,63 @@ export default function DashboardPage() {
                   className="space-y-6"
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
                     {/* Area Chart: Revenue Trend */}
                     <div className="lg:col-span-2 p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-black text-white uppercase tracking-wider">Revenue Trendline</h3>
-                        <span className="text-[9px] font-black text-slate-500 uppercase">Last 8 Confirmed Sales</span>
+                        <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                          Revenue Trendline
+                        </h3>
+                        <span className="text-[9px] font-black text-slate-500 uppercase">
+                          Last 8 Confirmed Sales
+                        </span>
                       </div>
-                      
-                      <div ref={revenueChartRef} className="h-64 w-full relative flex items-center justify-center">
+
+                      <div
+                        ref={revenueChartRef}
+                        className="h-64 w-full relative flex items-center justify-center"
+                      >
                         {revenueChartWidth > 0 ? (
                           revenueTrendData.length > 0 ? (
-                            <AreaChart width={revenueChartWidth} height={256} data={revenueTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <AreaChart
+                              width={revenueChartWidth}
+                              height={256}
+                              data={revenueTrendData}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
                               <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
-                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                 </linearGradient>
                               </defs>
                               <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
                               <XAxis dataKey="name" stroke="#475569" fontSize={9} />
                               <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip 
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
-                                labelStyle={{ color: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }}
-                                itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: '#070c18',
+                                  border: '1px solid #1e293b',
+                                  borderRadius: '12px',
+                                }}
+                                labelStyle={{
+                                  color: '#94a3b8',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                }}
+                                itemStyle={{
+                                  color: '#10b981',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                }}
                               />
-                              <Area type="monotone" dataKey="Revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                              <Area
+                                type="monotone"
+                                dataKey="Revenue"
+                                stroke="#10b981"
+                                strokeWidth={2}
+                                fillOpacity={1}
+                                fill="url(#colorRevenue)"
+                              />
                             </AreaChart>
                           ) : (
                             <div className="text-xs text-slate-550 uppercase tracking-widest font-black">
@@ -564,9 +684,14 @@ export default function DashboardPage() {
 
                     {/* Donut Chart: Status Share */}
                     <div className="p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-4 flex flex-col justify-between">
-                      <h3 className="text-xs font-black text-white uppercase tracking-wider">Booking Status Share</h3>
-                      
-                      <div ref={statusChartRef} className="h-44 w-full relative flex justify-center items-center">
+                      <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                        Booking Status Share
+                      </h3>
+
+                      <div
+                        ref={statusChartRef}
+                        className="h-44 w-full relative flex justify-center items-center"
+                      >
                         {statusChartWidth > 0 ? (
                           statusPieData.length > 0 ? (
                             <PieChart width={statusChartWidth} height={176}>
@@ -584,7 +709,11 @@ export default function DashboardPage() {
                                 ))}
                               </Pie>
                               <Tooltip
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '8px' }}
+                                contentStyle={{
+                                  backgroundColor: '#070c18',
+                                  border: '1px solid #1e293b',
+                                  borderRadius: '8px',
+                                }}
                                 itemStyle={{ fontSize: '10px', fontWeight: 'bold' }}
                               />
                             </PieChart>
@@ -600,9 +729,15 @@ export default function DashboardPage() {
 
                       <div className="space-y-1.5 mt-2">
                         {statusPieData.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-[9px] font-bold text-slate-400 px-3 py-2 bg-slate-950/40 rounded-xl border border-slate-900/60">
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-[9px] font-bold text-slate-400 px-3 py-2 bg-slate-950/40 rounded-xl border border-slate-900/60"
+                          >
                             <div className="flex items-center gap-1.5">
-                              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: item.color }} />
+                              <span
+                                className="h-1.5 w-1.5 rounded-full animate-pulse"
+                                style={{ backgroundColor: item.color }}
+                              />
                               <span>{item.name}</span>
                             </div>
                             <span className="text-white font-extrabold">{item.value}</span>
@@ -613,18 +748,31 @@ export default function DashboardPage() {
 
                     {/* Bar Chart: Sport popularity */}
                     <div className="lg:col-span-3 p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-4">
-                      <h3 className="text-xs font-black text-white uppercase tracking-wider">Sport Popularity Distribution</h3>
-                      
-                      <div ref={sportsChartRef} className="h-56 w-full relative flex items-center justify-center">
+                      <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                        Sport Popularity Distribution
+                      </h3>
+
+                      <div
+                        ref={sportsChartRef}
+                        className="h-56 w-full relative flex items-center justify-center"
+                      >
                         {sportsChartWidth > 0 ? (
                           sportChartData.length > 0 ? (
                             <BarChart width={sportsChartWidth} height={224} data={sportChartData}>
                               <CartesianGrid stroke="#0b101c" strokeDasharray="3 3" />
                               <XAxis dataKey="name" stroke="#475569" fontSize={9} />
                               <YAxis stroke="#475569" fontSize={9} />
-                              <Tooltip 
-                                contentStyle={{ backgroundColor: '#070c18', border: '1px solid #1e293b', borderRadius: '12px' }}
-                                itemStyle={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: '#070c18',
+                                  border: '1px solid #1e293b',
+                                  borderRadius: '12px',
+                                }}
+                                itemStyle={{
+                                  color: '#10b981',
+                                  fontSize: '11px',
+                                  fontWeight: 'bold',
+                                }}
                               />
                               <Bar dataKey="Arenas" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                             </BarChart>
@@ -638,7 +786,6 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-
                   </div>
                 </motion.div>
               )}
@@ -652,7 +799,6 @@ export default function DashboardPage() {
                   transition={{ duration: 0.25 }}
                   className="p-6 rounded-2xl bg-[#060a16] border border-slate-900 shadow-xl space-y-6"
                 >
-                  
                   {/* Search and Filters Deck */}
                   <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-slate-900 pb-5">
                     <div className="relative w-full md:max-w-xs">
@@ -672,7 +818,7 @@ export default function DashboardPage() {
                           key={status}
                           onClick={() => setStatusFilter(status)}
                           className={`h-9 px-4 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                            statusFilter === status 
+                            statusFilter === status
                               ? 'bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 shadow-sm'
                               : 'bg-slate-950/40 border border-slate-900 text-slate-400 hover:text-white'
                           }`}
@@ -694,39 +840,61 @@ export default function DashboardPage() {
                           <th className="pb-3 pr-2">Schedule</th>
                           <th className="pb-3 pr-2">Total Amount</th>
                           <th className="pb-3 text-right">Status</th>
+                          <th className="pb-3 text-right pr-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-900/40">
                         {filteredBookings.length > 0 ? (
                           filteredBookings.map((booking, index) => {
                             const dateStr = booking.slot?.date
-                              ? new Date(booking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                              ? new Date(booking.slot.date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })
                               : 'Confirmed Date';
                             const initials = booking.user?.name ? booking.user.name.charAt(0) : 'U';
                             const gradient = avatarGradients[index % avatarGradients.length];
 
                             return (
-                              <tr key={booking.id} className="hover:bg-[#090f1f]/35 transition-colors group">
-                                <td className="py-4 pr-2 font-mono text-slate-600">#{booking.id.slice(0, 8)}</td>
+                              <tr
+                                key={booking.id}
+                                className="hover:bg-[#090f1f]/35 transition-colors group"
+                              >
+                                <td className="py-4 pr-2 font-mono text-slate-600">
+                                  #{booking.id.slice(0, 8)}
+                                </td>
                                 <td className="py-4 pr-2">
                                   <div className="flex items-center gap-3">
-                                    <div className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-[10px] font-black text-white shadow-md uppercase`}>
+                                    <div
+                                      className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-[10px] font-black text-white shadow-md uppercase`}
+                                    >
                                       {initials}
                                     </div>
                                     <div>
                                       <div className="text-white font-black text-xs group-hover:text-emerald-400 transition-colors">
                                         {booking.user?.name || 'Guest User'}
                                       </div>
-                                      <div className="text-[8.5px] text-slate-500 mt-0.5">{booking.user?.phone || 'No Contact'}</div>
+                                      <div className="text-[8.5px] text-slate-500 mt-0.5">
+                                        {booking.user?.phone || 'No Contact'}
+                                      </div>
                                     </div>
                                   </div>
                                 </td>
-                                <td className="py-4 pr-2 text-white font-black">{booking.turf?.name || 'Sports Arena'}</td>
+                                <td className="py-4 pr-2 text-white font-black">
+                                  {booking.turf?.name || 'Sports Arena'}
+                                </td>
                                 <td className="py-4 pr-2">
                                   <div>{dateStr}</div>
-                                  <div className="text-[9px] text-emerald-400 mt-0.5">{booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time Slot'}</div>
+                                  <div className="text-[9px] text-emerald-400 mt-0.5">
+                                    {booking.slot
+                                      ? `${booking.slot.startTime} - ${booking.slot.endTime}`
+                                      : 'Time Slot'}
+                                  </div>
                                 </td>
-                                <td className="py-4 pr-2 text-white font-extrabold">৳{booking.totalAmount}</td>
+                                <td className="py-4 pr-2 text-white font-extrabold">
+                                  ৳{booking.totalAmount}
+                                </td>
                                 <td className="py-4 text-right">
                                   {booking.status === 'CONFIRMED' ? (
                                     <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full">
@@ -742,12 +910,63 @@ export default function DashboardPage() {
                                     </span>
                                   )}
                                 </td>
+                                <td className="py-4 text-right pr-2">
+                                  <div className="flex justify-end gap-1.5">
+                                    {booking.status !== 'CANCELLED' && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (
+                                            window.confirm(
+                                              'Are you sure you want to cancel this booking?'
+                                            )
+                                          ) {
+                                            cancelBookingMutation.mutate(booking.id);
+                                          }
+                                        }}
+                                        disabled={cancelBookingMutation.isPending}
+                                        className="text-[9px] font-black uppercase tracking-wider text-rose-400 border border-rose-500/20 hover:border-rose-500/60 hover:bg-rose-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                      >
+                                        Cancel
+                                      </button>
+                                    )}
+                                    {booking.status === 'CANCELLED' &&
+                                      booking.payment?.status === 'PAID' && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (
+                                              window.confirm(
+                                                'Are you sure you want to refund this booking payment?'
+                                              )
+                                            ) {
+                                              refundPaymentMutation.mutate(booking.id);
+                                            }
+                                          }}
+                                          disabled={refundPaymentMutation.isPending}
+                                          className="text-[9px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/20 hover:border-amber-500/60 hover:bg-amber-950/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer disabled:opacity-50"
+                                        >
+                                          Refund
+                                        </button>
+                                      )}
+                                    {booking.payment?.status === 'REFUNDED' && (
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 bg-slate-900/50 px-2.5 py-1 rounded-lg border border-slate-800">
+                                        Refunded
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
                               </tr>
                             );
                           })
                         ) : (
                           <tr>
-                            <td colSpan={6} className="py-12 text-center text-slate-600 uppercase tracking-widest text-[9px] font-black">
+                            <td
+                              colSpan={7}
+                              className="py-12 text-center text-slate-600 uppercase tracking-widest text-[9px] font-black"
+                            >
                               No bookings matching filter criteria
                             </td>
                           </tr>
@@ -755,7 +974,6 @@ export default function DashboardPage() {
                       </tbody>
                     </table>
                   </div>
-
                 </motion.div>
               )}
 
@@ -768,7 +986,6 @@ export default function DashboardPage() {
                   transition={{ duration: 0.25 }}
                   className="space-y-4"
                 >
-                  
                   {/* Turf Registry Command center grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {turfsData?.data && turfsData.data.length > 0 ? (
@@ -798,8 +1015,12 @@ export default function DashboardPage() {
 
                             <div className="flex justify-between items-center border-t border-slate-900/60 pt-3 mt-3">
                               <div>
-                                <span className="text-[7.5px] font-black text-slate-650 uppercase tracking-widest block leading-none">Price per hour</span>
-                                <span className="text-white font-black text-xs mt-1 block">৳{turf.pricePerHour}</span>
+                                <span className="text-[7.5px] font-black text-slate-650 uppercase tracking-widest block leading-none">
+                                  Price per hour
+                                </span>
+                                <span className="text-white font-black text-xs mt-1 block">
+                                  ৳{turf.pricePerHour}
+                                </span>
                               </div>
 
                               <Link
@@ -822,7 +1043,6 @@ export default function DashboardPage() {
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
         ) : (
           /* REGULAR PLAYER VIEW (ACTIVE RESERVATIONS SUMMARY) */
@@ -852,24 +1072,28 @@ export default function DashboardPage() {
                   >
                     <CloseIcon />
                   </motion.button>
-                  
+
                   <motion.div
                     layoutId={`card-${activeBooking.id}-${activeBookingId}`}
                     ref={activeBookingRef}
                     className="w-full max-w-[500px] h-fit max-h-[90vh] flex flex-col bg-[#070c18] border border-slate-900 rounded-3xl overflow-hidden shadow-2xl"
                   >
                     {/* Card Image */}
-                    <motion.div layoutId={`image-${activeBooking.id}-${activeBookingId}`} className="relative h-64 w-full">
+                    <motion.div
+                      layoutId={`image-${activeBooking.id}-${activeBookingId}`}
+                      className="relative h-64 w-full"
+                    >
                       <img
                         src={
-                          turfsData?.data?.find(t => t.id === activeBooking.turfId)?.images?.[0] || 
+                          turfsData?.data?.find((t) => t.id === activeBooking.turfId)
+                            ?.images?.[0] ||
                           'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?q=80&w=600&auto=format&fit=crop'
                         }
                         alt={activeBooking.turf?.name}
                         className="w-full h-full object-cover object-center"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#070c18] via-transparent to-black/30" />
-                      
+
                       {/* Status Badge in Image overlay */}
                       <div className="absolute bottom-4 left-4">
                         {activeBooking.status === 'CONFIRMED' ? (
@@ -927,38 +1151,89 @@ export default function DashboardPage() {
                         >
                           <div className="grid grid-cols-2 gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-900">
                             <div>
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Reference ID</span>
-                              <span className="text-white font-mono font-bold mt-1 block">#{activeBooking.id.slice(0, 8)}</span>
-                            </div>
-                            <div>
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Payment status</span>
-                              <span className="text-emerald-400 font-bold mt-1 block uppercase">{activeBooking.payment?.status || 'PAID'}</span>
-                            </div>
-                            <div>
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Time Slot</span>
-                              <span className="text-white font-bold mt-1 block flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5 text-emerald-400" />
-                                {activeBooking.slot ? `${activeBooking.slot.startTime} - ${activeBooking.slot.endTime}` : 'N/A'}
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                                Reference ID
+                              </span>
+                              <span className="text-white font-mono font-bold mt-1 block">
+                                #{activeBooking.id.slice(0, 8)}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Reservation Date</span>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                                Payment status
+                              </span>
+                              <span className="text-emerald-400 font-bold mt-1 block uppercase">
+                                {activeBooking.payment?.status || 'PAID'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                                Time Slot
+                              </span>
+                              <span className="text-white font-bold mt-1 block flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5 text-emerald-400" />
+                                {activeBooking.slot
+                                  ? `${activeBooking.slot.startTime} - ${activeBooking.slot.endTime}`
+                                  : 'N/A'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">
+                                Reservation Date
+                              </span>
                               <span className="text-white font-bold mt-1 block flex items-center gap-1">
                                 <Calendar className="h-3.5 w-3.5 text-emerald-400" />
-                                {activeBooking.slot?.date ? new Date(activeBooking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                                {activeBooking.slot?.date
+                                  ? new Date(activeBooking.slot.date).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    })
+                                  : 'N/A'}
                               </span>
                             </div>
                           </div>
 
                           <div className="flex justify-between items-center bg-slate-950/40 px-4 py-3 rounded-2xl border border-slate-900">
-                            <span className="text-[10px] font-bold text-slate-300">Total Charged Amount</span>
-                            <span className="text-white font-black text-sm">৳{activeBooking.totalAmount}</span>
+                            <span className="text-[10px] font-bold text-slate-300">
+                              Total Charged Amount
+                            </span>
+                            <span className="text-white font-black text-sm">
+                              ৳{activeBooking.totalAmount}
+                            </span>
                           </div>
 
                           {activeBooking.notes && (
                             <div className="bg-slate-950/20 p-3.5 rounded-2xl border border-slate-900/60">
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Booking Notes</span>
-                              <p className="text-slate-350 italic">"{activeBooking.notes}"</p>
+                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                                Booking Notes
+                              </span>
+                              <p className="text-slate-350 italic">
+                                &quot;{activeBooking.notes}&quot;
+                              </p>
+                            </div>
+                          )}
+
+                          {activeBooking.status !== 'CANCELLED' && (
+                            <div className="pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      'Are you sure you want to cancel this reservation?'
+                                    )
+                                  ) {
+                                    cancelBookingMutation.mutate(activeBooking.id);
+                                  }
+                                }}
+                                disabled={cancelBookingMutation.isPending}
+                                className="w-full h-11 bg-rose-950/20 hover:bg-rose-900/30 border border-rose-500/20 hover:border-rose-500/50 text-rose-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                              >
+                                {cancelBookingMutation.isPending
+                                  ? 'Cancelling...'
+                                  : 'Cancel Reservation'}
+                              </button>
                             </div>
                           )}
                         </motion.div>
@@ -971,19 +1246,25 @@ export default function DashboardPage() {
 
             <div className="p-6 rounded-2xl bg-gradient-to-br from-[#060a16] to-[#04060f] border border-slate-900 shadow-xl space-y-6">
               <div className="flex justify-between items-center border-b border-slate-900/60 pb-4">
-                <h3 className="text-xs font-black text-white uppercase tracking-wider">Your Games Log</h3>
-                <span className="text-[9px] font-black text-slate-500 uppercase">{myBookingsList.length} Reservations</span>
+                <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                  Your Games Log
+                </h3>
+                <span className="text-[9px] font-black text-slate-500 uppercase">
+                  {myBookingsList.length} Reservations
+                </span>
               </div>
 
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                 {myBookingsList.length > 0 ? (
                   myBookingsList.map((booking) => {
                     const dateStr = booking.slot?.date
-                      ? new Date(booking.slot.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      ? new Date(booking.slot.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
                       : 'Confirmed Date';
-                    const isPending = booking.status === 'PENDING';
-                    const isConfirmed = booking.status === 'CONFIRMED';
-                    const turfDetails = turfsData?.data?.find(t => t.id === booking.turfId);
+                    const turfDetails = turfsData?.data?.find((t) => t.id === booking.turfId);
 
                     return (
                       <motion.div
@@ -1011,7 +1292,7 @@ export default function DashboardPage() {
                               className="h-16 w-16 md:h-14 md:w-14 rounded-lg object-cover object-center shadow-md border border-slate-900 group-hover:border-slate-800 transition-all"
                             />
                           </motion.div>
-                          
+
                           <div className="text-center md:text-left space-y-1">
                             <motion.h3
                               layoutId={`title-${booking.id}-${activeBookingId}`}
@@ -1019,7 +1300,7 @@ export default function DashboardPage() {
                             >
                               {booking.turf?.name || 'Sports Arena'}
                             </motion.h3>
-                            
+
                             <motion.div
                               layoutId={`description-${booking.id}-${activeBookingId}`}
                               className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 text-[9px] font-semibold text-slate-500"
@@ -1030,7 +1311,9 @@ export default function DashboardPage() {
                               </span>
                               <span className="flex items-center gap-1 text-slate-400">
                                 <Clock className="h-3.5 w-3.5 text-emerald-455" />
-                                {booking.slot ? `${booking.slot.startTime} - ${booking.slot.endTime}` : 'Time'}
+                                {booking.slot
+                                  ? `${booking.slot.startTime} - ${booking.slot.endTime}`
+                                  : 'Time'}
                               </span>
                             </motion.div>
                           </div>
@@ -1038,8 +1321,12 @@ export default function DashboardPage() {
 
                         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
                           <div className="text-left md:text-right">
-                            <span className="text-[7.5px] font-black text-slate-655 uppercase tracking-widest block leading-none">Total Cost</span>
-                            <span className="text-white font-extrabold text-xs mt-1 block">৳{booking.totalAmount}</span>
+                            <span className="text-[7.5px] font-black text-slate-655 uppercase tracking-widest block leading-none">
+                              Total Cost
+                            </span>
+                            <span className="text-white font-extrabold text-xs mt-1 block">
+                              ৳{booking.totalAmount}
+                            </span>
                           </div>
 
                           <motion.button
@@ -1057,8 +1344,13 @@ export default function DashboardPage() {
                     <div className="h-12 w-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
                       <Calendar className="h-6 w-6" />
                     </div>
-                    <h3 className="text-xs font-black text-slate-450 uppercase tracking-wider">No Reservations Yet</h3>
-                    <Link href="/turfs" className="text-[9.5px] font-black uppercase text-emerald-400 hover:underline">
+                    <h3 className="text-xs font-black text-slate-450 uppercase tracking-wider">
+                      No Reservations Yet
+                    </h3>
+                    <Link
+                      href="/turfs"
+                      className="text-[9.5px] font-black uppercase text-emerald-400 hover:underline"
+                    >
                       Book your first sports slot now →
                     </Link>
                   </div>
@@ -1067,7 +1359,6 @@ export default function DashboardPage() {
             </div>
           </>
         )}
-
       </div>
     </div>
   );
