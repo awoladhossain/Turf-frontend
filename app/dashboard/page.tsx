@@ -9,7 +9,7 @@ import paymentService from '@/services/payment.service';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import React, { useEffect, useState, useRef, useCallback, useId } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useId, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOutsideClick } from '@/hooks/use-outside-click';
@@ -134,11 +134,15 @@ interface CustomTooltipProps {
 const CustomRevenueTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none border-emerald-500/10">
-        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px] border-emerald-500/10">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
           {label}
-        </p>
-        <p className="text-xs font-black text-emerald-400">৳{payload[0].value.toLocaleString()}</p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="text-slate-350">Revenue:</span>
+          <span className="ml-auto text-emerald-400">৳{payload[0].value.toLocaleString()}</span>
+        </div>
       </div>
     );
   }
@@ -149,16 +153,17 @@ const CustomPieTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none">
-        <p
-          className="text-[9px] font-black uppercase tracking-widest mb-1.5"
-          style={{ color: data.color }}
-        >
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px]">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
           {data.name}
-        </p>
-        <p className="text-xs font-black text-white">
-          {data.value} {data.value === 1 ? 'Booking' : 'Bookings'}
-        </p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: data.color }} />
+          <span className="text-slate-350">Bookings:</span>
+          <span className="ml-auto" style={{ color: data.color }}>
+            {data.value}
+          </span>
+        </div>
       </div>
     );
   }
@@ -168,13 +173,15 @@ const CustomPieTooltip = ({ active, payload }: CustomTooltipProps) => {
 const CustomBarTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#0b1324]/95 backdrop-blur-md border border-slate-800/80 p-3.5 rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.7)] leading-none border-indigo-500/10">
-        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">
+      <div className="rounded-xl border border-slate-800/80 bg-[#070c19]/95 backdrop-blur-md p-3 text-xs shadow-2xl min-w-[130px] border-indigo-500/10">
+        <div className="font-semibold text-slate-400 mb-1 text-[10px] uppercase tracking-wider">
           {label}
-        </p>
-        <p className="text-xs font-black text-indigo-400">
-          {payload[0].value} {payload[0].value === 1 ? 'Arena' : 'Arenas'}
-        </p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1.5 font-bold text-white">
+          <div className="h-2 w-2 rounded-full bg-indigo-500" />
+          <span className="text-slate-350">Arenas:</span>
+          <span className="ml-auto text-indigo-400">{payload[0].value}</span>
+        </div>
       </div>
     );
   }
@@ -316,6 +323,61 @@ export default function DashboardPage() {
     refetchInterval: 15000, // refresh every 15s for high-tech telemetry feel
   });
 
+  const bookingsList = adminBookings?.data || [];
+
+  // --- CHART DATA GENERATION (ADMIN) ---
+  // Pad the last 8 calendar days relative to the latest booking date to ensure a beautiful continuous line
+  const revenueTrendData = useMemo(() => {
+    const revenueByDateMap: Record<string, number> = {};
+    const datesWithBookings: Date[] = [];
+
+    bookingsList.forEach((b) => {
+      if (b.status === 'CONFIRMED' && b.slot?.date) {
+        const d = new Date(b.slot.date);
+        d.setHours(0, 0, 0, 0);
+        datesWithBookings.push(d);
+
+        const dateStr = d.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        revenueByDateMap[dateStr] = (revenueByDateMap[dateStr] || 0) + Number(b.totalAmount);
+      }
+    });
+
+    if (datesWithBookings.length === 0) {
+      const fallback: Array<{ name: string; Revenue: number }> = [];
+      for (let i = 7; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        fallback.push({
+          name: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          Revenue: 0,
+        });
+      }
+      return fallback;
+    }
+
+    const maxDate = new Date(Math.max(...datesWithBookings.map((d) => d.getTime())));
+    maxDate.setHours(0, 0, 0, 0);
+
+    const finalDataMap: Record<string, number> = {};
+    for (let i = 7; i >= 0; i--) {
+      const targetDate = new Date(maxDate);
+      targetDate.setDate(targetDate.getDate() - i);
+      const dateStr = targetDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      finalDataMap[dateStr] = revenueByDateMap[dateStr] || 0;
+    }
+
+    return Object.entries(finalDataMap).map(([date, revenue]) => ({
+      name: date,
+      Revenue: revenue,
+    }));
+  }, [bookingsList]);
+
   if (
     !mounted ||
     isFetchingMe ||
@@ -338,7 +400,6 @@ export default function DashboardPage() {
   if (!isAuthenticated || !user) return null;
 
   // --- STATS CALCULATIONS (ADMIN) ---
-  const bookingsList = adminBookings?.data || [];
   const totalBookingsCount = adminBookings?.meta?.total || bookingsList.length;
 
   const confirmedBookings = bookingsList.filter((b) => b.status === 'CONFIRMED');
@@ -364,25 +425,6 @@ export default function DashboardPage() {
   const myBookingsList = userBookings?.data || [];
   const myConfirmed = myBookingsList.filter((b) => b.status === 'CONFIRMED');
   const myTotalSpent = myConfirmed.reduce((sum, b) => sum + Number(b.totalAmount), 0);
-
-  const revenueByDate: Record<string, number> = {};
-  bookingsList.forEach((b) => {
-    if (b.status === 'CONFIRMED' && b.slot?.date) {
-      const dateStr = new Date(b.slot.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      });
-      revenueByDate[dateStr] = (revenueByDate[dateStr] || 0) + Number(b.totalAmount);
-    }
-  });
-
-  const revenueTrendData = Object.entries(revenueByDate)
-    .map(([date, revenue]) => ({
-      name: date,
-      Revenue: revenue,
-    }))
-    .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime())
-    .slice(-8);
 
   const statusPieData = [
     { name: 'Confirmed', value: confirmedBookings.length, color: '#10b981' },
@@ -725,7 +767,7 @@ export default function DashboardPage() {
                               width={revenueChartWidth}
                               height={256}
                               data={revenueTrendData}
-                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
                             >
                               <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -740,16 +782,21 @@ export default function DashboardPage() {
                               />
                               <XAxis
                                 dataKey="name"
-                                stroke="#475569"
+                                stroke="#64748b"
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
+                                dy={10}
                               />
                               <YAxis
-                                stroke="#475569"
+                                stroke="#64748b"
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
+                                tickFormatter={(val) =>
+                                  val >= 1000 ? `৳${(val / 1000).toFixed(0)}k` : `৳${val}`
+                                }
+                                dx={-5}
                               />
                               <Tooltip content={<CustomRevenueTooltip />} />
                               <Area
@@ -768,7 +815,7 @@ export default function DashboardPage() {
                               />
                             </AreaChart>
                           ) : (
-                            <div className="text-xs text-slate-550 uppercase tracking-widest font-black">
+                            <div className="text-xs text-slate-555 uppercase tracking-widest font-black">
                               No Sales Logged
                             </div>
                           )
@@ -792,11 +839,14 @@ export default function DashboardPage() {
                           statusPieData.length > 0 ? (
                             <>
                               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">
+                                <span className="text-[10px] font-semibold text-slate-450 uppercase tracking-widest leading-none mb-1.5">
                                   Total
                                 </span>
-                                <span className="text-xl font-black text-white leading-none">
+                                <span className="text-3xl font-extrabold text-white leading-none tracking-tight">
                                   {statusPieData.reduce((acc, curr) => acc + curr.value, 0)}
+                                </span>
+                                <span className="text-[9px] text-slate-555 mt-1 uppercase font-semibold tracking-wider">
+                                  Bookings
                                 </span>
                               </div>
                               <PieChart width={statusChartWidth} height={176}>
@@ -804,8 +854,8 @@ export default function DashboardPage() {
                                   data={statusPieData}
                                   cx="50%"
                                   cy="50%"
-                                  innerRadius={48}
-                                  outerRadius={62}
+                                  innerRadius={52}
+                                  outerRadius={68}
                                   paddingAngle={6}
                                   dataKey="value"
                                 >
@@ -865,8 +915,8 @@ export default function DashboardPage() {
                             <BarChart width={sportsChartWidth} height={224} data={sportChartData}>
                               <defs>
                                 <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.95} />
-                                  <stop offset="100%" stopColor="#a855f7" stopOpacity={0.95} />
+                                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.9} />
+                                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.9} />
                                 </linearGradient>
                               </defs>
                               <CartesianGrid
@@ -876,23 +926,26 @@ export default function DashboardPage() {
                               />
                               <XAxis
                                 dataKey="name"
-                                stroke="#475569"
+                                stroke="#64748b"
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
+                                dy={10}
                               />
                               <YAxis
-                                stroke="#475569"
+                                stroke="#64748b"
                                 fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
+                                allowDecimals={false}
+                                dx={-5}
                               />
                               <Tooltip content={<CustomBarTooltip />} />
                               <Bar
                                 dataKey="Arenas"
                                 fill="url(#colorBar)"
-                                barSize={40}
-                                radius={[10, 10, 0, 0]}
+                                barSize={24}
+                                radius={[6, 6, 0, 0]}
                               />
                             </BarChart>
                           ) : (
