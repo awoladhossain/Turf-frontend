@@ -16,7 +16,9 @@ export function useAuth() {
   const router = useRouter();
 
   // 1. Redux from Auth State
-  const { user, isAuthenticated, accessToken, refreshToken } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, accessToken, refreshToken } = useAppSelector(
+    (state) => state.auth
+  );
 
   // 2. TanStack Query: GET ME (Auto-sync fresh profile details on mount/refresh)
   const {
@@ -107,6 +109,20 @@ export function useAuth() {
     router.push('/login');
   };
 
+  // 7. LOGOUT ALL Devices Action
+  const logoutAllMutation = useMutation({
+    mutationFn: () => authService.logoutAll(),
+    onSuccess: () => {
+      dispatch(logoutAction());
+      toast.success('Logged out from all devices successfully! 🔒');
+      router.push('/login');
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message = error?.response?.data?.message || 'Failed to logout from all devices.';
+      toast.error(message);
+    },
+  });
+
   return {
     // Auth States
     user,
@@ -132,5 +148,9 @@ export function useAuth() {
 
     // Logout Action
     logout,
+
+    // Logout All Action
+    logoutAll: logoutAllMutation.mutate,
+    isLoggingOutAll: logoutAllMutation.isPending,
   };
 }

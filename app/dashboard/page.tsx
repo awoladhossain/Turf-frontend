@@ -330,6 +330,8 @@ export default function DashboardPage() {
     healthData?.info?.database?.status === 'up' || healthData?.details?.database?.status === 'up';
   const redisUp =
     healthData?.info?.redis?.status === 'up' || healthData?.details?.redis?.status === 'up';
+  const bullUp =
+    healthData?.info?.bull?.status === 'up' || healthData?.details?.bull?.status === 'up';
 
   // Avatar Gradient list
   const avatarGradients = [
@@ -462,31 +464,45 @@ export default function DashboardPage() {
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
                     <Database
-                      className={`h-4 w-4 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                      className={`h-3.5 w-3.5 ${dbUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
                     />
-                    <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
                         Database
                       </span>
-                      <span className="text-[9px] font-bold text-white uppercase">
+                      <span className="text-[8px] font-bold text-white uppercase">
                         {dbUp ? 'ONLINE' : 'OFFLINE'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900">
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
                     <Server
-                      className={`h-4 w-4 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                      className={`h-3.5 w-3.5 ${redisUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
                     />
-                    <div className="leading-none">
-                      <span className="text-[7.5px] font-black text-slate-500 uppercase block">
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
                         Redis
                       </span>
-                      <span className="text-[9px] font-bold text-white uppercase">
+                      <span className="text-[8px] font-bold text-white uppercase">
                         {redisUp ? 'ACTIVE' : 'OFFLINE'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-950/40 p-2 rounded-xl border border-slate-900">
+                    <Activity
+                      className={`h-3.5 w-3.5 ${bullUp ? 'text-emerald-400' : 'text-rose-500 animate-pulse'}`}
+                    />
+                    <div className="leading-none min-w-0">
+                      <span className="text-[7px] font-black text-slate-500 uppercase block truncate">
+                        Bull Queue
+                      </span>
+                      <span className="text-[8px] font-bold text-white uppercase">
+                        {bullUp ? 'ACTIVE' : 'OFFLINE'}
                       </span>
                     </div>
                   </div>
