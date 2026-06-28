@@ -39,7 +39,7 @@ export default function LoginPage() {
       {
         opacity: 0,
         y: 15,
-      },
+      }
     );
 
     // Select form items (inputs, remember row, login button)
@@ -57,7 +57,7 @@ export default function LoginPage() {
     tl.to(
       brandLogoRef.current,
       { opacity: 1, scale: 1, rotate: 0, duration: 0.8, ease: 'back.out(1.6)' },
-      '-=0.8',
+      '-=0.8'
     );
 
     // Header reveal
@@ -80,7 +80,7 @@ export default function LoginPage() {
           duration: 0.7,
           ease: 'power3.out',
         },
-        '-=0.3',
+        '-=0.3'
       );
     }
 
@@ -98,8 +98,6 @@ export default function LoginPage() {
       ease: 'sine.inOut',
     });
   }, []);
-;
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     login({ email, password });
@@ -265,8 +263,8 @@ export default function LoginPage() {
               Remember me
             </label>
             <Link
-              href="#"
-              className="text-emerald-400 hover:text-emerald-350 transition-colors duration-300"
+              href="/forgot-password"
+              className="text-emerald-400 hover:text-emerald-355 transition-colors duration-300"
             >
               Forgot password?
             </Link>

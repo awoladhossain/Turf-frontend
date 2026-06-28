@@ -1,5 +1,12 @@
 import api from './api';
-import { AuthResponse, LoginDto, RegisterDto, User, AuthTokens } from '@/types/auth.types';
+import {
+  AuthResponse,
+  LoginDto,
+  RegisterDto,
+  User,
+  AuthTokens,
+  ResetPasswordDto,
+} from '@/types/auth.types';
 
 class AuthService {
   async login(credentials: LoginDto): Promise<AuthResponse> {
@@ -36,8 +43,22 @@ class AuthService {
     const response = await api.post<{ message: string }>('/auth/logout-all');
     return response.data;
   }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/verify-email', { token });
+    return response.data;
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+  }
+
+  async resetPassword(payload: ResetPasswordDto): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/reset-password', payload);
+    return response.data;
+  }
 }
 
 const authService = new AuthService();
 export default authService;
-
