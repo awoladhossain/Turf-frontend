@@ -8,14 +8,25 @@ import gsap from 'gsap';
 import { Eye, EyeOff, HelpCircle, Lock, Mail, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
-  const { t } = useTranslation();
   const { login, isLoggingIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('turfbook_remembered_email');
+      if (savedEmail) {
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setEmail(savedEmail);
+        setRememberMe(true);
+        /* eslint-enable react-hooks/set-state-in-effect */
+      }
+    }
+  }, []);
 
   // Refs for GSAP animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
@@ -100,6 +111,11 @@ export default function LoginPage() {
   }, []);
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (rememberMe) {
+      localStorage.setItem('turfbook_remembered_email', email);
+    } else {
+      localStorage.removeItem('turfbook_remembered_email');
+    }
     login({ email, password });
   };
 
@@ -258,6 +274,8 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 text-slate-400 cursor-pointer select-none hover:text-slate-350 transition-colors duration-300">
               <input
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="accent-emerald-500 h-3.5 w-3.5 transition-all cursor-pointer rounded border-slate-800 bg-slate-950"
               />
               Remember me
