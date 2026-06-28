@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import Magnetic from '@/components/ui/Magnetic';
 import { useAuth } from '@/hooks/useAuth';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, Variants } from 'framer-motion';
 import {
   ChevronDown,
   Languages,
@@ -18,6 +18,53 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+const logoContainerVariants: Variants = {
+  initial: {},
+  hover: {
+    transition: {
+      staggerChildren: 0.03,
+    },
+  },
+};
+
+const logoBadgeVariants: Variants = {
+  initial: { scale: 1, rotate: 0 },
+  hover: {
+    scale: 1.1,
+    rotate: [0, -10, 15, -5, 0],
+    boxShadow: '0 0 15px rgba(16, 185, 129, 0.45)',
+    transition: {
+      duration: 0.5,
+      ease: 'easeInOut',
+    },
+  },
+};
+
+const logoRippleVariants: Variants = {
+  initial: { scale: 0.8, opacity: 0 },
+  hover: {
+    scale: [1, 1.45],
+    opacity: [0, 0.4, 0],
+    transition: {
+      duration: 0.9,
+      repeat: Infinity,
+      ease: 'easeOut',
+    },
+  },
+};
+
+const logoLetterVariants: Variants = {
+  initial: { y: 0, scale: 1 },
+  hover: {
+    y: [0, -3, 0],
+    scale: [1, 1.1, 1],
+    transition: {
+      duration: 0.35,
+      ease: 'easeOut',
+    },
+  },
+};
+
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname();
@@ -28,12 +75,19 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const wordTurf = Array.from('Turf');
+  const wordBook = Array.from('Book');
+
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMobileMenuOpen(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [pathname]);
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setMounted(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
     const handleScroll = () => {
       setScrolled(window.scrollY > 15);
     };
@@ -69,20 +123,46 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* --- Logo Section (Perfect Circular Glowing Badge) --- */}
         <Magnetic range={25} actionStrength={0.2}>
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group cursor-pointer"
-            data-cursor-text="HOME"
-          >
-            <div className="bg-gradient-to-br from-emerald-600 to-[#1e6b3e] p-2 rounded-full group-hover:rotate-6 transition-transform duration-350 shadow-sm shadow-emerald-950/50 border border-emerald-500/10 flex items-center justify-center">
-              <Trophy className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="text-base font-black tracking-tight text-white">
-              Turf
-              <span className="text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.25)]">
-                Book
+          <Link href="/" className="cursor-pointer select-none" data-cursor-text="HOME">
+            <motion.div
+              className="flex items-center gap-2.5 group"
+              initial="initial"
+              whileHover="hover"
+              variants={logoContainerVariants}
+            >
+              <motion.div
+                variants={logoBadgeVariants}
+                className="bg-gradient-to-br from-emerald-600 to-[#1e6b3e] p-2 rounded-full border border-emerald-500/10 flex items-center justify-center relative overflow-hidden shadow-sm shadow-emerald-950/50"
+              >
+                {/* Glowing Ripple Ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full border border-emerald-450 opacity-0"
+                  variants={logoRippleVariants}
+                />
+                <Trophy className="h-3.5 w-3.5 text-white relative z-10" />
+              </motion.div>
+
+              <span className="text-base font-black tracking-tight text-white flex items-center">
+                {wordTurf.map((char, i) => (
+                  <motion.span
+                    key={`turf-${i}`}
+                    variants={logoLetterVariants}
+                    className="inline-block origin-bottom"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+                {wordBook.map((char, i) => (
+                  <motion.span
+                    key={`book-${i}`}
+                    variants={logoLetterVariants}
+                    className="inline-block origin-bottom text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.25)]"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
               </span>
-            </span>
+            </motion.div>
           </Link>
         </Magnetic>
 
