@@ -30,3 +30,8 @@ export interface RegisterDto {
   phone: string;
   password: string;
 }
+
+export interface ResetPasswordDto {
+  token: string;
+  password: string;
+}

@@ -5,10 +5,29 @@ import { persistor, store } from '@/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout } from '@/store/slices/authSlice';
+import { getCookie } from '@/lib/cookies';
+
+function SessionManager({ children }: { children: React.ReactNode }) {
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const hasSessionCookie = getCookie('turfbook_session_active') === 'true';
+      if (!hasSessionCookie) {
+        dispatch(logout());
+      }
+    }
+  }, [isAuthenticated, dispatch]);
+
+  return <>{children}</>;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,42 +44,39 @@ export function Providers({ children }: { children: React.ReactNode }) {
             retry: 0,
           },
         },
-      }),
+      })
   );
 
   return (
     // ১. ThemeProvider কে সবার বাইরে নিয়ে আসুন
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       {/* ২. এরপর Redux Provider */}
       <Provider store={store}>
         {/* ৩. এরপর PersistGate */}
         <PersistGate loading={null} persistor={persistor}>
-          {/* ৪. সবার শেষে QueryClientProvider */}
-          <QueryClientProvider client={queryClient}>
-            {children}
-            
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                },
-                success: { duration: 3000 },
-                error: { duration: 5000 },
-              }}
-            />
+          <SessionManager>
+            {/* ৪. সবার শেষে QueryClientProvider */}
+            <QueryClientProvider client={queryClient}>
+              {children}
 
-            {process.env.NODE_ENV === 'development' && (
-              <ReactQueryDevtools initialIsOpen={false} />
-            )}
-          </QueryClientProvider>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                  },
+                  success: { duration: 3000 },
+                  error: { duration: 5000 },
+                }}
+              />
+
+              {process.env.NODE_ENV === 'development' && (
+                <ReactQueryDevtools initialIsOpen={false} />
+              )}
+            </QueryClientProvider>
+          </SessionManager>
         </PersistGate>
       </Provider>
     </ThemeProvider>

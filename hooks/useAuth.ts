@@ -3,13 +3,14 @@
 import authService from '@/services/auth.service';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { logout as logoutAction, setCredentials, updateUser } from '@/store/slices/authSlice';
-import { LoginDto, RegisterDto } from '@/types/auth.types';
+import { LoginDto, RegisterDto, ResetPasswordDto } from '@/types/auth.types';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import axios, { AxiosError } from 'axios';
 import { ApiError } from '@/types/api.types';
+import { setCookie, eraseCookie } from '@/lib/cookies';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
@@ -55,6 +56,12 @@ export function useAuth() {
     mutationFn: (credentials: LoginDto) => authService.login(credentials),
     onSuccess: (data) => {
       dispatch(setCredentials(data));
+      const isRemembered = localStorage.getItem('turfbook_remember_session') === 'true';
+      if (isRemembered) {
+        setCookie('turfbook_session_active', 'true', 30);
+      } else {
+        setCookie('turfbook_session_active', 'true');
+      }
       toast.success('Successfully logged in! ⚽');
       const redirectPath =
         typeof window !== 'undefined'
@@ -73,6 +80,7 @@ export function useAuth() {
     mutationFn: (userData: RegisterDto) => authService.register(userData),
     onSuccess: (data) => {
       dispatch(setCredentials(data));
+      setCookie('turfbook_session_active', 'true', 30);
       toast.success('Account created successfully! 🏆');
       router.push('/');
     },
@@ -99,14 +107,26 @@ export function useAuth() {
 
   // 6. LOGOUT Action
   const logout = () => {
+    const performLocalLogout = () => {
+      dispatch(logoutAction());
+      eraseCookie('turfbook_session_active');
+      localStorage.removeItem('turfbook_remember_session');
+      toast.success('Logged out successfully.');
+      router.push('/login');
+    };
+
     if (refreshToken) {
-      authService.logout(refreshToken).catch((err) => {
-        console.error('Failed to revoke token on backend:', err);
-      });
+      authService
+        .logout(refreshToken)
+        .catch((err) => {
+          console.error('Failed to revoke token on backend:', err);
+        })
+        .finally(() => {
+          performLocalLogout();
+        });
+    } else {
+      performLocalLogout();
     }
-    dispatch(logoutAction());
-    toast.success('Logged out successfully.');
-    router.push('/login');
   };
 
   // 7. LOGOUT ALL Devices Action
@@ -114,11 +134,50 @@ export function useAuth() {
     mutationFn: () => authService.logoutAll(),
     onSuccess: () => {
       dispatch(logoutAction());
+      eraseCookie('turfbook_session_active');
+      localStorage.removeItem('turfbook_remember_session');
       toast.success('Logged out from all devices successfully! 🔒');
       router.push('/login');
     },
     onError: (error: AxiosError<ApiError>) => {
       const message = error?.response?.data?.message || 'Failed to logout from all devices.';
+      toast.error(message);
+    },
+  });
+
+  // 8. TanStack Query Mutation: VERIFY EMAIL
+  const verifyEmailMutation = useMutation({
+    mutationFn: (token: string) => authService.verifyEmail(token),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Email verified successfully! ⚽');
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message = error?.response?.data?.message || 'Invalid or expired verification link.';
+      toast.error(message);
+    },
+  });
+
+  // 9. TanStack Query Mutation: FORGOT PASSWORD
+  const forgotPasswordMutation = useMutation({
+    mutationFn: (email: string) => authService.forgotPassword(email),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Reset link sent to your email!');
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message = error?.response?.data?.message || 'Failed to send reset link. Try again!';
+      toast.error(message);
+    },
+  });
+
+  // 10. TanStack Query Mutation: RESET PASSWORD
+  const resetPasswordMutation = useMutation({
+    mutationFn: (payload: ResetPasswordDto) => authService.resetPassword(payload),
+    onSuccess: (data) => {
+      toast.success(data.message || 'Password reset successfully!');
+      router.push('/login');
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message = error?.response?.data?.message || 'Failed to reset password.';
       toast.error(message);
     },
   });
@@ -152,5 +211,22 @@ export function useAuth() {
     // Logout All Action
     logoutAll: logoutAllMutation.mutate,
     isLoggingOutAll: logoutAllMutation.isPending,
+
+    // Email Verification Action & State
+    verifyEmail: verifyEmailMutation.mutate,
+    verifyEmailAsync: verifyEmailMutation.mutateAsync,
+    isVerifyingEmail: verifyEmailMutation.isPending,
+    verifyEmailError: verifyEmailMutation.error,
+    isVerifyEmailSuccess: verifyEmailMutation.isSuccess,
+
+    // Forgot Password Action & State
+    forgotPassword: forgotPasswordMutation.mutate,
+    isForgettingPassword: forgotPasswordMutation.isPending,
+    isForgotPasswordSuccess: forgotPasswordMutation.isSuccess,
+
+    // Reset Password Action & State
+    resetPassword: resetPasswordMutation.mutate,
+    isResettingPassword: resetPasswordMutation.isPending,
+    isResetPasswordSuccess: resetPasswordMutation.isSuccess,
   };
 }

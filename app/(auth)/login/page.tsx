@@ -8,14 +8,25 @@ import gsap from 'gsap';
 import { Eye, EyeOff, HelpCircle, Lock, Mail, Sparkles, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 
 export default function LoginPage() {
-  const { t } = useTranslation();
   const { login, isLoggingIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('turfbook_remembered_email');
+      if (savedEmail) {
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setEmail(savedEmail);
+        setRememberMe(true);
+        /* eslint-enable react-hooks/set-state-in-effect */
+      }
+    }
+  }, []);
 
   // Refs for GSAP animations
   const { containerRef: pageContainerRef, handleMouseMove } = useSpotlight();
@@ -39,7 +50,7 @@ export default function LoginPage() {
       {
         opacity: 0,
         y: 15,
-      },
+      }
     );
 
     // Select form items (inputs, remember row, login button)
@@ -57,7 +68,7 @@ export default function LoginPage() {
     tl.to(
       brandLogoRef.current,
       { opacity: 1, scale: 1, rotate: 0, duration: 0.8, ease: 'back.out(1.6)' },
-      '-=0.8',
+      '-=0.8'
     );
 
     // Header reveal
@@ -80,7 +91,7 @@ export default function LoginPage() {
           duration: 0.7,
           ease: 'power3.out',
         },
-        '-=0.3',
+        '-=0.3'
       );
     }
 
@@ -98,10 +109,13 @@ export default function LoginPage() {
       ease: 'sine.inOut',
     });
   }, []);
-;
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (rememberMe) {
+      localStorage.setItem('turfbook_remembered_email', email);
+    } else {
+      localStorage.removeItem('turfbook_remembered_email');
+    }
     login({ email, password });
   };
 
@@ -260,13 +274,15 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 text-slate-400 cursor-pointer select-none hover:text-slate-350 transition-colors duration-300">
               <input
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="accent-emerald-500 h-3.5 w-3.5 transition-all cursor-pointer rounded border-slate-800 bg-slate-950"
               />
               Remember me
             </label>
             <Link
-              href="#"
-              className="text-emerald-400 hover:text-emerald-350 transition-colors duration-300"
+              href="/forgot-password"
+              className="text-emerald-400 hover:text-emerald-355 transition-colors duration-300"
             >
               Forgot password?
             </Link>
