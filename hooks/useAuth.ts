@@ -99,14 +99,24 @@ export function useAuth() {
 
   // 6. LOGOUT Action
   const logout = () => {
+    const performLocalLogout = () => {
+      dispatch(logoutAction());
+      toast.success('Logged out successfully.');
+      router.push('/login');
+    };
+
     if (refreshToken) {
-      authService.logout(refreshToken).catch((err) => {
-        console.error('Failed to revoke token on backend:', err);
-      });
+      authService
+        .logout(refreshToken)
+        .catch((err) => {
+          console.error('Failed to revoke token on backend:', err);
+        })
+        .finally(() => {
+          performLocalLogout();
+        });
+    } else {
+      performLocalLogout();
     }
-    dispatch(logoutAction());
-    toast.success('Logged out successfully.');
-    router.push('/login');
   };
 
   // 7. LOGOUT ALL Devices Action
