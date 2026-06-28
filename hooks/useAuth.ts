@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import axios, { AxiosError } from 'axios';
 import { ApiError } from '@/types/api.types';
+import { setCookie, eraseCookie } from '@/lib/cookies';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
@@ -55,6 +56,12 @@ export function useAuth() {
     mutationFn: (credentials: LoginDto) => authService.login(credentials),
     onSuccess: (data) => {
       dispatch(setCredentials(data));
+      const isRemembered = localStorage.getItem('turfbook_remember_session') === 'true';
+      if (isRemembered) {
+        setCookie('turfbook_session_active', 'true', 30);
+      } else {
+        setCookie('turfbook_session_active', 'true');
+      }
       toast.success('Successfully logged in! ⚽');
       const redirectPath =
         typeof window !== 'undefined'
@@ -73,6 +80,7 @@ export function useAuth() {
     mutationFn: (userData: RegisterDto) => authService.register(userData),
     onSuccess: (data) => {
       dispatch(setCredentials(data));
+      setCookie('turfbook_session_active', 'true', 30);
       toast.success('Account created successfully! 🏆');
       router.push('/');
     },
@@ -101,6 +109,8 @@ export function useAuth() {
   const logout = () => {
     const performLocalLogout = () => {
       dispatch(logoutAction());
+      eraseCookie('turfbook_session_active');
+      localStorage.removeItem('turfbook_remember_session');
       toast.success('Logged out successfully.');
       router.push('/login');
     };
@@ -124,6 +134,8 @@ export function useAuth() {
     mutationFn: () => authService.logoutAll(),
     onSuccess: () => {
       dispatch(logoutAction());
+      eraseCookie('turfbook_session_active');
+      localStorage.removeItem('turfbook_remember_session');
       toast.success('Logged out from all devices successfully! 🔒');
       router.push('/login');
     },
